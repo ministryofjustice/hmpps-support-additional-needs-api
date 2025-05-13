@@ -3,7 +3,8 @@
 
 generic-service:
   ingress:
-    host: support-for-additional-needs-api.hmpps.service.justice.gov.uk
+    hosts:
+      - support-for-additional-needs-api.hmpps.service.justice.gov.uk
 
   env:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"

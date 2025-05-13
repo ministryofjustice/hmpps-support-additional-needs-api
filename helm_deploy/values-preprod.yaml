@@ -5,7 +5,9 @@ generic-service:
   replicaCount: 2
 
   ingress:
-    host: support-for-additional-needs-api-preprod.hmpps.service.justice.gov.uk
+    hosts:
+      - support-for-additional-needs-api-preprod.hmpps.service.justice.gov.uk
+      - san-api-preprod.hmpps.service.justice.gov.uk
 
   env:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
