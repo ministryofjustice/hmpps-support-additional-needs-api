@@ -1,10 +1,19 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
+import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+
+
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
   kotlin("plugin.spring") version "2.1.20"
   kotlin("plugin.jpa") version "2.1.20"
+  id("org.openapi.generator") version "7.13.0"
 
   `java-test-fixtures`
 }
+
+apply(plugin = "org.openapi.generator")
 
 allOpen {
   annotations(
@@ -21,12 +30,13 @@ configurations {
 val postgresqlVersion = "42.7.5"
 val testContainersVersion = "1.21.0"
 val buildDirectory: Directory = layout.buildDirectory.get()
+val springdocOpenapiVersion = "2.8.6"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.3")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.6")
+  implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
 
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
@@ -75,5 +85,57 @@ tasks.named("assemble") {
         .include("libs/*-plain.jar")
         .include("libs/*-test-fixtures.jar"),
     )
+  }
+}
+
+tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
+  validateSpec.set(true)
+  generatorName.set("kotlin-spring")
+  templateDir.set("$projectDir/src/main/resources/static/openapi/templates")
+  inputSpec.set("$projectDir/src/main/resources/static/openapi/SupportAdditionalNeedsAPI.yml")
+  outputDir.set("$buildDirectory/generated")
+  modelPackage.set("uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model")
+  configOptions.set(
+    mapOf(
+      "dateLibrary" to "java8",
+      "serializationLibrary" to "jackson",
+      "useBeanValidation" to "true",
+      "useSpringBoot3" to "true",
+      "enumPropertyNaming" to "UPPERCASE",
+    ),
+  )
+  globalProperties.set(
+    mapOf(
+      "models" to "",
+    ),
+  )
+}
+
+tasks {
+  withType<KtLintCheckTask> {
+    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
+    mustRunAfter("buildSupportAdditionalNeedsModel")
+  }
+  withType<KtLintFormatTask> {
+    // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
+    mustRunAfter("buildSupportAdditionalNeedsModel")
+  }
+}
+
+tasks.named("compileKotlin") {
+  dependsOn("buildSupportAdditionalNeedsModel")
+}
+
+kotlin {
+  kotlinDaemonJvmArgs = listOf("-Xmx1g")
+  sourceSets["main"].apply {
+    kotlin.srcDir("$buildDirectory/generated/src/main/kotlin")
+  }
+}
+
+// Exclude generated code from linting
+ktlint {
+  filter {
+    exclude { projectDir.toURI().relativize(it.file.toURI()).path.contains("/generated/") }
   }
 }

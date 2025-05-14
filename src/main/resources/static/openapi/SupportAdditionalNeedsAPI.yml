@@ -1,0 +1,33 @@
+openapi: 3.0.0
+info:
+  title: Support For Additional Needs API
+  version: '0.0.1'
+  description: Support For Additional Needs API
+  contact:
+    name: Learning and Work Progress team
+    email: learningandworkprogress@digital.justice.gov.uk
+servers:
+  - url: /
+
+security:
+  - bearerAuth: [ ]
+#
+# --------------------------------------------------------------------------------
+#
+# EXAMPLE PATH remove once we have actual API paths
+paths:
+  /health:
+    get:
+      summary: Health check
+      description: Returns the health status of the API.
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
