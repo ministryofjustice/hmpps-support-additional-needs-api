@@ -28,6 +28,7 @@ configurations {
 }
 
 val postgresqlVersion = "42.7.5"
+val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.0"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "2.8.6"
@@ -37,6 +38,8 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
+
+  implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
