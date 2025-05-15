@@ -137,3 +137,37 @@ docker compose pull && docker compose up --scale hmpps-support-additional-needs-
 
 will just start a docker instance of HMPPS Auth. The application should then be started with a `dev` active profile
 in Intellij.
+
+## Environment variables
+The following environment variables are required in order for the app to start:
+
+### General
+
+| Name           | Description                                |
+|----------------|--------------------------------------------|
+| SERVER_PORT    | The port that the application will run on  |
+| HMPPS_AUTH_URL | The URL for OAuth 2.0 authorisation server |
+
+### Database
+
+| Name      | Description                       |
+|-----------|-----------------------------------|
+| DB_SERVER | The host of the DB server         |
+| DB_NAME   | The name of the database instance |        
+| DB_USER   | The application's DB username     |
+| DB_PASS   | The DB user's password            |
+
+### Application Insights
+
+| Name                                   | Description                              |
+|----------------------------------------|------------------------------------------|
+| APPLICATIONINSIGHTS_CONNECTION_STRING  | The connection string for App Insights   |
+| APPLICATIONINSIGHTS_CONFIGURATION_FILE | A configuration file for App Insights    |
+
+### APIs
+
+| Name                              | Description                                                               |
+|-----------------------------------|---------------------------------------------------------------------------|
+| PRISONER_SEARCH_API_URL           | The URL of the Prisoner Search API                                        |
+| PRISONER_SEARCH_API_CLIENT_ID     | hmpps-auth oauth2 client-id for connecting to the Prisoner Search API     |
+| PRISONER_SEARCH_API_CLIENT_SECRET | hmpps-auth oauth2 client-secret for connecting to the Prisoner Search API |

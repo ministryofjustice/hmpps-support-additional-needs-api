@@ -32,6 +32,8 @@ generic-service:
     hmpps-support-additional-needs-api-client-creds:
       API_CLIENT_ID: 'API_CLIENT_ID'
       API_CLIENT_SECRET: 'API_CLIENT_SECRET'
+      PRISONER_SEARCH_API_CLIENT_ID: "PRISONER_SEARCH_API_CLIENT_ID"
+      PRISONER_SEARCH_API_CLIENT_SECRET: "PRISONER_SEARCH_API_CLIENT_SECRET"
     rds-postgresql-instance-output:
       DB_SERVER: "rds_instance_address"
       DB_NAME: "database_name"

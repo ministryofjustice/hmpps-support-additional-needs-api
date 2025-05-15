@@ -13,3 +13,12 @@ spring:
 
 hmpps-auth:
   url: "http://localhost:8090/auth"
+
+prisoner-search-api:
+  client:
+    id: prisoner-search-api-client-id
+    secret: client-secret
+
+apis:
+  prisoner-search-api:
+    url: http://localhost:9093
