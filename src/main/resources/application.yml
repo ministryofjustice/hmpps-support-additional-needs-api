@@ -86,6 +86,11 @@ management:
       cache:
         time-to-live: 2000ms
 
+springdoc:
+  # swagger specification file served via /swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config
+  swagger-ui:
+    url: '/openapi/SupportAdditionalNeedsAPI.yml'
+
 apis:
   prisoner-search-api:
     url: ${PRISONER_SEARCH_API_URL}
