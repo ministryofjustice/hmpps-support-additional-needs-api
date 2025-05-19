@@ -52,6 +52,9 @@ dependencies {
   }
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
   testImplementation("org.testcontainers:localstack:$testContainersVersion")
+
+  // Test fixtures dependencies
+  testFixturesImplementation("org.assertj:assertj-core")
 }
 
 kotlin {
