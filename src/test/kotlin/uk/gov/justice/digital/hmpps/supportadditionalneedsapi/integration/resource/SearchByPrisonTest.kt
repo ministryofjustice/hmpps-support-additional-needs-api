@@ -50,6 +50,51 @@ class SearchByPrisonTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should return paged results containing trimmed name values`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    val apiResponse = """
+      {
+        "last": true,
+        "content": [
+          {
+            "prisonerNumber": "  A1234AA  ",
+            "legalStatus": "SENTENCED",
+            "releaseDate": "2033-01-01",
+            "prisonId": "BXI",
+            "isIndeterminateSentence": false,
+            "isRecall": false,
+            "firstName": "  BOB   ",
+            "lastName": "  SMITH   ",
+            "cellLocation": "B-2-022",
+            "dateOfBirth": "1980-01-01",
+            "releaseType": "ARD"
+          }        
+        ]
+      }
+    """.trimIndent()
+    stubGetPrisonersInPrisonFromPrisonerSearchApi(PRISON_ID, apiResponse)
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, PRISON_ID)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(SearchByPrisonResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .person(1) {
+        it.hasPrisonNumber("A1234AA")
+          .hasForename("BOB")
+          .hasSurname("SMITH")
+      }
+  }
+
+  @Test
   fun `should return unauthorized given no bearer token`() {
     webTestClient.get()
       .uri(URI_TEMPLATE, PRISON_ID)

@@ -1,6 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.StringTrimDeserializer
 import java.time.LocalDate
 
 data class PagedPrisonerResponse(
@@ -9,6 +11,7 @@ data class PagedPrisonerResponse(
 )
 
 data class Prisoner(
+  @field:JsonDeserialize(using = StringTrimDeserializer::class)
   val prisonerNumber: String,
   val legalStatus: LegalStatus = LegalStatus.OTHER,
   val releaseDate: LocalDate?,
@@ -17,7 +20,9 @@ data class Prisoner(
   val isIndeterminateSentence: Boolean,
   @field:JsonProperty(value = "recall", defaultValue = "false")
   val isRecall: Boolean,
+  @field:JsonDeserialize(using = StringTrimDeserializer::class)
   val lastName: String,
+  @field:JsonDeserialize(using = StringTrimDeserializer::class)
   val firstName: String,
   val dateOfBirth: LocalDate,
   val cellLocation: String?,
