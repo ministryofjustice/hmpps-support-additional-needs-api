@@ -58,7 +58,6 @@ class HmppsPrisonerSearchApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubPrisonersInAPrison(prisonId: String, response: List<Prisoner>) {
-    println("will return: ${objectMapper.writeValueAsString(PagedPrisonerResponse(last = true, content = response))}")
     stubFor(
       get(urlPathMatching("/prisoner-search/prison/$prisonId"))
         .willReturn(
@@ -66,6 +65,18 @@ class HmppsPrisonerSearchApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
             .withBody(objectMapper.writeValueAsString(PagedPrisonerResponse(last = true, content = response))),
+        ),
+    )
+  }
+
+  fun stubPrisonersInAPrison(prisonId: String, response: String) {
+    stubFor(
+      get(urlPathMatching("/prisoner-search/prison/$prisonId"))
+        .willReturn(
+          responseDefinition()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response),
         ),
     )
   }
