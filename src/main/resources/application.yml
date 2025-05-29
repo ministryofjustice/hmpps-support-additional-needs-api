@@ -27,6 +27,12 @@ spring:
             client-secret: ${prisoner-search-api.client.secret}
             authorization-grant-type: client_credentials
             scope: read
+          curious-api:
+            provider: hmpps-auth
+            client-id: ${curious-api.client.id}
+            client-secret: ${curious-api.client.secret}
+            authorization-grant-type: client_credentials
+            scope: read
         provider:
           hmpps-auth:
             token-uri: ${hmpps-auth.url}/oauth/token
@@ -94,3 +100,5 @@ springdoc:
 apis:
   prisoner-search-api:
     url: ${PRISONER_SEARCH_API_URL}
+  curious-api:
+    url: ${CURIOUS_API_URL}

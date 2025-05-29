@@ -29,6 +29,13 @@ class WebClientConfiguration(
     @Value("\${apis.prisoner-search-api.url}") prisonerSearchApiUri: String,
   ): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "prisoner-search-api", url = prisonerSearchApiUri)
 
+  @Bean(name = ["curiousApiWebClient"])
+  fun curiousApiWebClient(
+    authorizedClientManager: OAuth2AuthorizedClientManager,
+    builder: WebClient.Builder,
+    @Value("\${apis.curious-api.url}") curiousApiUri: String,
+  ): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "curious-api", url = curiousApiUri)
+
   private fun WebClient.Builder.authorisedWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     registrationId: String,

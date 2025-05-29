@@ -117,19 +117,45 @@ tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
   )
 }
 
+tasks.register<GenerateTask>("buildCuriousApiModel") {
+  validateSpec.set(false) // As at 2025-05-29 the curious-api swagger spec does not validate, so need to set this to false
+  generatorName.set("kotlin-spring")
+  templateDir.set("$projectDir/src/main/resources/static/openapi/templates")
+  remoteInputSpec.set("https://testservices.sequation.net/sequation-virtual-campus2-api/v3/api-docs")
+  outputDir.set("$buildDirectory/generated")
+  modelPackage.set("uk.gov.justice.digital.hmpps.curiousapi.resource.model")
+  configOptions.set(
+    mapOf(
+      "dateLibrary" to "java8",
+      "serializationLibrary" to "jackson",
+      "useBeanValidation" to "true",
+      "useSpringBoot3" to "true",
+      "enumPropertyNaming" to "UPPERCASE",
+    ),
+  )
+  globalProperties.set(
+    mapOf(
+      "models" to "LearnerNeurodivergenceDTO", // Only generate the model classes we are interested in
+    ),
+  )
+}
+
 tasks {
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter("buildSupportAdditionalNeedsModel")
+    mustRunAfter("buildCuriousApiModel")
   }
   withType<KtLintFormatTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
     mustRunAfter("buildSupportAdditionalNeedsModel")
+    mustRunAfter("buildCuriousApiModel")
   }
 }
 
 tasks.named("compileKotlin") {
   dependsOn("buildSupportAdditionalNeedsModel")
+  dependsOn("buildCuriousApiModel")
 }
 
 kotlin {
