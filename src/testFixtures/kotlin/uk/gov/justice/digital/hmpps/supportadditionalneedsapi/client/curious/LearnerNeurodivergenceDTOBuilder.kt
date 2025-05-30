@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.curiousapi.resource.model
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious
 
 import java.time.LocalDate
 

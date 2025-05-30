@@ -6,7 +6,6 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.curiousapi.resource.model.LearnerNeurodivergenceDTO
 
 /**
  * API client class to consume Curious API endpoints.

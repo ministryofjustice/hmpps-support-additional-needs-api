@@ -7,9 +7,9 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.given
-import uk.gov.justice.digital.hmpps.curiousapi.resource.model.aValidLearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousPrisonerRecordNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidLearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 
 @ExtendWith(MockitoExtension::class)
