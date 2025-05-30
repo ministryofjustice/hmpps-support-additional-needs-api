@@ -166,8 +166,11 @@ The following environment variables are required in order for the app to start:
 
 ### APIs
 
-| Name                              | Description                                                               |
-|-----------------------------------|---------------------------------------------------------------------------|
-| PRISONER_SEARCH_API_URL           | The URL of the Prisoner Search API                                        |
-| PRISONER_SEARCH_API_CLIENT_ID     | hmpps-auth oauth2 client-id for connecting to the Prisoner Search API     |
-| PRISONER_SEARCH_API_CLIENT_SECRET | hmpps-auth oauth2 client-secret for connecting to the Prisoner Search API |
+| Name                              | Description                                                                 |
+|-----------------------------------|-----------------------------------------------------------------------------|
+| PRISONER_SEARCH_API_URL           | The URL of the Prisoner Search API                                          |
+| PRISONER_SEARCH_API_CLIENT_ID     | hmpps-auth oauth2 client-id for connecting to the Prisoner Search API       |
+| PRISONER_SEARCH_API_CLIENT_SECRET | hmpps-auth oauth2 client-secret for connecting to the Prisoner Search API   |
+| CURIOUS_API_URL                   | The URL of the Meganexus Curious API                                        |
+| CURIOUS_API_CLIENT_ID             | hmpps-auth oauth2 client-id for connecting to the Meganexus Curious API     |
+| CURIOUS_API_CLIENT_SECRET         | hmpps-auth oauth2 client-secret for connecting to the Meganexus Curious API |
