@@ -54,6 +54,33 @@ paths:
         '400':
           $ref: '#/components/responses/400Error'
 
+  '/profile/{prisonNumber}/reviews/review-schedules':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    get:
+      summary: Lists all Action Plan Review Schedules (past and scheduled) for a prisoner
+      description: |
+        Returns all Review schedules for the specified prisoner. 
+
+        The data will be returned as a list ordered by last updated date then by version number. 
+
+        It is possible for a review schedule to be updated therefore this endpoint will return all versions of a
+        review schedule - the highest version number will be the most recent schedule. 
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `TOCO` (Read-Only)
+          - `TODO` (Read-Write)
+
+      tags:
+        - Action Plan Reviews
+      responses:
+        '200':
+          $ref: '#/components/responses/GetReviewSchedules'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-review-schedules
+
 components:
   securitySchemes:
     bearerAuth:
@@ -178,6 +205,54 @@ components:
         - first
         - pageSize
 
+    AuditedResource:
+      title: AuditedResource
+      type: object
+      properties:
+        createdBy:
+          type: string
+          description: The DPS username of the person who created this resource.
+          example: 'asmith_gen'
+        createdByDisplayName:
+          type: string
+          description: The display name of the person who created this resource.
+          example: 'Alex Smith'
+        createdAt:
+          type: string
+          format: date-time
+          description: An ISO-8601 timestamp representing when this resource was created.
+          example: '2023-06-19T09:39:44Z'
+        createdAtPrison:
+          type: string
+          description: The identifier of the prison that the prisoner was resident at when this resource was created.
+          example: 'BXI'
+        updatedBy:
+          type: string
+          description: The DPS username of the person who last updated this resource.
+          example: 'asmith_gen'
+        updatedByDisplayName:
+          type: string
+          description: The display name of the person who last updated this resource.
+          example: 'Alex Smith'
+        updatedAt:
+          type: string
+          format: date-time
+          description: An ISO-8601 timestamp representing when this resource was last updated. This will be the same as the created date if it has not yet been updated.
+          example: '2023-06-19T09:39:44Z'
+        updatedAtPrison:
+          type: string
+          description: The identifier of the prison that the prisoner was resident at when this resource was updated.
+          example: 'BXI'
+      required:
+        - createdBy
+        - createdByDisplayName
+        - createdAt
+        - createdAtPrison
+        - updatedBy
+        - updatedByDisplayName
+        - updatedAt
+        - updatedAtPrison
+
     Person:
       title: Person
       description: A summary of a person in prison, including flags as to whether they have Challenges, Strengths, Conditions or Support Recommendations recorded in the service.
@@ -251,6 +326,83 @@ components:
         - hasConditions
         - hasStrengths
         - hasSupportRecommendations
+
+    ReviewSchedulesResponse:
+      title: ReviewSchedulesResponse
+      description: A list of review schedules for a prisoner.
+      type: object
+      properties:
+        reviewSchedules:
+          type: array
+          description: A List containing zero or more ReviewSchedules.
+          items:
+            $ref: '#/components/schemas/ReviewScheduleResponse'
+      required:
+        - reviewSchedules
+
+    ReviewScheduleResponse:
+      title: ReviewScheduleResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A Scheduled Review of a Prisoner's support additional needs plan.
+
+        A DPS user will create a new Review Schedule (and therefore they will be recorded in the `createdBy...` fields)
+        when they complete a prisoner's Induction or their previous Review. IE. completing an Induction will create
+        the prisoner's first Review Schedule. Completing their Review will create their next Review Schedule.
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this Review
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        deadlineDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the Review is due.
+          example: '2023-11-19'
+        status:
+          $ref: '#/components/schemas/ReviewScheduleStatus'
+        exemptionReason:
+          type: string
+          description: |
+            An optional reason as to why the Review Schedule is exempted.
+
+            Only present when the `status` field is one of the `EXEMPTION_` statuses and the user entered an exemption 
+            reason when marking the Review as Exempted.
+        version:
+          type: integer
+          description: the version number of this schedule (the highest number is the most recent version of this review schedule)
+      required:
+        - reference
+        - deadlineDate
+        - status
+
+    ReviewScheduleStatus:
+      title: ReviewScheduleStatus
+      description: Enum of the various Review Schedule statuses.
+      type: string
+      enum:
+        - SCHEDULED
+        - EXEMPT_PRISONER_DRUG_OR_ALCOHOL_DEPENDENCY
+        - EXEMPT_PRISONER_OTHER_HEALTH_ISSUES
+        - EXEMPT_PRISONER_FAILED_TO_ENGAGE
+        - EXEMPT_PRISONER_ESCAPED_OR_ABSCONDED
+        - EXEMPT_PRISONER_SAFETY_ISSUES
+        - EXEMPT_PRISON_REGIME_CIRCUMSTANCES
+        - EXEMPT_PRISON_STAFF_REDEPLOYMENT
+        - EXEMPT_PRISON_OPERATION_OR_SECURITY_ISSUE
+        - EXEMPT_SECURITY_ISSUE_RISK_TO_STAFF
+        - EXEMPT_SYSTEM_TECHNICAL_ISSUE
+        - EXEMPT_PRISONER_TRANSFER
+        - EXEMPT_PRISONER_RELEASE
+        - EXEMPT_PRISONER_DEATH
+        - EXEMPT_PRISONER_MERGE
+        - EXEMPT_UNKNOWN
+        - COMPLETED
+
 
   #
   # Response Body Definitions
@@ -332,6 +484,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SearchByPrisonResponse'
+
+    GetReviewSchedules:
+      description: Response body containing the a list of review schedules.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReviewSchedulesResponse'
+
 
   #
   # Request Body Definitions
