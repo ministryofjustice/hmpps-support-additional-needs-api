@@ -26,7 +26,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__API__RO"), username = "system"))
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "system"))
       .exchange()
       .expectStatus()
       .isOk

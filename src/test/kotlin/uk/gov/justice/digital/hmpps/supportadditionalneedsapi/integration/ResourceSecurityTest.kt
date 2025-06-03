@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationContext
@@ -23,7 +22,6 @@ class ResourceSecurityTest : IntegrationTestBase() {
   )
 
   @Test
-  @Disabled // TODO put this back in when all endpoints have pre authorize
   fun `Ensure all endpoints protected with PreAuthorize`() {
     // need to exclude any that are forbidden in helm configuration
     val exclusions = File("helm_deploy").walk().filter { it.name.equals("values.yaml") }.flatMap { file ->
