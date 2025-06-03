@@ -73,13 +73,35 @@ paths:
           - `TODO` (Read-Write)
 
       tags:
-        - Action Plan Reviews
+        - Plan Reviews
       responses:
         '200':
           $ref: '#/components/responses/GetReviewSchedules'
         '404':
           $ref: '#/components/responses/404Error'
       operationId: get-review-schedules
+
+  '/profile/{prisonNumber}/plan-creation-schedule':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    get:
+      summary: Returns the plan creation Schedule for a prisoner
+      description: |
+        Returns the plan creation schedule for the specified prisoner. 
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `TODO` (Read-Only)
+          - `TODO` (Read-Write)
+
+      tags:
+        - Plan
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPlanCreationSchedule'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-plan-creation-schedule
 
 components:
   securitySchemes:
@@ -386,15 +408,70 @@ components:
       type: string
       enum:
         - SCHEDULED
-        - EXEMPT_PRISONER_DRUG_OR_ALCOHOL_DEPENDENCY
-        - EXEMPT_PRISONER_OTHER_HEALTH_ISSUES
-        - EXEMPT_PRISONER_FAILED_TO_ENGAGE
-        - EXEMPT_PRISONER_ESCAPED_OR_ABSCONDED
-        - EXEMPT_PRISONER_SAFETY_ISSUES
-        - EXEMPT_PRISON_REGIME_CIRCUMSTANCES
-        - EXEMPT_PRISON_STAFF_REDEPLOYMENT
-        - EXEMPT_PRISON_OPERATION_OR_SECURITY_ISSUE
-        - EXEMPT_SECURITY_ISSUE_RISK_TO_STAFF
+        - EXEMPT_SYSTEM_TECHNICAL_ISSUE
+        - EXEMPT_PRISONER_TRANSFER
+        - EXEMPT_PRISONER_RELEASE
+        - EXEMPT_PRISONER_DEATH
+        - EXEMPT_PRISONER_MERGE
+        - EXEMPT_UNKNOWN
+        - COMPLETED
+
+    PlanCreationSchedulesResponse:
+      title: PlansCreationSchedulesResponse
+      description: A list of plan creation schedules for a prisoner.
+      type: object
+      properties:
+        planCreationSchedules:
+          type: array
+          description: A List containing zero or more PlanCreationSchedules.
+          items:
+            $ref: '#/components/schemas/PlanCreationScheduleResponse'
+      required:
+        - planCreationSchedules
+
+    PlanCreationScheduleResponse:
+      title: PlanCreationScheduleResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A Plan creation schedule for a Prisoner's support additional needs plan.
+
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this plan creation schedule
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        deadlineDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the plan creation is due.
+          example: '2023-11-19'
+        status:
+          $ref: '#/components/schemas/PlanCreationStatus'
+        exemptionReason:
+          type: string
+          description: |
+            An optional reason as to why the plan creation Schedule is exempted.
+
+            Only present when the `status` field is one of the `EXEMPTION_` statuses and the user entered an exemption 
+            reason when marking the Review as Exempted.
+        version:
+          type: integer
+          description: the version number of this schedule (the highest number is the most recent version of this plan creation schedule)
+      required:
+        - reference
+        - deadlineDate
+        - status
+
+    PlanCreationStatus:
+      title: PlanCreationStatus
+      description: Enum of the various plan creation schedule statuses.
+      type: string
+      enum:
+        - SCHEDULED
         - EXEMPT_SYSTEM_TECHNICAL_ISSUE
         - EXEMPT_PRISONER_TRANSFER
         - EXEMPT_PRISONER_RELEASE
@@ -501,6 +578,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ReviewSchedulesResponse'
+
+    GetPlanCreationSchedule:
+      description: Response body containing the a the plan creation schedule.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlanCreationSchedulesResponse'
 
 
   #

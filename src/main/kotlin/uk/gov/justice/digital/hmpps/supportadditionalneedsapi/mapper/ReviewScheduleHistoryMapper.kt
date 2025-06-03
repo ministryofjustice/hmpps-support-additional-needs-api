@@ -1,31 +1,31 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus as ReviewScheduleStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleStatus as ReviewScheduleStatusModel
 
 @Component
-class ReviewScheduleMapper(private val instantMapper: InstantMapper) {
+class ReviewScheduleHistoryMapper(private val instantMapper: InstantMapper) {
 
   fun toModel(
-    entity: ReviewScheduleEntity,
+    entity: ReviewScheduleHistoryEntity,
   ): ReviewScheduleResponse = with(entity) {
     ReviewScheduleResponse(
       reference = reference,
       deadlineDate = deadlineDate,
       status = toReviewScheduleStatus(status),
-      createdBy = createdBy!!,
+      createdBy = createdBy,
       createdByDisplayName = "TODO",
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,
       createdAtPrison = createdAtPrison,
-      updatedBy = updatedBy!!,
+      updatedBy = updatedBy,
       updatedByDisplayName = "TODO",
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
-      version = 1, // TODO
+      version = version,
     )
   }
 

@@ -2,26 +2,28 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
-class GetReviewSchedulesTest : IntegrationTestBase() {
+class GetPlanCreationSchedulesTest : IntegrationTestBase() {
   companion object {
-    private const val URI_TEMPLATE = "/profile/{prisonNumber}/reviews/review-schedules"
+    private const val URI_TEMPLATE = "/profile/{prisonNumber}/plan-creation-schedule"
   }
 
   @Test
-  fun `should return a list of review schedules`() {
+  fun `should return a list of plan creation schedules`() {
     // Given
     stubGetTokenFromHmppsAuth()
     val prisonNumber = randomValidPrisonNumber()
-    val reviewScheduleRecords = createReviewScheduleRecords(prisonNumber)
+    val reviewScheduleRecords = createPlanCreationScheduleRecords(prisonNumber)
 
     // When
     val response = webTestClient.get()
@@ -30,23 +32,23 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .returnResult(ReviewSchedulesResponse::class.java)
+      .returnResult(PlanCreationSchedulesResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.reviewSchedules).hasSize(reviewScheduleRecords.size)
+    assertThat(actual!!.planCreationSchedules).hasSize(reviewScheduleRecords.size)
   }
 
-  private fun createReviewScheduleRecords(
+  private fun createPlanCreationScheduleRecords(
     prisonNumber: String,
     reference: UUID = UUID.randomUUID(),
-  ): List<ReviewScheduleHistoryEntity> = (1..3).map {
-    val reviewScheduleHistoryEntity = ReviewScheduleHistoryEntity(
+  ): List<PlanCreationScheduleHistoryEntity> = (1..3).map {
+    val planCreationScheduleHistoryEntity = PlanCreationScheduleHistoryEntity(
       reference = reference,
       prisonNumber = prisonNumber,
       deadlineDate = LocalDate.now().minusMonths(1),
-      status = if (it == 3) ReviewScheduleStatus.SCHEDULED else ReviewScheduleStatus.COMPLETED,
+      status = if (it == 3) PlanCreationScheduleStatus.SCHEDULED else PlanCreationScheduleStatus.COMPLETED,
       exemptionReason = null,
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
@@ -56,6 +58,6 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
       updatedBy = "system",
       updatedAt = Instant.now(),
     )
-    reviewScheduleHistoryRepository.saveAndFlush(reviewScheduleHistoryEntity)
+    planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)
   }
 }
