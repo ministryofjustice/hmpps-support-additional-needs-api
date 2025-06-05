@@ -91,8 +91,8 @@ paths:
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `TODO` (Read-Only)
-          - `TODO` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
 
       tags:
         - Plan
@@ -102,7 +102,41 @@ paths:
         '404':
           $ref: '#/components/responses/404Error'
       operationId: get-plan-creation-schedule
-
+  '/reference-data/{domain}':
+    get:
+      tags:
+        - Reference Data
+      summary: Retrieve all reference data for a domain.
+      description: |-
+        Get all reference data for a domain e.g. CONDITION
+        
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      operationId: getReferenceData
+      parameters:
+        - name: domain
+          in: path
+          description: Reference data domain.
+          required: true
+          schema:
+            type: string
+            enum:
+              - CONDITION
+              - CHALLENGE
+              - STRENGTH
+        - name: includeInactive
+          in: query
+          description: Include inactive reference data. Defaults to false
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/ReferenceDataResponse'
+        '404':
+          $ref: '#/components/responses/404Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -362,6 +396,40 @@ components:
       required:
         - reviewSchedules
 
+    ReferenceDataListResponse:
+      title: ReferenceDataListResponse
+      description: A list of reference data for a given domain.
+      type: object
+      properties:
+        referenceDataList:
+          type: array
+          description: A List containing zero or more ReferenceDataItem.
+          items:
+            $ref: '#/components/schemas/ReferenceData'
+      required:
+        - referenceDataList
+
+    ReferenceData:
+      type: object
+      description: A reference item belonging to a particular domain
+      properties:
+        code:
+          type: string
+          description: The short code of a reference data
+        description:
+          type: string
+          description: The description of the reference data code
+        listSequence:
+          type: integer
+          format: int32
+          description: 'The sequence number of the code. Used for ordering codes correctly in lists and drop downs. '
+          example: 3
+        active:
+          type: boolean
+          description: whether or not this ref data is active
+      required:
+        - code
+
     ReviewScheduleResponse:
       title: ReviewScheduleResponse
       type: object
@@ -582,6 +650,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ReviewSchedulesResponse'
+
+    ReferenceDataResponse:
+      description: Response body containing the a list of reference data.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ReferenceDataListResponse'
 
     GetPlanCreationSchedule:
       description: Response body containing the a the plan creation schedule.
