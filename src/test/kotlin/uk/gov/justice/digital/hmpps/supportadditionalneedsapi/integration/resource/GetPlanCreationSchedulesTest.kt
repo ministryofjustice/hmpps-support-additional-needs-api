@@ -20,13 +20,14 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
   fun `should return a list of plan creation schedules`() {
     // Given
     stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     val reviewScheduleRecords = createPlanCreationScheduleRecords(prisonNumber)
 
     // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "system"))
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
       .exchange()
       .expectStatus()
       .isOk
