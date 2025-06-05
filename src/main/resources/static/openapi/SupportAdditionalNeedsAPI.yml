@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.2.1'
+  version: '0.2.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -69,8 +69,8 @@ paths:
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `TODO` (Read-Only)
-          - `TODO` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
 
       tags:
         - Plan Reviews
