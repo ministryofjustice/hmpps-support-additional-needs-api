@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.2.0'
+  version: '0.2.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -58,7 +58,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
     get:
-      summary: Lists all Action Plan Review Schedules (past and scheduled) for a prisoner
+      summary: Lists all Plan Review Schedules (past and scheduled) for a prisoner
       description: |
         Returns all Review schedules for the specified prisoner. 
 
@@ -150,7 +150,7 @@ components:
         userMessage:
           description: An optional human readable description of the error.
           type: string
-          example: 'No Action Plan found for prisoner [A1234BC]'
+          example: 'No Plan found for prisoner [A1234BC]'
         developerMessage:
           description: An optional error message that may have more technical information for developers.
           type: string
@@ -413,6 +413,8 @@ components:
         - EXEMPT_PRISONER_RELEASE
         - EXEMPT_PRISONER_DEATH
         - EXEMPT_PRISONER_MERGE
+        - EXEMPT_PRISONER_NOT_COMPLY
+        - EXEMPT_NOT_IN_EDUCATION
         - EXEMPT_UNKNOWN
         - COMPLETED
 
@@ -477,6 +479,8 @@ components:
         - EXEMPT_PRISONER_RELEASE
         - EXEMPT_PRISONER_DEATH
         - EXEMPT_PRISONER_MERGE
+        - EXEMPT_PRISONER_NOT_COMPLY
+        - EXEMPT_NOT_IN_EDUCATION
         - EXEMPT_UNKNOWN
         - COMPLETED
 
@@ -503,7 +507,7 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             status: 400
-            userMessage: 'Error on field targetCompletionDate: rejected value [2023-06-01] cannot be in the past'
+            userMessage: 'Error on field deadlineDate: rejected value [2023-06-01] cannot be in the past'
     404Error:
       description: |
         Error response for a HTTP 404 describing the problem with the request.

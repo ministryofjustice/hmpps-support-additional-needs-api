@@ -3,11 +3,15 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus as PlanCreationStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus as PlanCreationStatusModel
 
 @Component
-class PlanCreationScheduleHistoryMapper(private val instantMapper: InstantMapper) {
+class PlanCreationScheduleHistoryMapper(
+  private val instantMapper: InstantMapper,
+  private val userService: ManageUserService,
+) {
 
   fun toModel(
     entity: PlanCreationScheduleHistoryEntity,
@@ -17,11 +21,11 @@ class PlanCreationScheduleHistoryMapper(private val instantMapper: InstantMapper
       deadlineDate = deadlineDate,
       status = toPlanCreationStatus(status),
       createdBy = createdBy,
-      createdByDisplayName = "TODO",
+      createdByDisplayName = userService.getUserDetails(createdBy).name,
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,
       createdAtPrison = createdAtPrison,
       updatedBy = updatedBy,
-      updatedByDisplayName = "TODO",
+      updatedByDisplayName = userService.getUserDetails(updatedBy).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
@@ -37,6 +41,8 @@ class PlanCreationScheduleHistoryMapper(private val instantMapper: InstantMapper
     PlanCreationStatusEntity.EXEMPT_PRISONER_RELEASE -> PlanCreationStatusModel.EXEMPT_PRISONER_RELEASE
     PlanCreationStatusEntity.EXEMPT_PRISONER_DEATH -> PlanCreationStatusModel.EXEMPT_PRISONER_DEATH
     PlanCreationStatusEntity.EXEMPT_PRISONER_MERGE -> PlanCreationStatusModel.EXEMPT_PRISONER_MERGE
+    PlanCreationStatusEntity.EXEMPT_PRISONER_NOT_COMPLY -> PlanCreationStatusModel.EXEMPT_PRISONER_NOT_COMPLY
+    PlanCreationStatusEntity.EXEMPT_NOT_IN_EDUCATION -> PlanCreationStatusModel.EXEMPT_NOT_IN_EDUCATION
     PlanCreationStatusEntity.EXEMPT_UNKNOWN -> PlanCreationStatusModel.EXEMPT_UNKNOWN
   }
 }
