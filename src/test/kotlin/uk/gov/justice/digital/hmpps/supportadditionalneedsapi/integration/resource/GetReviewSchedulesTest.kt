@@ -20,13 +20,14 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
   fun `should return a list of review schedules`() {
     // Given
     stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     val reviewScheduleRecords = createReviewScheduleRecords(prisonNumber)
 
     // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "system"))
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
       .exchange()
       .expectStatus()
       .isOk
@@ -35,7 +36,9 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.reviewSchedules).hasSize(reviewScheduleRecords.size)
+    assertThat(actual!!.reviewSchedules[0].createdByDisplayName).isEqualTo("Test User")
+    assertThat(actual.reviewSchedules[0].updatedByDisplayName).isEqualTo("Test User")
+    assertThat(actual.reviewSchedules).hasSize(reviewScheduleRecords.size)
   }
 
   private fun createReviewScheduleRecords(
@@ -51,9 +54,9 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
       version = it,
-      createdBy = "system",
+      createdBy = "testuser",
       createdAt = Instant.now(),
-      updatedBy = "system",
+      updatedBy = "testuser",
       updatedAt = Instant.now(),
     )
     reviewScheduleHistoryRepository.saveAndFlush(reviewScheduleHistoryEntity)

@@ -73,6 +73,8 @@ enum class ReviewScheduleStatus(val activeReview: Boolean) {
   EXEMPT_PRISONER_RELEASE(false),
   EXEMPT_PRISONER_DEATH(false),
   EXEMPT_PRISONER_MERGE(false),
+  EXEMPT_PRISONER_NOT_COMPLY(false),
+  EXEMPT_NOT_IN_EDUCATION(false),
   EXEMPT_UNKNOWN(false),
   COMPLETED(false),
 }

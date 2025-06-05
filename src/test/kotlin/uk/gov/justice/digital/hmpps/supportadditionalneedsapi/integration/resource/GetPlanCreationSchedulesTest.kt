@@ -35,7 +35,9 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.planCreationSchedules).hasSize(reviewScheduleRecords.size)
+    assertThat(actual!!.planCreationSchedules[0].createdByDisplayName).isEqualTo("Test User")
+    assertThat(actual.planCreationSchedules[0].updatedByDisplayName).isEqualTo("Test User")
+    assertThat(actual.planCreationSchedules).hasSize(reviewScheduleRecords.size)
   }
 
   private fun createPlanCreationScheduleRecords(
@@ -51,9 +53,9 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
       version = it,
-      createdBy = "system",
+      createdBy = "testuser",
       createdAt = Instant.now(),
-      updatedBy = "system",
+      updatedBy = "testuser",
       updatedAt = Instant.now(),
     )
     planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)

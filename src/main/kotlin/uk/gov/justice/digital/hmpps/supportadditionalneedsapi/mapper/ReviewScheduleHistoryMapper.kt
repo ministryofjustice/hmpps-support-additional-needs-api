@@ -3,11 +3,15 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus as ReviewScheduleStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleStatus as ReviewScheduleStatusModel
 
 @Component
-class ReviewScheduleHistoryMapper(private val instantMapper: InstantMapper) {
+class ReviewScheduleHistoryMapper(
+  private val instantMapper: InstantMapper,
+  private val userService: ManageUserService,
+) {
 
   fun toModel(
     entity: ReviewScheduleHistoryEntity,
@@ -17,11 +21,11 @@ class ReviewScheduleHistoryMapper(private val instantMapper: InstantMapper) {
       deadlineDate = deadlineDate,
       status = toReviewScheduleStatus(status),
       createdBy = createdBy,
-      createdByDisplayName = "TODO",
+      createdByDisplayName = userService.getUserDetails(createdBy).name,
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,
       createdAtPrison = createdAtPrison,
       updatedBy = updatedBy,
-      updatedByDisplayName = "TODO",
+      updatedByDisplayName = userService.getUserDetails(updatedBy).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
@@ -37,6 +41,8 @@ class ReviewScheduleHistoryMapper(private val instantMapper: InstantMapper) {
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_RELEASE -> ReviewScheduleStatusModel.EXEMPT_PRISONER_RELEASE
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_DEATH -> ReviewScheduleStatusModel.EXEMPT_PRISONER_DEATH
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_MERGE -> ReviewScheduleStatusModel.EXEMPT_PRISONER_MERGE
+    ReviewScheduleStatusEntity.EXEMPT_NOT_IN_EDUCATION -> ReviewScheduleStatusModel.EXEMPT_NOT_IN_EDUCATION
+    ReviewScheduleStatusEntity.EXEMPT_PRISONER_NOT_COMPLY -> ReviewScheduleStatusModel.EXEMPT_PRISONER_NOT_COMPLY
     ReviewScheduleStatusEntity.EXEMPT_UNKNOWN -> ReviewScheduleStatusModel.EXEMPT_UNKNOWN
   }
 }

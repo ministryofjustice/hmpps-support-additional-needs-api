@@ -24,8 +24,15 @@ curious-api:
     id: curious-api-client-id
     secret: client-secret
 
+manage-users-api:
+  client:
+    id: manage-users-api-client-id
+    secret: client-secret
+
 apis:
   prisoner-search-api:
     url: http://localhost:9093
   curious-api:
     url: http://localhost:9094
+  manage-users-api:
+    url: http://localhost:9095
