@@ -56,7 +56,6 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(mentalHealthCondition.conditionType.key.code).isEqualTo("MENTAL_HEALTH")
     assertThat(mentalHealthCondition.source).isEqualTo(EntitySource.CONFIRMED_DIAGNOSIS)
     assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
-
   }
 
   private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(

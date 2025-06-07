@@ -63,7 +63,7 @@ abstract class IntegrationTestBase {
   @Autowired
   protected lateinit var conditionRepository: ConditionRepository
 
-    @Autowired
+  @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
 
   internal fun setAuthorisation(
