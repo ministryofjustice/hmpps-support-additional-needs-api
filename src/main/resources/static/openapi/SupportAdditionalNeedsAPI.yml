@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.2.2'
+  version: '0.2.3'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -53,6 +53,27 @@ paths:
           $ref: '#/components/responses/SearchByPrison'
         '400':
           $ref: '#/components/responses/400Error'
+
+  '/profile/{prisonNumber}/conditions':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Adds one or more conditions.
+      description: |
+       
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_EDUCATION_AND_WORK_PLAN__ACTIONPLANS__RW` (Read-Write)
+      tags:
+        - Condition
+      responses:
+        '200':
+          $ref: '#/components/responses/ConditionList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: post-conditions
+      requestBody:
+        $ref: '#/components/requestBodies/CreateConditionList'
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
@@ -144,6 +165,16 @@ components:
       scheme: bearer
       bearerFormat: JWT
 
+  #
+  # Request Body Definitions
+  # --------------------------------------------------------------------------------
+  requestBodies:
+    CreateConditionList:
+      description: Request body to create conditions for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateConditionsRequest'
   #
   # Schema and Enum Definitions
   # --------------------------------------------------------------------------------
@@ -396,6 +427,32 @@ components:
       required:
         - reviewSchedules
 
+    ConditionListResponse:
+      title: ConditionListResponse
+      description: A list of conditions for a prisoner.
+      type: object
+      properties:
+        conditions:
+          type: array
+          description: A List containing zero or more Conditions.
+          items:
+            $ref: '#/components/schemas/ConditionResponse'
+      required:
+        - conditions
+
+    CreateConditionsRequest:
+      title: ConditionListRequest
+      description: A request to create a list of conditions for a person.
+      type: object
+      properties:
+        conditions:
+          type: array
+          description: A List containing zero or more Conditions.
+          items:
+            $ref: '#/components/schemas/ConditionRequest'
+      required:
+        - conditions
+
     ReferenceDataListResponse:
       title: ReferenceDataListResponse
       description: A list of reference data for a given domain.
@@ -469,6 +526,60 @@ components:
         - reference
         - deadlineDate
         - status
+
+    ConditionResponse:
+      title: ReviewScheduleResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A conditions a person has.
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this condition
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        source:
+          $ref: '#/components/schemas/Source'
+        conditionType:
+          $ref: '#/components/schemas/ReferenceData'
+        active:
+          type: boolean
+          description: |
+            Whether or not this condition is active
+      required:
+        - reference
+        - source
+        - conditionType
+        - active
+
+    ConditionRequest:
+      title: ReviewScheduleRequest
+      type: object
+      description: |
+        A condition a person has.
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+        conditionTypeCode:
+          type: string
+          description: the reference data type code of the condition
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - source
+        - conditionType
+        - prisonId
+
+    Source:
+      title: Source
+      description: Enum of the source of the need.
+      type: string
+      enum:
+        - ALN_SCREENER
+        - SELF_DECLARED
+        - CONFIRMED_DIAGNOSIS
 
     ReviewScheduleStatus:
       title: ReviewScheduleStatus
@@ -633,6 +744,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SearchByPrisonResponse'
+
+    ConditionList:
+      description: Response body containing the a list of conditions.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConditionListResponse'
 
     GetReviewSchedules:
       description: Response body containing the a list of review schedules.

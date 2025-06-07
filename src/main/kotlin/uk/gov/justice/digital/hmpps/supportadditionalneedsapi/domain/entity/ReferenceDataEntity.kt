@@ -9,6 +9,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReferenceData
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -30,6 +31,8 @@ class ReferenceDataEntity(
   val id: UUID = UUID.randomUUID(),
 ) : ReferenceDataLookup by key {
   fun isActive() = deactivatedAt?.isBefore(LocalDateTime.now()) != true
+
+  fun toModel() = ReferenceData(code, description, listSequence, isActive())
 }
 
 interface ReferenceDataLookup {
