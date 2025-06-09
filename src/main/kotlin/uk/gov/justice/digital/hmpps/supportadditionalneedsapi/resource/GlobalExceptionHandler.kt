@@ -9,6 +9,7 @@ import org.springframework.dao.DataAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
@@ -145,6 +147,29 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, status.value(), RequestAttributes.SCOPE_REQUEST)
     val body = errorAttributes.getErrorResponse(request)
     return handleExceptionInternal(exception, body, HttpHeaders(), status, request)
+  }
+
+  /**
+   * Exception handler to return a 404 Not Found ErrorResponse
+   */
+  @ExceptionHandler(
+    value = [
+      ConditionNotFoundException::class,
+    ],
+  )
+  fun handleExceptionReturnNotFoundErrorResponse(
+    e: RuntimeException,
+    request: WebRequest,
+  ): ResponseEntity<ErrorResponse> {
+    log.info("Not found exception: {}", e.message)
+    return ResponseEntity
+      .status(NOT_FOUND)
+      .body(
+        ErrorResponse(
+          status = NOT_FOUND.value(),
+          userMessage = e.message,
+        ),
+      )
   }
 
   /**

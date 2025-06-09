@@ -8,11 +8,15 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Refe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ConditionMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateConditionRequest
+import java.util.*
 
 @Service
 class ConditionService(
@@ -81,5 +85,19 @@ class ConditionService(
     if (alreadyExists.isNotEmpty()) {
       throw DuplicateConditionException(prisonNumber, alreadyExists.joinToString(", "))
     }
+  }
+
+  fun updateCondition(
+    prisonNumber: String,
+    conditionReference: UUID,
+    request: UpdateConditionRequest,
+  ): ConditionResponse {
+    val condition = conditionRepository.getConditionEntityByPrisonNumberAndReference(prisonNumber, conditionReference)
+      ?: throw ConditionNotFoundException(prisonNumber, conditionReference)
+
+    condition.active = request.active
+    condition.updatedAtPrison = request.prisonId
+
+    return conditionMapper.toModel(conditionRepository.save(condition))
   }
 }

@@ -89,6 +89,36 @@ paths:
         '400':
           $ref: '#/components/responses/400Error'
       operationId: get-conditions
+  '/profile/{prisonNumber}/conditions/{conditionReference}':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: conditionReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific condition to update
+    put:
+      summary: Updates a single condition by UUID.
+      description: |
+        Updates a specific condition associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+      tags:
+        - Condition
+      operationId: update-condition
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateCondition'
+      responses:
+        '200':
+          $ref: '#/components/responses/Condition'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          description: Condition not found
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
@@ -190,6 +220,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CreateConditionsRequest'
+    UpdateCondition:
+      description: Request body to update a condition for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateConditionRequest'
   #
   # Schema and Enum Definitions
   # --------------------------------------------------------------------------------
@@ -543,7 +579,7 @@ components:
         - status
 
     ConditionResponse:
-      title: ReviewScheduleResponse
+      title: ConditionResponse
       type: object
       allOf:
         - $ref: '#/components/schemas/AuditedResource'
@@ -570,7 +606,7 @@ components:
         - active
 
     ConditionRequest:
-      title: ReviewScheduleRequest
+      title: ConditionRequest
       type: object
       description: |
         A condition a person has.
@@ -585,6 +621,22 @@ components:
       required:
         - source
         - conditionType
+        - prisonId
+
+    UpdateConditionRequest:
+      title: UpdateConditionRequest
+      type: object
+      description: |
+        request object to update a condition.
+      properties:
+        active:
+          type: boolean
+          description: Whether or not the condition is active
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prison the condition was updated at
+      required:
+        - active
         - prisonId
 
     Source:
@@ -776,6 +828,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ConditionListResponse'
+
+    Condition:
+      description: Response body containing a single condition.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConditionResponse'
 
     GetReviewSchedules:
       description: Response body containing the a list of review schedules.
