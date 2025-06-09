@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Lea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer.setLocalStackProperties
@@ -59,6 +60,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository
+
+  @Autowired
+  protected lateinit var referenceDataRepository: ReferenceDataRepository
 
   @Autowired
   protected lateinit var conditionRepository: ConditionRepository

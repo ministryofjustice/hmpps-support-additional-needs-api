@@ -40,4 +40,10 @@ class ConditionService(
 
     return ConditionListResponse(models)
   }
+
+  fun getConditions(prisonNumber: String): ConditionListResponse {
+    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
+    val models = conditions.map { conditionMapper.toModel(it) }
+    return ConditionListResponse(models)
+  }
 }
