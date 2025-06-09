@@ -16,3 +16,5 @@ data class NotActiveException(override val name: String, override val value: Str
 data class MultipleInvalidException(override val name: String, override val value: String) :
   IllegalArgumentException("Multiple invalid $name"),
   InvalidUserRequest
+
+class DuplicateConditionException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate condition(s) $conditions for prisoner [$prisonNumber]")

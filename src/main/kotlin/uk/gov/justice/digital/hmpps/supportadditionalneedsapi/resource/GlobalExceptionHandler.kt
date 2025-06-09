@@ -8,6 +8,7 @@ import org.springframework.beans.TypeMismatchException
 import org.springframework.dao.DataAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
 private val log = KotlinLogging.logger {}
@@ -144,4 +146,24 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     val body = errorAttributes.getErrorResponse(request)
     return handleExceptionInternal(exception, body, HttpHeaders(), status, request)
   }
+
+  /**
+   * Exception handler to return a 400 bad request.
+   */
+  @ExceptionHandler(
+    value = [
+      DuplicateConditionException::class,
+    ],
+  )
+  protected fun badRequestHandler(
+    e: RuntimeException,
+    request: WebRequest,
+  ): ResponseEntity<Any> = ResponseEntity
+    .status(BAD_REQUEST)
+    .body(
+      ErrorResponse(
+        status = BAD_REQUEST.value(),
+        userMessage = e.message,
+      ),
+    )
 }

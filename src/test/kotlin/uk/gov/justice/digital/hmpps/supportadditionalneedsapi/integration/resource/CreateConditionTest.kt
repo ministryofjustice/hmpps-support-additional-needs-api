@@ -58,6 +58,44 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
   }
 
+  @Test
+  fun `Fail when request contains duplicate condition codes`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val duplicateConditionsList = CreateConditionsRequest(
+      listOf(
+        ConditionRequest(
+          Source.SELF_DECLARED,
+          "BXI",
+          "ADHD",
+        ),
+        ConditionRequest(
+          Source.ALN_SCREENER,
+          "BXI",
+          "ADHD", // Duplicate code
+        ),
+      ),
+    )
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(duplicateConditionsList)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .expectBody(String::class.java)
+      .returnResult()
+
+    // Then
+    val errorMessage = response.responseBody
+    assertThat(errorMessage).contains("Attempted to add duplicate condition(s)")
+  }
+
   private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(
     listOf(
       ConditionRequest(
