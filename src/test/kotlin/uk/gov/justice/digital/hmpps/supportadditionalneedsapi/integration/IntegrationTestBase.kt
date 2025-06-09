@@ -11,6 +11,7 @@ import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer
@@ -58,6 +59,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository
+
+  @Autowired
+  protected lateinit var conditionRepository: ConditionRepository
 
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
