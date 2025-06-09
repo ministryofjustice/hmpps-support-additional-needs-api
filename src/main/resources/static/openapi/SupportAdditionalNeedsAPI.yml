@@ -721,8 +721,10 @@ components:
           format: uuid
           description: The unique reference of this challenge
           example: c88a6c48-97e2-4c04-93b5-98619966447b
-        source:
-          $ref: '#/components/schemas/Source'
+        fromALNScreener:
+          type: boolean
+          description: |
+            Whether or not this challenge is from the ALN screener
         challengeType:
           $ref: '#/components/schemas/ReferenceData'
         active:
@@ -731,7 +733,7 @@ components:
             Whether or not this challenge is active
       required:
         - reference
-        - source
+        - fromALNScreener
         - challengeType
         - active
 
@@ -775,15 +777,12 @@ components:
       description: |
         A challenge a person has.
       properties:
-        source:
-          $ref: '#/components/schemas/Source'
         challengeTypeCode:
           type: string
           description: the reference data type code of the challenge
         prisonId:
           $ref: '#/components/schemas/PrisonId'
       required:
-        - source
         - challengeType
         - prisonId
 
