@@ -17,5 +17,4 @@ data class MultipleInvalidException(override val name: String, override val valu
   IllegalArgumentException("Multiple invalid $name"),
   InvalidUserRequest
 
-class DuplicateConditionException(prisonNumber: String, conditions: String) :
-  RuntimeException("Attempted to add duplicate condition(s) $conditions for prisoner [$prisonNumber]")
+class DuplicateConditionException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate condition(s) $conditions for prisoner [$prisonNumber]")

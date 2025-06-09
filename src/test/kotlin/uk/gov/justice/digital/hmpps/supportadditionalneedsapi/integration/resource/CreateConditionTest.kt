@@ -77,7 +77,7 @@ class CreateConditionTest : IntegrationTestBase() {
           "BXI",
           "ADHD", // Duplicate code
         ),
-      )
+      ),
     )
 
     // When
@@ -95,8 +95,6 @@ class CreateConditionTest : IntegrationTestBase() {
     val errorMessage = response.responseBody
     assertThat(errorMessage).contains("Attempted to add duplicate condition(s)")
   }
-
-
 
   private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(
     listOf(

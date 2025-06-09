@@ -16,71 +16,70 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cre
 
 @Service
 class ConditionService(
-    private val conditionRepository: ConditionRepository,
-    private val referenceDataRepository: ReferenceDataRepository,
-    private val conditionMapper: ConditionMapper,
+  private val conditionRepository: ConditionRepository,
+  private val referenceDataRepository: ReferenceDataRepository,
+  private val conditionMapper: ConditionMapper,
 ) {
-    fun getConditions(prisonNumber: String): ConditionListResponse {
-        val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
-        val models = conditions.map { conditionMapper.toModel(it) }
-        return ConditionListResponse(models)
+  fun getConditions(prisonNumber: String): ConditionListResponse {
+    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
+    val models = conditions.map { conditionMapper.toModel(it) }
+    return ConditionListResponse(models)
+  }
+
+  fun createConditions(prisonNumber: String, request: CreateConditionsRequest): ConditionListResponse {
+    validateNoDuplicateCodesInRequest(prisonNumber, request)
+
+    val conditionTypeEntities = resolveConditionTypes(request)
+
+    validateNoDuplicateConditionsInDatabase(prisonNumber, conditionTypeEntities)
+
+    val conditions = conditionTypeEntities.map { (conditionType, requestItem) ->
+      ConditionEntity(
+        prisonNumber = prisonNumber,
+        conditionType = conditionType,
+        source = conditionMapper.toEntity(requestItem.source),
+        createdAtPrison = requestItem.prisonId,
+        updatedAtPrison = requestItem.prisonId,
+        active = true,
+      )
     }
 
-    fun createConditions(prisonNumber: String, request: CreateConditionsRequest): ConditionListResponse {
-        validateNoDuplicateCodesInRequest(prisonNumber, request)
+    val savedConditions = conditionRepository.saveAll(conditions)
+    return ConditionListResponse(savedConditions.map { conditionMapper.toModel(it) })
+  }
 
-        val conditionTypeEntities = resolveConditionTypes(request)
+  private fun validateNoDuplicateCodesInRequest(prisonNumber: String, request: CreateConditionsRequest) {
+    val duplicateCodes = request.conditions
+      .mapNotNull { it.conditionTypeCode }
+      .groupingBy { it }
+      .eachCount()
+      .filterValues { it > 1 }
+      .keys
 
-        validateNoDuplicateConditionsInDatabase(prisonNumber, conditionTypeEntities)
-
-        val conditions = conditionTypeEntities.map { (conditionType, requestItem) ->
-            ConditionEntity(
-                prisonNumber = prisonNumber,
-                conditionType = conditionType,
-                source = conditionMapper.toEntity(requestItem.source),
-                createdAtPrison = requestItem.prisonId,
-                updatedAtPrison = requestItem.prisonId,
-                active = true,
-            )
-        }
-
-        val savedConditions = conditionRepository.saveAll(conditions)
-        return ConditionListResponse(savedConditions.map { conditionMapper.toModel(it) })
+    if (duplicateCodes.isNotEmpty()) {
+      throw DuplicateConditionException(prisonNumber, duplicateCodes.joinToString(", "))
     }
+  }
 
-    private fun validateNoDuplicateCodesInRequest(prisonNumber: String, request: CreateConditionsRequest) {
-        val duplicateCodes = request.conditions
-            .mapNotNull { it.conditionTypeCode }
-            .groupingBy { it }
-            .eachCount()
-            .filterValues { it > 1 }
-            .keys
+  private fun resolveConditionTypes(request: CreateConditionsRequest): List<Pair<ReferenceDataEntity, ConditionRequest>> = request.conditions.map { conditionRequest ->
+    val code = requireNotNull(conditionRequest.conditionTypeCode) { "Condition type code must not be null" }
+    val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CONDITION, code))
+    type to conditionRequest
+  }
 
-        if (duplicateCodes.isNotEmpty()) {
-            throw DuplicateConditionException(prisonNumber, duplicateCodes.joinToString(", "))
-        }
+  private fun validateNoDuplicateConditionsInDatabase(
+    prisonNumber: String,
+    conditionTypeEntities: List<Pair<ReferenceDataEntity, ConditionRequest>>,
+  ) {
+    val existingCodes = conditionRepository.findAllByPrisonNumber(prisonNumber)
+      .map { it.conditionType.key.code }
+      .toSet()
+
+    val newCodes = conditionTypeEntities.map { (type, _) -> type.key.code }
+
+    val alreadyExists = newCodes.intersect(existingCodes)
+    if (alreadyExists.isNotEmpty()) {
+      throw DuplicateConditionException(prisonNumber, alreadyExists.joinToString(", "))
     }
-
-    private fun resolveConditionTypes(request: CreateConditionsRequest): List<Pair<ReferenceDataEntity, ConditionRequest>> =
-        request.conditions.map { conditionRequest ->
-            val code = requireNotNull(conditionRequest.conditionTypeCode) { "Condition type code must not be null" }
-            val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CONDITION, code))
-            type to conditionRequest
-        }
-
-    private fun validateNoDuplicateConditionsInDatabase(
-        prisonNumber: String,
-        conditionTypeEntities: List<Pair<ReferenceDataEntity, ConditionRequest>>,
-    ) {
-        val existingCodes = conditionRepository.findAllByPrisonNumber(prisonNumber)
-            .map { it.conditionType.key.code }
-            .toSet()
-
-        val newCodes = conditionTypeEntities.map { (type, _) -> type.key.code }
-
-        val alreadyExists = newCodes.intersect(existingCodes)
-        if (alreadyExists.isNotEmpty()) {
-            throw DuplicateConditionException(prisonNumber, alreadyExists.joinToString(", "))
-        }
-    }
+  }
 }

@@ -166,5 +166,4 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
         userMessage = e.message,
       ),
     )
-
 }
