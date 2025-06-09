@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.2.3'
+  version: '0.2.4'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -120,6 +120,72 @@ paths:
         '404':
           description: Condition not found
 
+  '/profile/{prisonNumber}/challenges':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Adds one or more challenges.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+      tags:
+        - Challenge
+      responses:
+        '200':
+          $ref: '#/components/responses/ChallengeList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: post-challenges
+      requestBody:
+        $ref: '#/components/requestBodies/CreateChallengeList'
+    get:
+      summary: Retrieves the list of challenges.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Only)
+      tags:
+        - Challenge
+      responses:
+        '200':
+          $ref: '#/components/responses/ChallengeList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-challenges
+  '/profile/{prisonNumber}/challenges/{challengeReference}':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: challengeReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific challenge to update
+    put:
+      summary: Updates a single challenge by UUID.
+      description: |
+        Updates a specific challenge associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+      tags:
+        - Challenge
+      operationId: update-challenge
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateChallenge'
+      responses:
+        '200':
+          $ref: '#/components/responses/Challenge'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          description: Challenge not found
+
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
@@ -226,6 +292,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UpdateConditionRequest'
+    CreateChallengeList:
+      description: Request body to create challenges for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateChallengesRequest'
+    UpdateChallenge:
+      description: Request body to update a challenge for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateChallengeRequest'
   #
   # Schema and Enum Definitions
   # --------------------------------------------------------------------------------
@@ -491,6 +569,19 @@ components:
       required:
         - conditions
 
+    ChallengeListResponse:
+      title: ChallengeListResponse
+      description: A list of challenges for a prisoner.
+      type: object
+      properties:
+        challenges:
+          type: array
+          description: A List containing zero or more Challenges.
+          items:
+            $ref: '#/components/schemas/ChallengeResponse'
+      required:
+        - challenges
+
     CreateConditionsRequest:
       title: ConditionListRequest
       description: A request to create a list of conditions for a person.
@@ -503,6 +594,18 @@ components:
             $ref: '#/components/schemas/ConditionRequest'
       required:
         - conditions
+    CreateChallengesRequest:
+      title: ChallengesListRequest
+      description: A request to create a list of challenges for a person.
+      type: object
+      properties:
+        challenges:
+          type: array
+          description: A List containing zero or more Challenges.
+          items:
+            $ref: '#/components/schemas/ChallengeRequest'
+      required:
+        - challenges
 
     ReferenceDataListResponse:
       title: ReferenceDataListResponse
@@ -584,7 +687,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/AuditedResource'
       description: |
-        A conditions a person has.
+        A condition a person has.
       properties:
         reference:
           type: string
@@ -603,6 +706,33 @@ components:
         - reference
         - source
         - conditionType
+        - active
+
+    ChallengeResponse:
+      title: ChallengeResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A challenge a person has.
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this challenge
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        source:
+          $ref: '#/components/schemas/Source'
+        challengeType:
+          $ref: '#/components/schemas/ReferenceData'
+        active:
+          type: boolean
+          description: |
+            Whether or not this challenge is active
+      required:
+        - reference
+        - source
+        - challengeType
         - active
 
     ConditionRequest:
@@ -635,6 +765,40 @@ components:
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the condition was updated at
+      required:
+        - active
+        - prisonId
+
+    ChallengeRequest:
+      title: ChallengeRequest
+      type: object
+      description: |
+        A challenge a person has.
+      properties:
+        source:
+          $ref: '#/components/schemas/Source'
+        challengeTypeCode:
+          type: string
+          description: the reference data type code of the challenge
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - source
+        - challengeType
+        - prisonId
+
+    UpdateChallengeRequest:
+      title: UpdateChallengeRequest
+      type: object
+      description: |
+        request object to update a challenge.
+      properties:
+        active:
+          type: boolean
+          description: Whether or not the challenge is active
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prison the challenge was updated at
       required:
         - active
         - prisonId
@@ -829,6 +993,23 @@ components:
           schema:
             $ref: '#/components/schemas/ConditionListResponse'
 
+    ChallengeList:
+      description: Response body containing the a list of challenges.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChallengeListResponse'
+
     Condition:
       description: Response body containing a single condition.
       headers:
@@ -845,6 +1026,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ConditionResponse'
+
+    Challenge:
+      description: Response body containing a single challenge.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ChallengeResponse'
 
     GetReviewSchedules:
       description: Response body containing the a list of review schedules.
