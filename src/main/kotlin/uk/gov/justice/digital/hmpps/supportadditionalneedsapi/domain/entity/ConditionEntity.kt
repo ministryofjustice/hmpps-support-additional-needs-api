@@ -38,13 +38,13 @@ data class ConditionEntity(
   val conditionType: ReferenceDataEntity,
 
   @Column(nullable = false)
-  val active: Boolean = true,
+  var active: Boolean = true,
 
   @Column(updatable = false)
   val createdAtPrison: String,
 
   @Column
-  val updatedAtPrison: String,
+  var updatedAtPrison: String,
 ) {
   @Id
   @GeneratedValue

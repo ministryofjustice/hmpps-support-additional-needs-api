@@ -9,4 +9,6 @@ import java.util.UUID
 interface ConditionRepository : JpaRepository<ConditionEntity, UUID> {
 
   fun findAllByPrisonNumber(prisonNumber: String): List<ConditionEntity>
+
+  fun getConditionEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): ConditionEntity?
 }
