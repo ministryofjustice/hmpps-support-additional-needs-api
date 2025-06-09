@@ -22,3 +22,7 @@ data class MultipleInvalidException(override val name: String, override val valu
 class DuplicateConditionException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate condition(s) $conditions for prisoner [$prisonNumber]")
 
 class ConditionNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Condition with reference [$reference] not found for prisoner [$prisonNumber]")
+
+class DuplicateChallengeException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate challenge(s) $conditions for prisoner [$prisonNumber]")
+
+class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] not found for prisoner [$prisonNumber]")
