@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -24,4 +25,10 @@ class ConditionController(private val conditionService: ConditionService) {
     @Valid
     @RequestBody request: CreateConditionsRequest,
   ): ConditionListResponse = conditionService.createConditions(prisonNumber, request)
+
+  @PreAuthorize(HAS_VIEW_ELSP)
+  @GetMapping
+  fun getConditions(
+    @PathVariable prisonNumber: String,
+  ): ConditionListResponse = conditionService.getConditions(prisonNumber)
 }

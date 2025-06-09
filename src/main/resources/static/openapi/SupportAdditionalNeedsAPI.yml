@@ -63,7 +63,7 @@ paths:
        
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_EDUCATION_AND_WORK_PLAN__ACTIONPLANS__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
       tags:
         - Condition
       responses:
@@ -74,6 +74,21 @@ paths:
       operationId: post-conditions
       requestBody:
         $ref: '#/components/requestBodies/CreateConditionList'
+    get:
+      summary: Retrieves the list of conditions.
+      description: |
+        
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Only)
+      tags:
+        - Condition
+      responses:
+        '200':
+          $ref: '#/components/responses/ConditionList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-conditions
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
