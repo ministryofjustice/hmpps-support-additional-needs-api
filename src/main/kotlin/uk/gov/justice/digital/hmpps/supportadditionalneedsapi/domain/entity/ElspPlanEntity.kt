@@ -35,7 +35,7 @@ data class ElspPlanEntity(
   val planCreatedByJobRole: String? = null,
 
   @Column(nullable = false)
-  var hasCurrentEhcp: Boolean = false,
+  val hasCurrentEhcp: Boolean = false,
 
   @Column
   val learningEnvironmentAdjustments: String? = null,
