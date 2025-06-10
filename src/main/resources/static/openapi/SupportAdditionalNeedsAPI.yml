@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.2.4'
+  version: '0.3.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -53,6 +53,44 @@ paths:
           $ref: '#/components/responses/SearchByPrison'
         '400':
           $ref: '#/components/responses/400Error'
+
+  '/profile/{prisonNumber}/education-support-plan':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Create an Education Support Plan
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Plan
+      operationId: create-education-support-plan
+      responses:
+        '201':
+          $ref: '#/components/responses/EducationSupportPlan'
+          description: The Education Support Plan that was created.
+        '400':
+          $ref: '#/components/responses/400Error'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateEducationSupportPlan'
+    get:
+      summary: Return an Education Support Plan
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Plan
+      operationId: get-education-support-plan
+      responses:
+        '200':
+          $ref: '#/components/responses/EducationSupportPlan'
+          description: The Education Support Plan for the specified person.
+        '404':
+          $ref: '#/components/responses/404Error'
+
 
   '/profile/{prisonNumber}/conditions':
     parameters:
@@ -304,6 +342,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UpdateChallengeRequest'
+    CreateEducationSupportPlan:
+      description: Request body to create an Education Support Plan for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateEducationSupportPlanRequest'
+
   #
   # Schema and Enum Definitions
   # --------------------------------------------------------------------------------
@@ -607,6 +652,83 @@ components:
       required:
         - challenges
 
+    CreateEducationSupportPlanRequest:
+      title: CreateEducationSupportPlanRequest
+      description: A request to create an Education Support Plan for a person.
+      type: object
+      properties:
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prisonId that the person is a resident at at the time of creating their plan.
+        hasCurrentEhcp:
+          type: boolean
+          description: Whether there is a current Education Health Care Plan in place for the person.
+          example: true
+        reviewDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the Education Support Plan should be reviewed.
+          example: '2023-11-19'
+        planCreatedBy:
+          description: Optional details of who created the Education Support Plan. If not specified the authenticated user is assumed to have created it.
+          $ref: '#/components/schemas/PlanContributor'
+        otherContributors:
+          description: |
+            Optional list of other people involved in the creation of the Education Support Plan.
+            
+            If provided, the list must contain at least 1 contributor. The list must not be empty.
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanContributor'
+          min: 1
+        learningEnvironmentAdjustments:
+          type: string
+          description: Optional details of any adjustments that are required for the person's learning environment or materials.
+          example: Needs to sit near the front of the class and used coloured overlays for reading text.
+          maxLength: 4096
+        teachingAdjustments:
+          type: string
+          description: Optional details of any adjustments that need to be made to the teaching or curriculum.
+          example: Ensure simple, clear and relevant examples of used when explaining concepts.
+          maxLength: 4096
+        specificTeachingSkills:
+          type: string
+          description: Optional details of any specific teaching skills or knowledge that are required.
+          example: British Sign Language.
+          maxLength: 4096
+        examAccessArrangements:
+          type: string
+          description: Optional details of any exam access arrangements that need to be made.
+          example: Escort Chris to the exam hall 10 minutes before other students to allow him time to settle and collect his thoughts before the exam.
+          maxLength: 4096
+        lnspSupport:
+          type: string
+          description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
+          example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
+          maxLength: 4096
+      required:
+        - prisonId
+        - hasCurrentEhcp
+        - reviewDate
+
+    PlanContributor:
+      title: PlanContributor
+      description: An object describing someone who contributed to the Education Support Plan
+      type: object
+      properties:
+        name:
+          type: string
+          example: Joe Bloggs
+          maxLength: 200
+        jobRole:
+          type: string
+          example: Education Instructor
+          maxLength: 200
+      required:
+        - name
+        - jobRole
+
     ReferenceDataListResponse:
       title: ReferenceDataListResponse
       description: A list of reference data for a given domain.
@@ -893,6 +1015,47 @@ components:
         - EXEMPT_UNKNOWN
         - COMPLETED
 
+    EducationSupportPlanResponse:
+      title: EducationSupportPlanResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: A person's Education Support Plan
+      properties:
+        hasCurrentEhcp:
+          type: boolean
+          description: Whether there is a current Education Health Care Plan in place for the person.
+          example: true
+        planCreatedBy:
+          description: Optional details of who created the Education Support Plan. If not present the plan was created by the createdBy/createdByDisplayName fields.
+          $ref: '#/components/schemas/PlanContributor'
+        otherContributors:
+          description: Optional list of other people involved in the creation of the Education Support Plan.
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanContributor'
+        learningEnvironmentAdjustments:
+          type: string
+          description: Optional details of any adjustments that are required for the person's learning environment or materials.
+          example: Needs to sit near the front of the class and used coloured overlays for reading text.
+        teachingAdjustments:
+          type: string
+          description: Optional details of any adjustments that need to be made to the teaching or curriculum.
+          example: Ensure simple, clear and relevant examples of used when explaining concepts.
+        specificTeachingSkills:
+          type: string
+          description: Optional details of any specific teaching skills or knowledge that are required.
+          example: British Sign Language.
+        examAccessArrangements:
+          type: string
+          description: Optional details of any exam access arrangements that need to be made.
+          example: Escort Chris to the exam hall 10 minutes before other students to allow him time to settle and collect his thoughts before the exam.
+        lnspSupport:
+          type: string
+          description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
+          example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
+      required:
+        - hasCurrentEhcp
 
   #
   # Response Body Definitions
@@ -1093,6 +1256,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PlanCreationSchedulesResponse'
+
+    EducationSupportPlan:
+      description: Response body containing an Education Support Plan.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EducationSupportPlanResponse'
 
 
   #
