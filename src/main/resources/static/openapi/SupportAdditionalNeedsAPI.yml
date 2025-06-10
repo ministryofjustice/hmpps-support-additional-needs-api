@@ -660,7 +660,7 @@ components:
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prisonId that the person is a resident at at the time of creating their plan.
-        currentEhcp:
+        hasCurrentEhcp:
           type: boolean
           description: Whether there is a current Education Health Care Plan in place for the person.
           example: true
@@ -709,7 +709,7 @@ components:
           maxLength: 4096
       required:
         - prisonId
-        - currentEhcp
+        - hasCurrentEhcp
         - reviewDate
 
     PlanContributor:
@@ -1023,7 +1023,7 @@ components:
         - $ref: '#/components/schemas/AuditedResource'
       description: A person's Education Support Plan
       properties:
-        currentEhcp:
+        hasCurrentEhcp:
           type: boolean
           description: Whether there is a current Education Health Care Plan in place for the person.
           example: true
@@ -1056,7 +1056,7 @@ components:
           description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
           example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
       required:
-        - currentEhcp
+        - hasCurrentEhcp
 
   #
   # Response Body Definitions
