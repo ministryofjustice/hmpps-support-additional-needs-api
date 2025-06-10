@@ -26,3 +26,7 @@ class ConditionNotFoundException(prisonNumber: String, reference: UUID) : Runtim
 class DuplicateChallengeException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate challenge(s) $conditions for prisoner [$prisonNumber]")
 
 class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] not found for prisoner [$prisonNumber]")
+
+class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
+
+class PlanNotFoundException(prisonNumber: String) : RuntimeException("ELSP plan not found for prisoner [$prisonNumber]")

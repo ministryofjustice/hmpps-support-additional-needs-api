@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Lea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.HmppsPrisonerSearchApiExtension.Companion.hmppsPrisonerSearchApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 
 @ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class)
@@ -70,6 +72,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var challengeRepository: ChallengeRepository
+
+  @Autowired
+  protected lateinit var elspPlanRepository: ElspPlanRepository
+
+  @Autowired
+  protected lateinit var elspPlanService: EducationSupportPlanService
 
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper

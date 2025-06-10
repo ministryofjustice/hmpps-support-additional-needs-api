@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
+import jakarta.transaction.Transactional
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -20,6 +21,7 @@ import java.util.*
 
 @RestController
 @RequestMapping("/profile/{prisonNumber}/conditions")
+@Transactional
 class ConditionController(private val conditionService: ConditionService) {
   @PreAuthorize(HAS_EDIT_ELSP)
   @PostMapping
