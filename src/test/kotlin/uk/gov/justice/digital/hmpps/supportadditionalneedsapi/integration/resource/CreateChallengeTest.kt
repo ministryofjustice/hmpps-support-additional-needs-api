@@ -45,9 +45,11 @@ class CreateChallengeTest : IntegrationTestBase() {
     assertThat(memoryChallenge.howIdentified).isEqualTo("In the classroom by tutor.")
     assertThat(memoryChallenge.symptoms).isEqualTo("Struggles to remember a sequence of numbers")
 
-    val processingSpeedChallenge = savedChallenges.find { it.challengeType.key.code == "PROCESSING_SPEED" }
+    val processingSpeedChallenge = savedChallenges.find { it.challengeType.key.code == "SPEED_OF_CALCULATION" }
     assertThat(processingSpeedChallenge!!.prisonNumber).isEqualTo(prisonNumber)
-    assertThat(processingSpeedChallenge.challengeType.key.code).isEqualTo("PROCESSING_SPEED")
+    assertThat(processingSpeedChallenge.challengeType.key.code).isEqualTo("SPEED_OF_CALCULATION")
+    assertThat(processingSpeedChallenge.challengeType.areaDescription).isEqualTo("Cognition & Learning")
+    assertThat(processingSpeedChallenge.challengeType.categoryDescription).isEqualTo("Numeracy Skills")
     assertThat(processingSpeedChallenge.fromALNScreener).isFalse()
     assertThat(processingSpeedChallenge.createdAtPrison).isEqualTo("BXI")
   }
@@ -98,7 +100,7 @@ class CreateChallengeTest : IntegrationTestBase() {
       ),
       ChallengeRequest(
         prisonId = "BXI",
-        challengeTypeCode = "PROCESSING_SPEED",
+        challengeTypeCode = "SPEED_OF_CALCULATION",
       ),
     ),
   )

@@ -31,13 +31,6 @@ class ChallengeService(
   }
 
   fun createChallenges(prisonNumber: String, request: CreateChallengesRequest): ChallengeListResponse {
-    /**
-     * TODO
-     * there is talk of having two levels of challenge type in the ALN Screener version of this entity.
-     * For now there you can only have one of each challenge type but there is potentially multiple sub types
-     * in the ALN world so will need to think about the multiple type validation when it comes along...
-     */
-
     validateNoDuplicateCodesInRequest(prisonNumber, request)
 
     val challengeTypeEntities = resolveChallengeTypes(request)
