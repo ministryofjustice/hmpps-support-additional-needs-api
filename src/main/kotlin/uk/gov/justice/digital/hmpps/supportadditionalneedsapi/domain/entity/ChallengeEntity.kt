@@ -15,6 +15,7 @@ import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
+import java.time.LocalDate
 import java.util.UUID
 
 @Entity
@@ -33,6 +34,15 @@ data class ChallengeEntity(
   @ManyToOne(optional = false)
   @JoinColumn(name = "challenge_type_id", referencedColumnName = "id")
   val challengeType: ReferenceDataEntity,
+
+  @Column
+  val symptoms: String? = null,
+
+  @Column
+  val howIdentified: String? = null,
+
+  @Column
+  val screeningDate: LocalDate? = null,
 
   @Column(nullable = false)
   var active: Boolean = true,

@@ -752,6 +752,18 @@ components:
         description:
           type: string
           description: The description of the reference data code
+        categoryCode:
+          type: string
+          description: The short code of a reference data category
+        categoryDescription:
+          type: string
+          description: The description of the reference data category
+        areaCode:
+          type: string
+          description: The short code of a reference data area
+        areaDescription:
+          type: string
+          description: The description of the reference data area
         listSequence:
           type: integer
           format: int32
@@ -820,6 +832,9 @@ components:
           $ref: '#/components/schemas/Source'
         conditionType:
           $ref: '#/components/schemas/ReferenceData'
+        detail:
+          type: string
+          description: additional detail about the condition
         active:
           type: boolean
           description: |
@@ -847,6 +862,20 @@ components:
           type: boolean
           description: |
             Whether or not this challenge is from the ALN screener
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this challenge
+          example: John struggles to read text on white background.
+        howIdentified:
+          type: string
+          description: Details about how this challenge was identified
+          example: The trainer noticed that John could read better on a cream background.
+        screeningDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the screening was carried out.
+          example: '2023-11-19'
         challengeType:
           $ref: '#/components/schemas/ReferenceData'
         active:
@@ -870,6 +899,9 @@ components:
         conditionTypeCode:
           type: string
           description: the reference data type code of the condition
+        detail:
+          type: string
+          description: additional detail about the condition
         prisonId:
           $ref: '#/components/schemas/PrisonId'
       required:
@@ -904,6 +936,14 @@ components:
           description: the reference data type code of the challenge
         prisonId:
           $ref: '#/components/schemas/PrisonId'
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this challenge
+          example: John struggles to read text on white background.
+        howIdentified:
+          type: string
+          description: Details about how this challenge was identified
+          example: The trainer noticed that John could read better on a cream background.
       required:
         - challengeType
         - prisonId
@@ -929,7 +969,6 @@ components:
       description: Enum of the source of the need.
       type: string
       enum:
-        - ALN_SCREENER
         - SELF_DECLARED
         - CONFIRMED_DIAGNOSIS
 

@@ -59,7 +59,7 @@ data class ElspPlanEntity(
   var updatedAtPrison: String,
 
   @OneToMany(mappedBy = "elspPlan", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
-  var otherContributors: MutableList<OtherContributorEntity> = mutableListOf(),
+  val otherContributors: MutableList<OtherContributorEntity> = mutableListOf(),
 ) {
   @Id
   @GeneratedValue

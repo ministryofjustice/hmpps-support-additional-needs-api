@@ -44,11 +44,12 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(adhdCondition.conditionType.key.code).isEqualTo("ADHD")
     assertThat(adhdCondition.source).isEqualTo(EntitySource.SELF_DECLARED)
     assertThat(adhdCondition.createdAtPrison).isEqualTo("BXI")
+    assertThat(adhdCondition.detail).isEqualTo("Bob struggles to sit still for longer than one hour")
 
     val dyslexiaCondition = savedConditions.find { it.conditionType.key.code == "DYSLEXIA" }
     assertThat(dyslexiaCondition!!.prisonNumber).isEqualTo(prisonNumber)
     assertThat(dyslexiaCondition.conditionType.key.code).isEqualTo("DYSLEXIA")
-    assertThat(dyslexiaCondition.source).isEqualTo(EntitySource.ALN_SCREENER)
+    assertThat(dyslexiaCondition.source).isEqualTo(EntitySource.SELF_DECLARED)
     assertThat(dyslexiaCondition.createdAtPrison).isEqualTo("BXI")
 
     val mentalHealthCondition = savedConditions.find { it.conditionType.key.code == "MENTAL_HEALTH" }
@@ -73,7 +74,7 @@ class CreateConditionTest : IntegrationTestBase() {
           "ADHD",
         ),
         ConditionRequest(
-          Source.ALN_SCREENER,
+          Source.SELF_DECLARED,
           "BXI",
           "ADHD", // Duplicate code
         ),
@@ -99,12 +100,13 @@ class CreateConditionTest : IntegrationTestBase() {
   private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(
     listOf(
       ConditionRequest(
-        Source.SELF_DECLARED,
-        "BXI",
-        "ADHD",
+        source = Source.SELF_DECLARED,
+        prisonId = "BXI",
+        conditionTypeCode = "ADHD",
+        detail = "Bob struggles to sit still for longer than one hour",
       ),
       ConditionRequest(
-        Source.ALN_SCREENER,
+        Source.SELF_DECLARED,
         "BXI",
         "DYSLEXIA",
       ),

@@ -28,26 +28,20 @@ class GetReferenceDataTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.referenceDataList.size).isEqualTo(18)
+    assertThat(actual!!.referenceDataList.size).isEqualTo(22)
 
     // Example check for specific entry (e.g. code = "ADHD")
     val adhd = actual.referenceDataList.find { it.code == "ADHD" }
     assertThat(adhd).isNotNull()
-    assertThat(adhd!!.description).isEqualTo("Attention Deficit Hyperactivity Disorder")
-    assertThat(adhd.listSequence).isEqualTo(3)
+    assertThat(adhd!!.description).isEqualTo("Attention Deficit Hyperactivity Disorder (ADHD / ADD)")
+    assertThat(adhd.listSequence).isEqualTo(1)
     assertThat(adhd.active).isNotEqualTo(false)
-
-    val firstItem = actual.referenceDataList.minByOrNull { it.listSequence ?: Int.MAX_VALUE }
-    assertThat(firstItem).isNotNull()
-    assertThat(firstItem!!.code).isEqualTo("ABI")
-
-    val lastItem = actual.referenceDataList.maxByOrNull { it.listSequence ?: Int.MIN_VALUE }
-    assertThat(lastItem).isNotNull()
-    assertThat(lastItem!!.code).isEqualTo("OTHER")
+    assertThat(adhd.categoryCode).isEqualTo("LEARNING_DIFFICULTY")
+    assertThat(adhd.categoryDescription).isEqualTo("Learning Difficulty")
 
     // Ensure no duplicate codes
     val uniqueCodes = actual.referenceDataList.map { it.code }.toSet()
-    assertThat(uniqueCodes.size).isEqualTo(18)
+    assertThat(uniqueCodes.size).isEqualTo(actual.referenceDataList.size)
 
     // Ensure all entries have non-null descriptions
     assertThat(actual.referenceDataList).allMatch { it.description != null }
