@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -38,14 +37,7 @@ class ConditionService(
     validateNoDuplicateConditionsInDatabase(prisonNumber, conditionTypeEntities)
 
     val conditions = conditionTypeEntities.map { (conditionType, requestItem) ->
-      ConditionEntity(
-        prisonNumber = prisonNumber,
-        conditionType = conditionType,
-        source = conditionMapper.toEntity(requestItem.source),
-        createdAtPrison = requestItem.prisonId,
-        updatedAtPrison = requestItem.prisonId,
-        active = true,
-      )
+      conditionMapper.toEntity(prisonNumber, conditionType, requestItem)
     }
 
     val savedConditions = conditionRepository.saveAll(conditions)

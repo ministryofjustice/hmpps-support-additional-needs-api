@@ -50,6 +50,8 @@ class ChallengeService(
         challengeType = challengeType,
         createdAtPrison = requestItem.prisonId,
         updatedAtPrison = requestItem.prisonId,
+        symptoms = requestItem.symptoms,
+        howIdentified = requestItem.howIdentified,
         active = true,
       )
     }

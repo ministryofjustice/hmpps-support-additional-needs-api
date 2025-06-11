@@ -26,6 +26,9 @@ class ChallengeMapper(
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       challengeType = challengeType.toModel(),
+      symptoms = symptoms,
+      howIdentified = howIdentified,
+      screeningDate = screeningDate,
       active = active,
     )
   }

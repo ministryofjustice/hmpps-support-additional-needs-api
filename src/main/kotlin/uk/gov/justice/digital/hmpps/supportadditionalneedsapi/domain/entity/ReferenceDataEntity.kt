@@ -32,7 +32,16 @@ class ReferenceDataEntity(
 ) : ReferenceDataLookup by key {
   fun isActive() = deactivatedAt?.isBefore(LocalDateTime.now()) != true
 
-  fun toModel() = ReferenceData(code, description, listSequence, isActive())
+  fun toModel() = ReferenceData(
+    code,
+    description,
+    categoryCode,
+    categoryDescription,
+    areaCode,
+    areaDescription,
+    listSequence,
+    isActive(),
+  )
 }
 
 interface ReferenceDataLookup {

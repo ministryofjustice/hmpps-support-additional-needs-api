@@ -13,6 +13,15 @@ class ReferenceDataService(
 ) {
   fun getReferenceDataForDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainOrderByListSequenceAsc(domain).filter { includeInactive || it.isActive() }
     .map {
-      ReferenceData(it.code, it.description, it.listSequence, it.isActive())
+      ReferenceData(
+        it.code,
+        it.description,
+        it.categoryCode,
+        it.categoryDescription,
+        it.areaCode,
+        it.areaDescription,
+        it.listSequence,
+        it.isActive(),
+      )
     }
 }

@@ -37,6 +37,9 @@ data class ConditionEntity(
   @JoinColumn(name = "condition_type_id", referencedColumnName = "id")
   val conditionType: ReferenceDataEntity,
 
+  @Column
+  val detail: String? = null,
+
   @Column(nullable = false)
   var active: Boolean = true,
 
@@ -69,7 +72,6 @@ data class ConditionEntity(
 }
 
 enum class Source {
-  ALN_SCREENER,
   SELF_DECLARED,
   CONFIRMED_DIAGNOSIS,
 }

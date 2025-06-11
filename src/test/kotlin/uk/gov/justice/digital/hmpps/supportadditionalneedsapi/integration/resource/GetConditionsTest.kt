@@ -40,7 +40,7 @@ class GetConditionsTest : IntegrationTestBase() {
         ),
         ConditionEntity(
           prisonNumber = prisonNumber,
-          source = Source.ALN_SCREENER,
+          source = Source.SELF_DECLARED,
           conditionType = dyslexia,
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
