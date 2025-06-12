@@ -1,17 +1,17 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.3.0'
+  version: '0.3.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
     email: learningandworkprogress@digital.justice.gov.uk
 servers:
-  - url: https://support-additional-needs-api-dev.hmpps.service.justice.gov.uk
+  - url: https://support-for-additional-needs-api-dev.hmpps.service.justice.gov.uk
     description: Development
-  - url: https://support-additional-needs-api-preprod.hmpps.service.justice.gov.uk
+  - url: https://support-for-additional-needs-api-preprod.hmpps.service.justice.gov.uk
     description: Pre-Production
-  - url: https://support-additional-needs-api.hmpps.service.justice.gov.uk
+  - url: https://support-for-additional-needs-api.hmpps.service.justice.gov.uk
     description: Production
   - url: http://localhost:8080
     description: Local
