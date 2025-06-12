@@ -23,7 +23,7 @@ class GetChallengesTest : IntegrationTestBase() {
 
     val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "MEMORY"))
       ?: throw IllegalStateException("Reference data not found")
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY"))
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
       ?: throw IllegalStateException("Reference data not found")
     challengeRepository.saveAll(
       listOf(
@@ -57,7 +57,7 @@ class GetChallengesTest : IntegrationTestBase() {
     assertThat(actual!!.challenges).hasSize(2)
 
     val challengeCodes = actual.challenges.map { it.challengeType.code }
-    assertThat(challengeCodes).containsExactlyInAnyOrder("MEMORY", "SENSORY")
+    assertThat(challengeCodes).containsExactlyInAnyOrder("MEMORY", "SENSORY_PROCESSING")
   }
 
   @Test
