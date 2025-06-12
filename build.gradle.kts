@@ -5,9 +5,9 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.1.0"
-  kotlin("plugin.spring") version "2.1.20"
-  kotlin("plugin.jpa") version "2.1.20"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
+  kotlin("plugin.spring") version "2.1.21"
+  kotlin("plugin.jpa") version "2.1.21"
   id("org.openapi.generator") version "7.13.0"
 
   `java-test-fixtures`
@@ -27,14 +27,14 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val postgresqlVersion = "42.7.5"
+val postgresqlVersion = "42.7.7"
 val kotlinLoggingVersion = "3.0.5"
-val testContainersVersion = "1.21.0"
+val testContainersVersion = "1.21.1"
 val buildDirectory: Directory = layout.buildDirectory.get()
-val springdocOpenapiVersion = "2.8.6"
+val springdocOpenapiVersion = "2.8.9"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.6")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
@@ -45,9 +45,9 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
 
   // Test dependencies
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.3")
-  testImplementation("org.wiremock:wiremock-standalone:3.13.0")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.26") {
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.6")
+  testImplementation("org.wiremock:wiremock-standalone:3.13.1")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.29") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
