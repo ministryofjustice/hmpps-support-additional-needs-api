@@ -21,4 +21,12 @@ class ReferenceDataController(
     @PathVariable @Parameter(description = "Reference data domain.", required = true) domain: Domain,
     @Parameter(description = "Include inactive reference data. Defaults to false") includeInactive: Boolean = false,
   ): ReferenceDataListResponse = ReferenceDataListResponse(referenceDataService.getReferenceDataForDomain(domain, includeInactive))
+
+  @GetMapping
+  @PreAuthorize(HAS_VIEW_ELSP)
+  @RequestMapping(path = ["/categories"])
+  fun getReferenceDataCategories(
+    @PathVariable @Parameter(description = "Reference data domain.", required = true) domain: Domain,
+    @Parameter(description = "Include inactive reference data. Defaults to false") includeInactive: Boolean = false,
+  ): ReferenceDataListResponse = ReferenceDataListResponse(referenceDataService.getReferenceDataCategoriesDomain(domain, includeInactive))
 }
