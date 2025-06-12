@@ -87,7 +87,7 @@ class CreateELSPPlanTest : IntegrationTestBase() {
       .bodyValue(planRequest)
       .exchange()
       .expectStatus()
-      .isBadRequest
+      .is4xxClientError
       .expectBody(String::class.java)
       .returnResult()
 

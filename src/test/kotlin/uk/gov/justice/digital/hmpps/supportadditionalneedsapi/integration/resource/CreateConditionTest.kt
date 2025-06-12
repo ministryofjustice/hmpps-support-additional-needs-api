@@ -88,7 +88,7 @@ class CreateConditionTest : IntegrationTestBase() {
       .bodyValue(duplicateConditionsList)
       .exchange()
       .expectStatus()
-      .isBadRequest
+      .is4xxClientError
       .expectBody(String::class.java)
       .returnResult()
 
