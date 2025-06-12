@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.3.1'
+  version: '0.3.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -285,6 +285,48 @@ paths:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       operationId: getReferenceData
+      parameters:
+        - name: domain
+          in: path
+          description: Reference data domain.
+          required: true
+          schema:
+            type: string
+            enum:
+              - CONDITION
+              - CHALLENGE
+              - STRENGTH
+        - name: includeInactive
+          in: query
+          description: Include inactive reference data. Defaults to false
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          $ref: '#/components/responses/ReferenceDataResponse'
+        '404':
+          $ref: '#/components/responses/404Error'
+  '/reference-data/{domain}/categories':
+    get:
+      tags:
+        - Reference Data
+      summary: Retrieve default reference data at the category level.
+      description: |-
+        Each category of reference data can have a default value. So that if someone wants to choose reference data
+        at the category level then this endpoint will return the reference data to be used.  
+        
+        For example in the domain CHALLENGE if someone wants the categories then it will return the default reference data type 
+        for each category currently there are 9 categories. an example of one of them isLITERACY_SKILLS, this will return the 
+        ChallengeType that should be used ie LITERACY_SKILLS_DEFAULT.
+        
+        If no defaults are set for a category then this will return no results. 
+        
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      operationId: getReferenceDataCategories
       parameters:
         - name: domain
           in: path

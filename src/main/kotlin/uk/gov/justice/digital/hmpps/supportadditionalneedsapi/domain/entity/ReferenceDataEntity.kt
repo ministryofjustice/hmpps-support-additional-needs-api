@@ -26,6 +26,8 @@ class ReferenceDataEntity(
   val categoryDescription: String?,
   val areaCode: String?,
   val areaDescription: String?,
+  val defaultForCategory: Boolean?,
+  val screenerOption: Boolean?,
   @Id
   @Column(name = "id")
   val id: UUID = UUID.randomUUID(),

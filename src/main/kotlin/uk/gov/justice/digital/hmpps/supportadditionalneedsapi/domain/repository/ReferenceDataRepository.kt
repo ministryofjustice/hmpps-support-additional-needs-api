@@ -14,6 +14,8 @@ import java.util.UUID
 interface ReferenceDataRepository : JpaRepository<ReferenceDataEntity, UUID> {
   fun findByKeyDomainOrderByListSequenceAsc(domain: Domain): Collection<ReferenceDataEntity>
 
+  fun findByKeyDomainAndDefaultForCategoryIsTrueOrderByListSequenceAsc(domain: Domain): Collection<ReferenceDataEntity>
+
   fun findByKey(key: ReferenceDataKey): ReferenceDataEntity?
 }
 

@@ -24,4 +24,18 @@ class ReferenceDataService(
         it.isActive(),
       )
     }
+
+  fun getReferenceDataCategoriesDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainAndDefaultForCategoryIsTrueOrderByListSequenceAsc(domain).filter { includeInactive || it.isActive() }
+    .map {
+      ReferenceData(
+        it.code,
+        it.description,
+        it.categoryCode,
+        it.categoryDescription,
+        it.areaCode,
+        it.areaDescription,
+        it.listSequence,
+        it.isActive(),
+      )
+    }
 }
