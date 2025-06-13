@@ -2,11 +2,14 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 
 class CreateChallengeTest : IntegrationTestBase() {
   companion object {
@@ -82,12 +85,14 @@ class CreateChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .expectBody(String::class.java)
+      .expectBody(ErrorResponse::class.java)
       .returnResult()
 
     // Then
-    val errorMessage = response.responseBody
-    assertThat(errorMessage).contains("Attempted to add duplicate challenge(s)")
+    val actual = response.responseBody
+    assertThat(actual)
+      .hasStatus(HttpStatus.CONFLICT.value())
+      .hasUserMessage("Attempted to add duplicate challenge(s) MEMORY for prisoner [$prisonNumber]")
   }
 
   private fun createChallengesList(prisonNumber: String): CreateChallengesRequest = CreateChallengesRequest(

@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateChallengeRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.util.*
 
 class UpdateChallengesTest : IntegrationTestBase() {
@@ -88,12 +90,13 @@ class UpdateChallengesTest : IntegrationTestBase() {
       .bodyValue(updateChallengeRequest)
       .exchange()
       .expectStatus()
-      .is4xxClientError
+      .isNotFound
       .returnResult(ErrorResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
-    assertThat(actual!!.userMessage).isEqualTo("Challenge with reference [$ref] not found for prisoner [$prisonNumber]")
+    assertThat(actual)
+      .hasStatus(HttpStatus.NOT_FOUND.value())
+      .hasUserMessage("Challenge with reference [$ref] not found for prisoner [$prisonNumber]")
   }
 }
