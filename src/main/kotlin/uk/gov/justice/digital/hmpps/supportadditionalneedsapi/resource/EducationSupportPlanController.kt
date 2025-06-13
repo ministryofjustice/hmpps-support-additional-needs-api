@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,6 +25,7 @@ class EducationSupportPlanController(private val educationSupportPlanService: Ed
   @PreAuthorize(HAS_EDIT_ELSP)
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @Transactional
   fun createEducationSupportPlan(
     @PathVariable prisonNumber: String,
     @Valid @RequestBody request: CreateEducationSupportPlanRequest,

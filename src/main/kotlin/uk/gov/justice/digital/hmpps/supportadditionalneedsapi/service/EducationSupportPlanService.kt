@@ -22,7 +22,7 @@ class EducationSupportPlanService(
     checkPlanDoesNotExist(prisonNumber)
 
     val entity = elspPlanMapper.toEntity(prisonNumber, request)
-    val savedEntity = elspPlanRepository.save(entity)
+    val savedEntity = elspPlanRepository.saveAndFlush(entity)
 
     return elspPlanMapper.toModel(savedEntity)
 

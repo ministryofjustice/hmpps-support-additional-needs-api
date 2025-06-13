@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.3.2'
+  version: '0.3.3'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -60,6 +60,11 @@ paths:
     post:
       summary: Create an Education Support Plan
       description: |
+        Creates an Education Support Plan for the specified prisoner.
+
+        A prisoner can only have a maximum of one Education Support Plans, and a 409 is returned if a 2nd is attempted
+        to be created.
+
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
@@ -72,6 +77,9 @@ paths:
           description: The Education Support Plan that was created.
         '400':
           $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+          description: A 409 is returned when the specified prisoner already has an Education Support Plan.
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlan'
     get:
@@ -96,9 +104,13 @@ paths:
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
     post:
-      summary: Adds one or more conditions.
+      summary: Adds one or more Conditions.
       description: |
-       
+        Adds one or more Conditions to the specified prisoner's list of Conditions.
+        
+        A prisoner cannot have multiple or duplicate Conditions of the same type recorded. A 409 response is returned if
+        the request contains any Conditions that the prisoner already has.
+        
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
@@ -109,6 +121,11 @@ paths:
           $ref: '#/components/responses/ConditionList'
         '400':
           $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+          description: |
+            A 409 response is returned if the request contains any Conditions that are already recorded for
+            the specified prisoner.
       operationId: post-conditions
       requestBody:
         $ref: '#/components/requestBodies/CreateConditionList'
@@ -164,7 +181,11 @@ paths:
     post:
       summary: Adds one or more challenges.
       description: |
-
+        Adds one or more Challenges to the specified prisoner's list of Challenges.
+        
+        A prisoner cannot have multiple or duplicate Challenges of the same type recorded. A 409 response is returned if
+        the request contains any Challenges that the prisoner already has.
+                
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
@@ -175,6 +196,11 @@ paths:
           $ref: '#/components/responses/ChallengeList'
         '400':
           $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+          description: |
+            A 409 response is returned if the request contains any Conditions that are already recorded for
+            the specified prisoner.
       operationId: post-challenges
       requestBody:
         $ref: '#/components/requestBodies/CreateChallengeList'
@@ -1200,7 +1226,7 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
           example:
             status: 409
-            userMessage: 'A resource with reference [c88a6c48-97e2-4c04-93b5-98619966447b] has an unexpected status = ARCHIVED'
+            userMessage: 'A resource with reference [c88a6c48-97e2-4c04-93b5-98619966447b] already exists for prisoner [A1234BC]'
 
     SearchByPrison:
       description: Response body containing a Search by prison results response.

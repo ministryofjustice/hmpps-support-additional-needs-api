@@ -2,12 +2,15 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source as EntitySource
 
 class CreateConditionTest : IntegrationTestBase() {
@@ -88,13 +91,15 @@ class CreateConditionTest : IntegrationTestBase() {
       .bodyValue(duplicateConditionsList)
       .exchange()
       .expectStatus()
-      .isBadRequest
-      .expectBody(String::class.java)
+      .is4xxClientError
+      .expectBody(ErrorResponse::class.java)
       .returnResult()
 
     // Then
-    val errorMessage = response.responseBody
-    assertThat(errorMessage).contains("Attempted to add duplicate condition(s)")
+    val actual = response.responseBody
+    assertThat(actual)
+      .hasStatus(HttpStatus.CONFLICT.value())
+      .hasUserMessage("Attempted to add duplicate condition(s) ADHD for prisoner [$prisonNumber]")
   }
 
   private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(

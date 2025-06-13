@@ -8,7 +8,7 @@ import org.springframework.beans.TypeMismatchException
 import org.springframework.dao.DataAccessException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
@@ -179,7 +179,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
   }
 
   /**
-   * Exception handler to return a 400 bad request.
+   * Exception handler to return a 409 conflict error.
    */
   @ExceptionHandler(
     value = [
@@ -188,15 +188,18 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       PersonAlreadyHasAPlanException::class,
     ],
   )
-  protected fun badRequestHandler(
+  protected fun handleExceptionReturnConflictErrorResponse(
     e: RuntimeException,
     request: WebRequest,
-  ): ResponseEntity<Any> = ResponseEntity
-    .status(BAD_REQUEST)
-    .body(
-      ErrorResponse(
-        status = BAD_REQUEST.value(),
-        userMessage = e.message,
-      ),
-    )
+  ): ResponseEntity<Any> {
+    log.info("Conflict exception: {}", e.message)
+    return ResponseEntity
+      .status(CONFLICT)
+      .body(
+        ErrorResponse(
+          status = CONFLICT.value(),
+          userMessage = e.message,
+        ),
+      )
+  }
 }

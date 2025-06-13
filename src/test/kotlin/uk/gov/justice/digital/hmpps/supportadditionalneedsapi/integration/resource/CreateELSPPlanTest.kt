@@ -2,11 +2,14 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.time.LocalDate
 
 class CreateELSPPlanTest : IntegrationTestBase() {
@@ -87,12 +90,14 @@ class CreateELSPPlanTest : IntegrationTestBase() {
       .bodyValue(planRequest)
       .exchange()
       .expectStatus()
-      .isBadRequest
-      .expectBody(String::class.java)
+      .is4xxClientError
+      .expectBody(ErrorResponse::class.java)
       .returnResult()
 
     // Then
-    val errorMessage = response.responseBody
-    assertThat(errorMessage).contains("Prisoner [$prisonNumber] already has a plan")
+    val actual = response.responseBody
+    assertThat(actual)
+      .hasStatus(HttpStatus.CONFLICT.value())
+      .hasUserMessage("Prisoner [$prisonNumber] already has a plan")
   }
 }
