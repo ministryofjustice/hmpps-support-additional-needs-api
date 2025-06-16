@@ -775,6 +775,11 @@ components:
           description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
           example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
           maxLength: 4096
+        detail:
+          type: string
+          description: Optional Additional information about the plan that is not covered in the other questions.
+          example: Chris is very open about his issues and is a pleasure to talk to.
+          maxLength: 4096
       required:
         - prisonId
         - hasCurrentEhcp
@@ -1161,6 +1166,11 @@ components:
           type: string
           description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
           example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
+        detail:
+          type: string
+          description: Optional Additional information about the plan that is not covered in the other questions.
+          example: Chris is very open about his issues and is a pleasure to talk to.
+          maxLength: 4096
       required:
         - hasCurrentEhcp
 

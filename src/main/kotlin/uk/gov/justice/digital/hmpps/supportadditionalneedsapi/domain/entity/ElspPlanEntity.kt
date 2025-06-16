@@ -52,6 +52,9 @@ data class ElspPlanEntity(
   @Column
   val lnspSupport: String? = null,
 
+  @Column
+  val detail: String? = null,
+
   @Column(updatable = false)
   val createdAtPrison: String,
 
