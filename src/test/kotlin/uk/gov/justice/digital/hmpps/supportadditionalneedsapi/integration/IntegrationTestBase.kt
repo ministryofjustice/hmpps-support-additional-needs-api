@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.awaitility.Awaitility
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -9,6 +11,9 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
@@ -28,8 +33,13 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.HmppsPrisonerSearchApiExtension.Companion.hmppsPrisonerSearchApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
+import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.util.concurrent.TimeUnit.MILLISECONDS
+import java.util.concurrent.TimeUnit.SECONDS
 
 @ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
@@ -53,6 +63,12 @@ abstract class IntegrationTestBase {
 
       localStackContainer?.also { setLocalStackProperties(it, registry) }
     }
+  }
+
+  init {
+    // set awaitility defaults
+    Awaitility.setDefaultPollInterval(500, MILLISECONDS)
+    Awaitility.setDefaultTimeout(5, SECONDS)
   }
 
   @Autowired
@@ -81,6 +97,19 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
+
+  @Autowired
+  protected lateinit var objectMapper: ObjectMapper
+
+  @Autowired
+  lateinit var hmppsQueueService: HmppsQueueService
+
+  val domainEventQueue by lazy {
+    hmppsQueueService.findByQueueId("suppportadditionalneeds")
+      ?: throw MissingQueueException("HmppsQueue suppportadditionalneeds not found")
+  }
+  val domainEventQueueClient by lazy { domainEventQueue.sqsClient }
+  val domainEventQueueDlqClient by lazy { domainEventQueue.sqsDlqClient }
 
   internal fun setAuthorisation(
     username: String? = "AUTH_ADM",
@@ -111,4 +140,22 @@ abstract class IntegrationTestBase {
   protected fun stubGetUserRepeatPass(username: String) = manageUsersApi.setUpManageUsersRepeatPass(username)
 
   protected fun stubGetUserRepeatFail(username: String) = manageUsersApi.setUpManageUsersRepeatFail(username)
+
+  fun clearQueues() {
+    // clear all the queues just in case there are any messages hanging around
+    domainEventQueueClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(domainEventQueue.queueUrl).build()).get()
+    domainEventQueueDlqClient!!.purgeQueue(PurgeQueueRequest.builder().queueUrl(domainEventQueue.dlqUrl).build())
+      .get()
+  }
+
+  fun sendDomainEvent(
+    message: SqsMessage,
+    queueUrl: String = domainEventQueue.queueUrl,
+  ): SendMessageResponse = domainEventQueueClient.sendMessage(
+    SendMessageRequest.builder()
+      .queueUrl(queueUrl)
+      .messageBody(
+        objectMapper.writeValueAsString(message),
+      ).build(),
+  ).get()
 }

@@ -50,9 +50,11 @@ class ResourceSecurityTest : IntegrationTestBase() {
   }
 }
 
-private fun RequestMappingInfo.getMappings() = methodsCondition.methods
+private fun RequestMappingInfo.getMappings(): List<String> = methodsCondition.methods
   .map { it.name }
   .ifEmpty { listOf("") } // if no methods defined then match all rather than none
   .flatMap { method ->
-    pathPatternsCondition?.patternValues?.map { "$method $it" } ?: emptyList()
+    pathPatternsCondition?.patternValues
+      ?.filterNot { it.contains("/queue-admin/") } // exclude /queue-admin/ paths
+      ?.map { "$method $it" } ?: emptyList()
   }

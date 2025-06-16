@@ -32,12 +32,15 @@ val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.1"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "2.8.9"
+val hmppsSqsVersion = "5.4.5"
+val awaitilityVersion = "4.3.0"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.4.6")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:$hmppsSqsVersion")
 
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
@@ -45,6 +48,7 @@ dependencies {
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
 
   // Test dependencies
+  testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.6")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.29") {
@@ -70,7 +74,7 @@ tasks {
 /*
   `dps-gradle-spring-boot` disabled the jar task in jira DT-2070, specifically to prevent the generation of the
   Spring Boot plain jar. The reason was that the `Dockerfile` copies the Spring Boot fat jar with:
-  `COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-education-and-work-plan-api*.jar /app/app.jar`
+  `COPY --from=builder --chown=appuser:appgroup /app/build/libs/hmpps-support-additional-needs-api*.jar /app/app.jar`
   The fat jar includes the date in the filename, hence needing to use a wildcard. Using the wildcard causes problems
   if there are multiple matching files (eg: the plain jar)
 
