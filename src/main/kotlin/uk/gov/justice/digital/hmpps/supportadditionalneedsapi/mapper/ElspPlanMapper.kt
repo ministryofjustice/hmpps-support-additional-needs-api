@@ -25,6 +25,7 @@ class ElspPlanMapper(
       specificTeachingSkills = specificTeachingSkills,
       examAccessArrangements = examAccessArrangements,
       lnspSupport = lnspSupport,
+      detail = detail,
       otherContributors = otherContributors.map { PlanContributor(it.name, it.jobRole) },
       createdBy = createdBy!!,
       createdByDisplayName = userService.getUserDetails(createdBy!!).name,
@@ -51,6 +52,7 @@ class ElspPlanMapper(
         teachingAdjustments = teachingAdjustments,
         examAccessArrangements = examAccessArrangements,
         specificTeachingSkills = specificTeachingSkills,
+        detail = detail,
         otherContributors = mutableListOf(),
       )
     }

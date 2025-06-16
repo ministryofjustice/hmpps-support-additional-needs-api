@@ -49,6 +49,7 @@ class GetELSPPlanTest : IntegrationTestBase() {
     assertThat(actual.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
     assertThat(actual.learningEnvironmentAdjustments).isEqualTo(planRequest.learningEnvironmentAdjustments)
     assertThat(actual.lnspSupport).isEqualTo(planRequest.lnspSupport)
+    assertThat(actual.detail).isEqualTo(planRequest.detail)
     assertThat(actual.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
     assertThat(actual.otherContributors?.get(0)?.name).isEqualTo(planRequest.otherContributors?.get(0)?.name)
     assertThat(actual.otherContributors?.get(0)?.jobRole).isEqualTo(planRequest.otherContributors?.get(0)?.jobRole)
@@ -62,6 +63,7 @@ class GetELSPPlanTest : IntegrationTestBase() {
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",
+    detail = "detail",
     reviewDate = LocalDate.now(),
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
     otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
