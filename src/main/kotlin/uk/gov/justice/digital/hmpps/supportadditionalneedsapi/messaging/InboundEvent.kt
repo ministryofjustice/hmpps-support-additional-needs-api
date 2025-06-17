@@ -1,13 +1,12 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.RawJsonDeserializer
+import com.fasterxml.jackson.databind.JsonNode
 import java.time.Instant
 
 data class InboundEvent(
   val eventType: EventType,
   val personReference: PersonReference,
-  @JsonDeserialize(using = RawJsonDeserializer::class) val additionalInformation: String,
+  val additionalInformation: JsonNode,
   val occurredAt: Instant,
   val publishedAt: Instant,
   val description: String,

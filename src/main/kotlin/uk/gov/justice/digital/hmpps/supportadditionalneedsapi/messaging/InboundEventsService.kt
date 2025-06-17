@@ -24,19 +24,17 @@ class InboundEventsService(
 
     when (eventType) {
       EventType.PRISONER_RECEIVED_INTO_PRISON -> {
-        val additionalInformation = eventAdditionalInformation<PrisonerReceivedAdditionalInformation>(inboundEvent)
-        log.info("Received inbound event $eventType with additional information: $additionalInformation")
+        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerReceivedAdditionalInformation::class.java)
+        log.info("Received inbound event $eventType with additional information: $info")
       }
       EventType.PRISONER_RELEASED_FROM_PRISON -> {
-        val additionalInformation = eventAdditionalInformation<PrisonerReleasedAdditionalInformation>(inboundEvent)
-        log.info("Received inbound event $eventType with additional information: $additionalInformation")
+        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerReleasedAdditionalInformation::class.java)
+        log.info("Received inbound event $eventType with additional information: $info")
       }
       EventType.PRISONER_MERGED -> {
-        val additionalInformation = eventAdditionalInformation<PrisonerMergedAdditionalInformation>(inboundEvent)
-        log.info("Received inbound event $eventType with additional information: $additionalInformation")
+        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerMergedAdditionalInformation::class.java)
+        log.info("Received inbound event $eventType with additional information: $info")
       }
     }
   }
-
-  private inline fun <reified T : AdditionalInformation> eventAdditionalInformation(inboundEvent: InboundEvent): T = this.mapper.readValue(inboundEvent.additionalInformation, T::class.java)
 }
