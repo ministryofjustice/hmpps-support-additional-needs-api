@@ -29,6 +29,21 @@ manage-users-api:
     id: manage-users-api-client-id
     secret: client-secret
 
+hmpps.sqs:
+  enabled: true
+  provider: localstack
+  queues:
+    suppportadditionalneeds:
+      queueName: support-additional-needs-queue
+      subscribeFilter: "{\"eventType\":[\"prison-offender-events.prisoner.received\", \"prison-offender-events.prisoner.released\"]}"
+      dlqName: support-additional-needs-dead-letter-queue
+      subscribeTopicId: domainevents
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 1
+  topics:
+    domainevents:
+      arn: arn:aws:sns:eu-west-2:000000000000:domainevents-topic
+
 apis:
   prisoner-search-api:
     url: http://localhost:9093

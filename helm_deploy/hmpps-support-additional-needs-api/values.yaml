@@ -42,6 +42,14 @@ generic-service:
       DB_USER: "database_username"
       DB_PASS: "database_password"
 
+    # Inbound SQS config
+    hmpps-domain-events-topic:
+      HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"
+    hmpps-support-additional-needs-domain-events-sqs-instance-output:
+      HMPPS_SQS_QUEUES_SUPPORTADDITIONALNEEDS_QUEUE_NAME: "sqs_queue_name"
+    hmpps-support-additional-needs-events-sqs-dl-instance-output:
+      HMPPS_SQS_QUEUES_SUPPORTADDITIONALNEEDS_DLQ_NAME: "sqs_queue_name"
+
   allowlist:
     groups:
       - internal
