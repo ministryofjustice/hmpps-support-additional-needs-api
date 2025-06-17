@@ -8,7 +8,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
  *
  * The classes here are used when deserializing the `additionalInformation` property for each event type.
  */
-sealed class AdditionalInformation {
+sealed interface AdditionalInformation {
   /**
    * Additional Information for the Prisoner Received Into Prison (prison-offender-events.prisoner.received) HMPPS Domain Event
    */
@@ -20,7 +20,7 @@ sealed class AdditionalInformation {
     val currentPrisonStatus: PrisonStatus?,
     val prisonId: String,
     val nomisMovementReasonCode: String,
-  ) : AdditionalInformation() {
+  ) : AdditionalInformation {
     enum class Reason {
       ADMISSION,
       TEMPORARY_ABSENCE_RETURN,
@@ -51,7 +51,7 @@ sealed class AdditionalInformation {
     val currentPrisonStatus: PrisonStatus?,
     val prisonId: String,
     val nomisMovementReasonCode: String,
-  ) : AdditionalInformation() {
+  ) : AdditionalInformation {
 
     val releaseTriggeredByPrisonerDeath: Boolean = nomisMovementReasonCode == "DEC"
 
@@ -84,7 +84,7 @@ sealed class AdditionalInformation {
     val reason: Reason,
     val removedNomsNumber: String,
 
-  ) : AdditionalInformation() {
+  ) : AdditionalInformation {
 
     enum class Reason {
       MERGE,

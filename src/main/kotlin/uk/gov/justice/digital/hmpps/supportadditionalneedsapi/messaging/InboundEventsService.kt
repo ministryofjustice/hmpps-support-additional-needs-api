@@ -19,22 +19,23 @@ class InboundEventsService(
   private val mapper: ObjectMapper,
 ) {
 
-  fun process(inboundEvent: InboundEvent) = with(inboundEvent) {
-    log.info { "Processing inbound event $eventType" }
+  private val eventTypeToClassMap = mapOf(
+    EventType.PRISONER_RECEIVED_INTO_PRISON to PrisonerReceivedAdditionalInformation::class.java,
+    EventType.PRISONER_RELEASED_FROM_PRISON to PrisonerReleasedAdditionalInformation::class.java,
+    EventType.PRISONER_MERGED to PrisonerMergedAdditionalInformation::class.java,
+  )
 
-    when (eventType) {
-      EventType.PRISONER_RECEIVED_INTO_PRISON -> {
-        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerReceivedAdditionalInformation::class.java)
-        log.info("Received inbound event $eventType with additional information: $info")
-      }
-      EventType.PRISONER_RELEASED_FROM_PRISON -> {
-        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerReleasedAdditionalInformation::class.java)
-        log.info("Received inbound event $eventType with additional information: $info")
-      }
-      EventType.PRISONER_MERGED -> {
-        val info = mapper.treeToValue(inboundEvent.additionalInformation, PrisonerMergedAdditionalInformation::class.java)
-        log.info("Received inbound event $eventType with additional information: $info")
-      }
+  fun process(inboundEvent: InboundEvent) {
+    log.info { "Processing inbound event ${inboundEvent.eventType}" }
+
+    val additionalInformation = eventTypeToClassMap[inboundEvent.eventType]
+
+    if (additionalInformation == null) {
+      log.warn { "No handler defined for eventType=${inboundEvent.eventType}" }
+      return
     }
+
+    val info = mapper.treeToValue(inboundEvent.additionalInformation, additionalInformation)
+    log.info("Received inbound event ${inboundEvent.eventType} with additional information: $info")
   }
 }
