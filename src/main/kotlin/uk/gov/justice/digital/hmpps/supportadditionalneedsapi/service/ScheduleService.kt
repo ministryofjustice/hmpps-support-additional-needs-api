@@ -19,8 +19,6 @@ private val log = KotlinLogging.logger {}
 class ScheduleService(
   val planCreationScheduleService: PlanCreationScheduleService,
   val reviewScheduleService: ReviewScheduleService,
-  val educationService: EducationService,
-  val assessmentService: NeedService,
 ) {
 
   fun updateSchedules(additionalInformation: AdditionalInformation) {
@@ -33,8 +31,8 @@ class ScheduleService(
 
   private fun processReceived(info: PrisonerReceivedAdditionalInformation) {
     when (info.reason) {
-      ADMISSION -> processNewAdmission(info.nomsNumber)
       TRANSFERRED -> processTransfer(info)
+      ADMISSION,
       RETURN_FROM_COURT,
       TEMPORARY_ABSENCE_RETURN,
       -> log.info { "Ignoring Processing Prisoner Received Into Prison Event with reason ${info.reason}" }
@@ -65,19 +63,7 @@ class ScheduleService(
     // exempt any schedules for the removed person:
     planCreationScheduleService.exemptSchedule(info.removedNomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_MERGE)
     reviewScheduleService.exemptSchedule(info.removedNomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_MERGE)
-    // process the new noms number as a new admission:
-    processNewAdmission(info.nomsNumber)
     log.info("processed {${info.reason.name}} event for ${info.nomsNumber}")
-  }
-
-  private fun processNewAdmission(nomsNumber: String) {
-    if (educationService.inEducation(nomsNumber) && assessmentService.hasNeed(nomsNumber)) {
-      // create or update plan creation schedule or review schedule.
-      // Check whether the person has a plan already, is in education and has a need.
-      // depending on the outcome of those checks, create/update a planCreationSchedule
-      // or reviewSchedule.
-      TODO()
-    }
   }
 
   private fun processTransfer(info: PrisonerReceivedAdditionalInformation) {
