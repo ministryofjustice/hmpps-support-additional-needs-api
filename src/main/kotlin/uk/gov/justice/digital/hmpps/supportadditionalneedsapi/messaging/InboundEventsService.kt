@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
 
 private val log = KotlinLogging.logger {}
 
@@ -17,6 +18,7 @@ private val log = KotlinLogging.logger {}
 @Service
 class InboundEventsService(
   private val mapper: ObjectMapper,
+  private val scheduleService: ScheduleService,
 ) {
 
   private val eventTypeToClassMap = mapOf(
@@ -36,6 +38,15 @@ class InboundEventsService(
     }
 
     val info = mapper.treeToValue(inboundEvent.additionalInformation, additionalInformation)
+      ?: run {
+        log.error("Failed to deserialize additional information for eventType=${inboundEvent.eventType}")
+        return
+      }
+
     log.info("Received inbound event ${inboundEvent.eventType} with additional information: $info")
+
+    scheduleService.updateSchedules(info)
+
+    log.info("Processed inbound event ${inboundEvent.eventType} with additional information: $info")
   }
 }

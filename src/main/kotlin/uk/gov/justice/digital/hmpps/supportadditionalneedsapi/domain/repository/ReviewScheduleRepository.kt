@@ -9,4 +9,6 @@ import java.util.UUID
 interface ReviewScheduleRepository : JpaRepository<ReviewScheduleEntity, UUID> {
 
   fun getAllByPrisonNumber(prisonNumber: String): List<ReviewScheduleEntity>
+  fun findByPrisonNumber(prisonNumber: String): MutableList<ReviewScheduleEntity>
+  fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): ReviewScheduleEntity?
 }

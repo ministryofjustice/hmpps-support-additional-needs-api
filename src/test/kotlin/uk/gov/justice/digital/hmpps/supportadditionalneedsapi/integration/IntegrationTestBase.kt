@@ -16,12 +16,19 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.PostgresContainer
@@ -38,6 +45,9 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationS
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.time.Instant
+import java.time.LocalDate
+import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
@@ -73,6 +83,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var webTestClient: WebTestClient
+
+  @Autowired
+  protected lateinit var reviewScheduleRepository: ReviewScheduleRepository
+
+  @Autowired
+  protected lateinit var planCreationScheduleRepository: PlanCreationScheduleRepository
 
   @Autowired
   protected lateinit var reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository
@@ -158,4 +174,63 @@ abstract class IntegrationTestBase {
         objectMapper.writeValueAsString(message),
       ).build(),
   ).get()
+
+  fun createPlanCreationScheduleRecords(
+    prisonNumber: String,
+    reference: UUID = UUID.randomUUID(),
+  ): List<PlanCreationScheduleHistoryEntity> = (1..3).map {
+    val planCreationScheduleHistoryEntity = PlanCreationScheduleHistoryEntity(
+      reference = reference,
+      prisonNumber = prisonNumber,
+      deadlineDate = LocalDate.now().minusMonths(1),
+      status = if (it == 3) PlanCreationScheduleStatus.SCHEDULED else PlanCreationScheduleStatus.COMPLETED,
+      exemptionReason = null,
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      version = it,
+      createdBy = "testuser",
+      createdAt = Instant.now(),
+      updatedBy = "testuser",
+      updatedAt = Instant.now(),
+    )
+    planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)
+  }
+
+  fun aValidPlanCreationScheduleExists(
+    prisonNumber: String,
+    reference: UUID = UUID.randomUUID(),
+    status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
+  ) {
+    val planCreationScheduleEntity =
+      PlanCreationScheduleEntity(
+        reference = UUID.randomUUID(),
+        prisonNumber = prisonNumber,
+        deadlineDate = LocalDate.now().minusMonths(1),
+        status = status,
+        exemptionReason = null,
+        createdAtPrison = "BXI",
+        updatedAtPrison = "BXI",
+
+      )
+    planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
+  }
+
+  fun aValidReviewScheduleExists(
+    prisonNumber: String,
+    reference: UUID = UUID.randomUUID(),
+    status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
+  ) {
+    val reviewScheduleEntity =
+      ReviewScheduleEntity(
+        reference = UUID.randomUUID(),
+        prisonNumber = prisonNumber,
+        deadlineDate = LocalDate.now().minusMonths(1),
+        status = status,
+        exemptionReason = null,
+        createdAtPrison = "BXI",
+        updatedAtPrison = "BXI",
+
+      )
+    reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
+  }
 }

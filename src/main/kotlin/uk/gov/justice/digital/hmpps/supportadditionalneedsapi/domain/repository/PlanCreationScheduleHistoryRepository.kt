@@ -9,8 +9,8 @@ import java.util.UUID
 @Repository
 interface PlanCreationScheduleHistoryRepository : JpaRepository<PlanCreationScheduleHistoryEntity, UUID> {
 
-  @Query("SELECT MAX(h.version) FROM PlanCreationScheduleHistoryEntity h WHERE h.reference = :reviewScheduleReference")
-  fun findMaxVersionByReviewScheduleReference(planCreationScheduleReference: UUID): Int?
+  @Query("SELECT MAX(h.version) FROM PlanCreationScheduleHistoryEntity h WHERE h.reference = :scheduleReference")
+  fun findMaxVersionByScheduleReference(scheduleReference: UUID): Int?
 
   fun findAllByReference(planCreationScheduleReference: UUID): List<PlanCreationScheduleHistoryEntity>
 
