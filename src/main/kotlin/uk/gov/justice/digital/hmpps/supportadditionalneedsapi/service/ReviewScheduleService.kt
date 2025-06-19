@@ -33,7 +33,7 @@ class ReviewScheduleService(
   private fun saveReviewScheduleHistory(reviewScheduleEntity: ReviewScheduleEntity) {
     with(reviewScheduleEntity) {
       val historyEntry = ReviewScheduleHistoryEntity(
-        version = reviewScheduleHistoryRepository.findMaxVersionByReviewScheduleReference(reference!!)
+        version = reviewScheduleHistoryRepository.findMaxVersionByReviewScheduleReference(reference)
           ?.plus(1) ?: 1,
         reference = reference,
         prisonNumber = prisonNumber,
