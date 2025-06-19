@@ -71,7 +71,7 @@ class PlanCreationScheduleService(
   private fun savePlanCreationScheduleHistory(planCreationScheduleEntity: PlanCreationScheduleEntity) {
     with(planCreationScheduleEntity) {
       val historyEntry = PlanCreationScheduleHistoryEntity(
-        version = planCreationScheduleHistoryRepository.findMaxVersionByScheduleReference(reference)
+        version = planCreationScheduleHistoryRepository.findMaxVersionByScheduleReference(reference!!)
           ?.plus(1) ?: 1,
         reference = reference,
         prisonNumber = prisonNumber,

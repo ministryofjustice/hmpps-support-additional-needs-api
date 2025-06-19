@@ -1,12 +1,10 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
 import jakarta.persistence.Column
-import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
-import org.hibernate.annotations.UuidGenerator
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.LastModifiedBy
 import java.time.Instant
@@ -16,13 +14,10 @@ import java.util.UUID
 abstract class BaseAuditableEntity {
 
   @Id
-  @GeneratedValue
-  @UuidGenerator
-  val id: UUID? = null
+  val id: UUID = UUID.randomUUID()
 
-  @UuidGenerator
   @Column(updatable = false)
-  val reference: UUID? = null
+  val reference: UUID = UUID.randomUUID()
 
   @CreatedBy
   @Column(updatable = false)
