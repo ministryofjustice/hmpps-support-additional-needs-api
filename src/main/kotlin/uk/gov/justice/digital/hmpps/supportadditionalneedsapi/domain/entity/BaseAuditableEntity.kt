@@ -18,10 +18,11 @@ abstract class BaseAuditableEntity {
   @Id
   @GeneratedValue
   @UuidGenerator
-  var id: UUID? = null
+  val id: UUID? = null
 
+  @UuidGenerator
   @Column(updatable = false)
-  val reference: UUID = UUID.randomUUID()
+  val reference: UUID? = null
 
   @CreatedBy
   @Column(updatable = false)

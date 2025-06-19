@@ -16,7 +16,7 @@ class ChallengeMapper(
   ): ChallengeResponse = with(entity) {
     ChallengeResponse(
       fromALNScreener = fromALNScreener,
-      reference = reference,
+      reference = reference!!,
       createdBy = createdBy!!,
       createdByDisplayName = userService.getUserDetails(createdBy!!).name,
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,

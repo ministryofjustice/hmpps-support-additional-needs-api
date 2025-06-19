@@ -17,7 +17,7 @@ class PlanCreationScheduleHistoryMapper(
     entity: PlanCreationScheduleHistoryEntity,
   ): PlanCreationScheduleResponse = with(entity) {
     PlanCreationScheduleResponse(
-      reference = reference,
+      reference = reference!!,
       deadlineDate = deadlineDate,
       status = toPlanCreationStatus(status),
       createdBy = createdBy,

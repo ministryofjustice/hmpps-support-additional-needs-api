@@ -203,7 +203,6 @@ abstract class IntegrationTestBase {
   ) {
     val planCreationScheduleEntity =
       PlanCreationScheduleEntity(
-        reference = UUID.randomUUID(),
         prisonNumber = prisonNumber,
         deadlineDate = LocalDate.now().minusMonths(1),
         status = status,
@@ -222,7 +221,6 @@ abstract class IntegrationTestBase {
   ) {
     val reviewScheduleEntity =
       ReviewScheduleEntity(
-        reference = UUID.randomUUID(),
         prisonNumber = prisonNumber,
         deadlineDate = LocalDate.now().minusMonths(1),
         status = status,

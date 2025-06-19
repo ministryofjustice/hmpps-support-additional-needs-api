@@ -17,7 +17,7 @@ class ReviewScheduleHistoryMapper(
     entity: ReviewScheduleHistoryEntity,
   ): ReviewScheduleResponse = with(entity) {
     ReviewScheduleResponse(
-      reference = reference,
+      reference = reference!!,
       deadlineDate = deadlineDate,
       status = toReviewScheduleStatus(status),
       createdBy = createdBy,

@@ -55,6 +55,7 @@ class CreateChallengeTest : IntegrationTestBase() {
     assertThat(processingSpeedChallenge.challengeType.categoryDescription).isEqualTo("Numeracy Skills")
     assertThat(processingSpeedChallenge.fromALNScreener).isFalse()
     assertThat(processingSpeedChallenge.createdAtPrison).isEqualTo("BXI")
+    assertThat(processingSpeedChallenge.reference).isNotNull()
   }
 
   @Test

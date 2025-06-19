@@ -20,7 +20,7 @@ import java.util.UUID
 data class PlanCreationScheduleHistoryEntity(
 
   @Column(updatable = false)
-  val reference: UUID,
+  val reference: UUID?,
 
   @Column(updatable = false)
   val version: Int,
