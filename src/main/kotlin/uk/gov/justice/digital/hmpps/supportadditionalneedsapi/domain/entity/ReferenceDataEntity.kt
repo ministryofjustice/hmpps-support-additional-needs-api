@@ -20,14 +20,14 @@ class ReferenceDataEntity(
   @Embedded
   val key: ReferenceDataKey,
   val description: String,
-  val listSequence: Int,
-  val deactivatedAt: LocalDateTime?,
-  val categoryCode: String?,
-  val categoryDescription: String?,
-  val areaCode: String?,
-  val areaDescription: String?,
-  val defaultForCategory: Boolean?,
-  val screenerOption: Boolean?,
+  val listSequence: Int = 0,
+  val deactivatedAt: LocalDateTime? = null,
+  val categoryCode: String? = null,
+  val categoryDescription: String? = null,
+  val areaCode: String? = null,
+  val areaDescription: String? = null,
+  val defaultForCategory: Boolean = false,
+  val screenerOption: Boolean = false,
   @Id
   @Column(name = "id")
   val id: UUID = UUID.randomUUID(),
