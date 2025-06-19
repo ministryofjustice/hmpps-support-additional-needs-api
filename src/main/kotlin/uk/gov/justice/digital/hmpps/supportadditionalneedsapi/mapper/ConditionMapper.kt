@@ -20,7 +20,7 @@ class ConditionMapper(
   ): ConditionResponse = with(entity) {
     ConditionResponse(
       source = toModel(source),
-      reference = reference!!,
+      reference = reference,
       createdBy = createdBy!!,
       createdByDisplayName = userService.getUserDetails(createdBy!!).name,
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,
