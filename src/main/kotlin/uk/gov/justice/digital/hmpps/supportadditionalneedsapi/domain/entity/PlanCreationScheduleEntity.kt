@@ -36,7 +36,7 @@ data class PlanCreationScheduleEntity(
   var status: PlanCreationScheduleStatus,
 
   @Column
-  var exemptionReason: String?,
+  var exemptionReason: String? = null,
 
   @Column(updatable = false)
   val createdAtPrison: String,

@@ -15,6 +15,7 @@ class ReviewScheduleService(
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
   private val reviewScheduleHistoryMapper: ReviewScheduleHistoryMapper,
 ) {
+
   fun getSchedules(prisonId: String): ReviewSchedulesResponse = ReviewSchedulesResponse(
     reviewScheduleHistoryRepository.findAllByPrisonNumber(prisonId).map { reviewScheduleHistoryMapper.toModel(it) },
   )
