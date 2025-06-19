@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
@@ -11,7 +12,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreatio
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
-import java.util.UUID
 
 @Service
 class PlanCreationScheduleService(
@@ -29,6 +29,7 @@ class PlanCreationScheduleService(
    * - An ALN screener message is processed
    * - SAN Condition or Challenge is created or made inactive.
    */
+  @Transactional
   fun attemptToCreate(prisonNumber: String) {
     try {
       educationSupportPlanService.getPlan(prisonNumber)
@@ -45,7 +46,6 @@ class PlanCreationScheduleService(
         prisonNumber = prisonNumber,
         status = PlanCreationScheduleStatus.SCHEDULED,
         deadlineDate = getDeadlineDate(),
-        reference = UUID.randomUUID(),
         createdAtPrison = "N/A",
         updatedAtPrison = "N/A",
       )

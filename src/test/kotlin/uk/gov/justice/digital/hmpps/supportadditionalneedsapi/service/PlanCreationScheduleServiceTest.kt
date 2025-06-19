@@ -20,7 +20,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNot
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class PlanCreationScheduleServiceTest {
@@ -91,7 +90,6 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = LocalDate.now().plusDays(10),
-      reference = UUID.randomUUID(),
       createdAtPrison = "N/A",
       updatedAtPrison = "N/A",
     ).apply {
