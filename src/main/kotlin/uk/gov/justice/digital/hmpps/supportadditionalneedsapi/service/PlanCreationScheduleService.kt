@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
@@ -49,7 +48,7 @@ class PlanCreationScheduleService(
         createdAtPrison = "N/A",
         updatedAtPrison = "N/A",
       )
-      planCreationScheduleRepository.saveAndFlush(planCreationSchedule).also { savePlanCreationScheduleHistory(it) }
+      planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
     }
   }
 
@@ -64,29 +63,7 @@ class PlanCreationScheduleService(
       ?.let {
         it.status = status
         planCreationScheduleRepository.save(it)
-        savePlanCreationScheduleHistory(it)
       }
-  }
-
-  private fun savePlanCreationScheduleHistory(planCreationScheduleEntity: PlanCreationScheduleEntity) {
-    with(planCreationScheduleEntity) {
-      val historyEntry = PlanCreationScheduleHistoryEntity(
-        version = planCreationScheduleHistoryRepository.findMaxVersionByScheduleReference(reference)
-          ?.plus(1) ?: 1,
-        reference = reference,
-        prisonNumber = prisonNumber,
-        createdAtPrison = createdAtPrison,
-        updatedAtPrison = updatedAtPrison,
-        updatedAt = updatedAt!!,
-        createdAt = createdAt!!,
-        updatedBy = updatedBy!!,
-        createdBy = createdBy!!,
-        status = status,
-        exemptionReason = exemptionReason,
-        deadlineDate = deadlineDate,
-      )
-      planCreationScheduleHistoryRepository.save(historyEntry)
-    }
   }
 
   // TODO This needs to be a date from the PES contract date.

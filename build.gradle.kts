@@ -46,6 +46,8 @@ dependencies {
 
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
+  implementation("org.hibernate.orm:hibernate-envers")
+  implementation("org.springframework.data:spring-data-envers")
 
   // Test dependencies
   testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")

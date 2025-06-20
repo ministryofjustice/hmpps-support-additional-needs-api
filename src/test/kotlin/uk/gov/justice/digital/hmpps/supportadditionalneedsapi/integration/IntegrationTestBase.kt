@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Lea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntityKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
@@ -187,11 +188,11 @@ abstract class IntegrationTestBase {
       exemptionReason = null,
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
-      version = it,
       createdBy = "testuser",
       createdAt = Instant.now(),
       updatedBy = "testuser",
       updatedAt = Instant.now(),
+      id = PlanCreationScheduleHistoryEntityKey(version = 0, id = UUID.randomUUID()),
     )
     planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)
   }
@@ -211,7 +212,8 @@ abstract class IntegrationTestBase {
         updatedAtPrison = "BXI",
 
       )
-    planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
+    val entity = planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
+    println(entity)
   }
 
   fun aValidReviewScheduleExists(

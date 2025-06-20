@@ -5,13 +5,22 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.UpdateTimestamp
+import org.hibernate.envers.Audited
+import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 @Table(name = "plan_creation_schedule")
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
+@Audited(withModifiedFlag = false)
 data class PlanCreationScheduleEntity(
 
   @Column(updatable = false)
@@ -32,7 +41,30 @@ data class PlanCreationScheduleEntity(
 
   @Column
   var updatedAtPrison: String,
-) : BaseAuditableEntity()
+
+  @Id
+  @Column
+  val id: UUID = UUID.randomUUID(),
+
+  @Column(updatable = false)
+  val reference: UUID = UUID.randomUUID(),
+
+  @CreatedBy
+  @Column(updatable = false)
+  var createdBy: String? = null,
+
+  @CreationTimestamp
+  @Column(updatable = false)
+  var createdAt: Instant? = null,
+
+  @LastModifiedBy
+  @Column
+  var updatedBy: String? = null,
+
+  @UpdateTimestamp
+  @Column
+  var updatedAt: Instant? = null,
+)
 
 enum class PlanCreationScheduleStatus(val activeReview: Boolean) {
   SCHEDULED(true),
