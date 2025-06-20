@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntityKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -53,11 +54,11 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
       exemptionReason = null,
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
-      version = it,
       createdBy = "testuser",
       createdAt = Instant.now(),
       updatedBy = "testuser",
       updatedAt = Instant.now(),
+      id = ReviewScheduleHistoryEntityKey(version = 0, id = UUID.randomUUID()),
     )
     reviewScheduleHistoryRepository.saveAndFlush(reviewScheduleHistoryEntity)
   }

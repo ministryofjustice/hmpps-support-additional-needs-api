@@ -37,6 +37,11 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_DEATH)
+
+    val history = planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(history).hasSize(2)
+    assertThat(history[0].id.version).isEqualTo(1)
+    assertThat(history[1].id.version).isEqualTo(2)
   }
 
   @Test
