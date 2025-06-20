@@ -7,6 +7,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import jakarta.persistence.Version
 import org.hibernate.annotations.CreationTimestamp
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.envers.Audited
@@ -41,6 +42,10 @@ data class ReviewScheduleEntity(
 
   @Column
   var updatedAtPrison: String,
+
+  @Version
+  @Column(name = "version")
+  var version: Int? = null,
 
   @Id
   @Column

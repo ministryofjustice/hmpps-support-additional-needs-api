@@ -91,6 +91,7 @@ class PlanCreationScheduleServiceTest {
       deadlineDate = LocalDate.now().plusDays(10),
       createdAtPrison = "N/A",
       updatedAtPrison = "N/A",
+      version = 1,
     ).apply {
       createdAt = Instant.now()
       updatedAt = Instant.now()

@@ -58,7 +58,8 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
       createdAt = Instant.now(),
       updatedBy = "testuser",
       updatedAt = Instant.now(),
-      id = ReviewScheduleHistoryEntityKey(version = 0, id = UUID.randomUUID()),
+      id = ReviewScheduleHistoryEntityKey(revisionNumber = 0, id = UUID.randomUUID()),
+      version = 1,
     )
     reviewScheduleHistoryRepository.saveAndFlush(reviewScheduleHistoryEntity)
   }

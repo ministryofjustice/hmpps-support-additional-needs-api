@@ -192,7 +192,8 @@ abstract class IntegrationTestBase {
       createdAt = Instant.now(),
       updatedBy = "testuser",
       updatedAt = Instant.now(),
-      id = PlanCreationScheduleHistoryEntityKey(version = 0, id = UUID.randomUUID()),
+      id = PlanCreationScheduleHistoryEntityKey(revisionNumber = 0, id = UUID.randomUUID()),
+      version = 1,
     )
     planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)
   }
@@ -210,10 +211,8 @@ abstract class IntegrationTestBase {
         exemptionReason = null,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
-
       )
-    val entity = planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
-    println(entity)
+    planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
   }
 
   fun aValidReviewScheduleExists(
@@ -229,7 +228,6 @@ abstract class IntegrationTestBase {
         exemptionReason = null,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
-
       )
     reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
   }

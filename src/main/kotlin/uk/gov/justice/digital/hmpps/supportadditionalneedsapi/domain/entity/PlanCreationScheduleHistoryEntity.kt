@@ -54,14 +54,17 @@ data class PlanCreationScheduleHistoryEntity(
   @Column(name = "updated_at_prison")
   val updatedAtPrison: String,
 
+  @Column(name = "version")
+  val version: Int? = null,
+
   @EmbeddedId
   val id: PlanCreationScheduleHistoryEntityKey,
 )
 
 @Embeddable
 data class PlanCreationScheduleHistoryEntityKey(
-  @Column
-  val version: Int,
+  @Column(name = "rev_id")
+  val revisionNumber: Long,
   @Column(name = "id")
   val id: UUID,
 )
