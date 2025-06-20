@@ -14,7 +14,6 @@ import java.util.UUID
 abstract class BaseAuditableEntity {
 
   @Id
-  @Column
   val id: UUID = UUID.randomUUID()
 
   @Column(updatable = false)

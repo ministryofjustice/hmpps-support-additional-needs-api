@@ -15,7 +15,7 @@ import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @Table(name = "review_schedule")
 @Entity
