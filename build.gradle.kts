@@ -53,7 +53,7 @@ dependencies {
   testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.4.6")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.29") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.30") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
