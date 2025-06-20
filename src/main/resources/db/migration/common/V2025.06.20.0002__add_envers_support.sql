@@ -2,7 +2,7 @@ ALTER TABLE review_schedule
     ADD COLUMN version int not null;
 
 ALTER TABLE review_schedule_history
-    ADD COLUMN rev_id bigint not null;-- references audit_revision (id);
+    ADD COLUMN rev_id bigint not null;
 
 ALTER TABLE review_schedule_history
 DROP
@@ -15,7 +15,7 @@ ALTER TABLE plan_creation_schedule
     ADD COLUMN version int not null;
 
 ALTER TABLE plan_creation_schedule_history
-    ADD COLUMN rev_id bigint not null;-- references audit_revision (id);
+    ADD COLUMN rev_id bigint not null;
 
 ALTER TABLE plan_creation_schedule_history
 DROP
