@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
@@ -52,10 +53,23 @@ class PlanCreationScheduleService(
     }
   }
 
-  fun getSchedules(prisonId: String): PlanCreationSchedulesResponse = PlanCreationSchedulesResponse(
-    planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonId)
-      .map { planCreationScheduleHistoryMapper.toModel(it) },
-  )
+  fun getSchedules(prisonId: String): PlanCreationSchedulesResponse {
+    val entities = planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonId)
+
+    // Relabel versions per group (by id.id)
+    val relabelledEntities: List<Pair<PlanCreationScheduleHistoryEntity, Int>> = entities
+      .groupBy { it.id.id }
+      .flatMap { (_, group) ->
+        group.sortedBy { it.id.version }
+          .mapIndexed { index, entity -> entity to (index + 1) }
+      }
+
+    return PlanCreationSchedulesResponse(
+      relabelledEntities.map { (entity, relabelledVersion) ->
+        planCreationScheduleHistoryMapper.toModel(entity, relabelledVersion)
+      },
+    )
+  }
 
   fun exemptSchedule(prisonNumber: String, status: PlanCreationScheduleStatus) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)

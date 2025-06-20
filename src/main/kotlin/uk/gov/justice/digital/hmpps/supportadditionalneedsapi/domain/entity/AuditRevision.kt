@@ -10,6 +10,10 @@ import org.hibernate.envers.RevisionNumber
 import org.hibernate.envers.RevisionTimestamp
 import java.time.LocalDateTime
 
+/**
+ * Note that this class is used by Envers
+ */
+
 @Entity
 @Table
 @RevisionEntity

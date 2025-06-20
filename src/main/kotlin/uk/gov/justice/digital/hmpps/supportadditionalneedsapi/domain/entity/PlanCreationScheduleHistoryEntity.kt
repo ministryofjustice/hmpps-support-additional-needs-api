@@ -61,7 +61,7 @@ data class PlanCreationScheduleHistoryEntity(
 @Embeddable
 data class PlanCreationScheduleHistoryEntityKey(
   @Column
-  val version: Int,
+  val version: Long,
   @Column(name = "id")
   val id: UUID,
 )

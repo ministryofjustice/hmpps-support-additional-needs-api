@@ -25,9 +25,12 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
   fun `should process prisoner death event setting plan creation schedule to exempt due to prisoner death`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    val prisonNumber2 = randomValidPrisonNumber()
     aValidPlanCreationScheduleExists(prisonNumber)
+    aValidPlanCreationScheduleExists(prisonNumber2)
     // When
     sendPrisonerDeathMessage(prisonNumber)
+    sendPrisonerDeathMessage(prisonNumber2)
 
     // Then
     // wait until the queue is drained / message is processed
@@ -40,8 +43,14 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
 
     val history = planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(history).hasSize(2)
-    assertThat(history[0].id.version).isEqualTo(1)
-    assertThat(history[1].id.version).isEqualTo(2)
+
+    val prisoner1Schedules = planCreationScheduleService.getSchedules(prisonNumber)
+    val prisoner2Schedules = planCreationScheduleService.getSchedules(prisonNumber2)
+
+    assertThat(prisoner1Schedules.planCreationSchedules[0].version).isEqualTo(1)
+    assertThat(prisoner1Schedules.planCreationSchedules[1].version).isEqualTo(2)
+    assertThat(prisoner2Schedules.planCreationSchedules[0].version).isEqualTo(1)
+    assertThat(prisoner2Schedules.planCreationSchedules[1].version).isEqualTo(2)
   }
 
   @Test
@@ -49,8 +58,11 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     aValidReviewScheduleExists(prisonNumber)
+    val prisonNumber2 = randomValidPrisonNumber()
+    aValidReviewScheduleExists(prisonNumber2)
     // When
     sendPrisonerDeathMessage(prisonNumber)
+    sendPrisonerDeathMessage(prisonNumber2)
 
     // Then
     // wait until the queue is drained / message is processed
@@ -60,6 +72,14 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_DEATH)
+
+    val prisoner1Schedules = reviewScheduleService.getSchedules(prisonNumber)
+    val prisoner2Schedules = reviewScheduleService.getSchedules(prisonNumber2)
+
+    assertThat(prisoner1Schedules.reviewSchedules[0].version).isEqualTo(1)
+    assertThat(prisoner1Schedules.reviewSchedules[1].version).isEqualTo(2)
+    assertThat(prisoner2Schedules.reviewSchedules[0].version).isEqualTo(1)
+    assertThat(prisoner2Schedules.reviewSchedules[1].version).isEqualTo(2)
   }
 
   private fun sendPrisonerDeathMessage(prisonNumber: String) {

@@ -15,6 +15,7 @@ class PlanCreationScheduleHistoryMapper(
 
   fun toModel(
     entity: PlanCreationScheduleHistoryEntity,
+    version: Int,
   ): PlanCreationScheduleResponse = with(entity) {
     PlanCreationScheduleResponse(
       reference = reference,
@@ -29,7 +30,7 @@ class PlanCreationScheduleHistoryMapper(
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
-      version = entity.id.version,
+      version = version,
     )
   }
 

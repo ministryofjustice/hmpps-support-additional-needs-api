@@ -43,6 +43,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ReviewScheduleService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
@@ -93,6 +95,12 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository
+
+  @Autowired
+  protected lateinit var reviewScheduleService: ReviewScheduleService
+
+  @Autowired
+  protected lateinit var planCreationScheduleService: PlanCreationScheduleService
 
   @Autowired
   protected lateinit var planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository
@@ -212,8 +220,7 @@ abstract class IntegrationTestBase {
         updatedAtPrison = "BXI",
 
       )
-    val entity = planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
-    println(entity)
+    planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
   }
 
   fun aValidReviewScheduleExists(

@@ -15,6 +15,7 @@ class ReviewScheduleHistoryMapper(
 
   fun toModel(
     entity: ReviewScheduleHistoryEntity,
+    version: Int,
   ): ReviewScheduleResponse = with(entity) {
     ReviewScheduleResponse(
       reference = reference,
@@ -29,7 +30,7 @@ class ReviewScheduleHistoryMapper(
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
-      version = entity.id.version,
+      version = version,
     )
   }
 
