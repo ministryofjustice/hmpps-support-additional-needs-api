@@ -40,8 +40,8 @@ class PrisonerDeathEventTest : IntegrationTestBase() {
 
     val history = planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(history).hasSize(2)
-    assertThat(history[0].id.version).isEqualTo(1)
-    assertThat(history[1].id.version).isEqualTo(2)
+    assertThat(history[0].version).isEqualTo(0)
+    assertThat(history[1].version).isEqualTo(1)
   }
 
   @Test
