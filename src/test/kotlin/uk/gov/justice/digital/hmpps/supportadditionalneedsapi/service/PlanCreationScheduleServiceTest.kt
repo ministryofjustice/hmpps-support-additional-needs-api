@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import java.time.Instant
 import java.time.LocalDate
 
@@ -44,7 +45,7 @@ class PlanCreationScheduleServiceTest {
   @InjectMocks
   private lateinit var service: PlanCreationScheduleService
 
-  private val prisonNumber = "A1234BC"
+  private val prisonNumber = randomValidPrisonNumber()
 
   @Test
   fun `does nothing if plan already exists`() {
