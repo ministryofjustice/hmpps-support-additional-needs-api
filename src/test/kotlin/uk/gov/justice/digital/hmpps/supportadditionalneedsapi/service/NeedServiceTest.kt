@@ -130,12 +130,25 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasNeed returns true if any source reports need`() {
+  fun `hasNeed returns false if need is an ALN challenge`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
       .thenReturn(
         listOf(
           getChallengeEntity(prisonNumber = prisonNumber),
+        ),
+      )
+
+    assertFalse(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasNeed returns false if need is not an ALN challenge`() {
+    val prisonNumber = randomValidPrisonNumber()
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
+      .thenReturn(
+        listOf(
+          getChallengeEntity(prisonNumber = prisonNumber, alnScreener = false),
         ),
       )
 

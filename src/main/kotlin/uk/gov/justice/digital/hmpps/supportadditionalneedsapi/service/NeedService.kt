@@ -68,7 +68,7 @@ class NeedService(
       conditions.any { it.active }
   }
 
-  fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber, includingALN = true) ||
+  fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber, includingALN = false) ||
     hasALNScreenerNeed(prisonNumber) ||
     hasLDDNeed(prisonNumber)
 }
