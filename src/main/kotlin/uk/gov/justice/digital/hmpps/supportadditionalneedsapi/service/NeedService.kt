@@ -60,10 +60,15 @@ class NeedService(
    * Was a challenge or condition created in the SAN database and is it active - these can either be
    * Staff instigated or ALN screener instigated.
    */
-  fun hasSANNeed(prisonNumber: String): Boolean = (
-    challengeRepository.findAllByPrisonNumber(prisonNumber).any { it.active } ||
-      conditionRepository.findAllByPrisonNumber(prisonNumber).any { it.active }
-    )
+  fun hasActiveSANNeed(prisonNumber: String, includingALN: Boolean = true): Boolean {
+    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
+    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
-  fun hasNeed(prisonNumber: String): Boolean = hasSANNeed(prisonNumber) || hasALNScreenerNeed(prisonNumber) || hasLDDNeed(prisonNumber)
+    return challenges.any { it.active && it.fromALNScreener == includingALN } ||
+      conditions.any { it.active }
+  }
+
+  fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber, includingALN = true) ||
+    hasALNScreenerNeed(prisonNumber) ||
+    hasLDDNeed(prisonNumber)
 }
