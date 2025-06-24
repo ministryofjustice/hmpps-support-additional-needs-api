@@ -26,7 +26,7 @@ class PlanCreationScheduleUpdateEventPublisherTest {
   private val service = EventPublisher(hmppsQueueService, objectMapper, "http://localhost:8080")
 
   @Test
-  fun `send event converts to induction schedule event update event`() {
+  fun `publish creates to plan creation schedule update event`() {
     whenever(objectMapper.writeValueAsString(any())).thenReturn("messageAsJson")
     whenever(hmppsQueueService.findByTopicId("domainevents")).thenReturn(HmppsTopic("id", "topicUrn", snsClient))
 
@@ -66,7 +66,6 @@ class PlanCreationScheduleUpdateEventPublisherTest {
     whenever(hmppsQueueService.findByTopicId("domainevents")).thenReturn(HmppsTopic("id", "topicArn", snsClient))
     val publishResponse = mock<PublishResponse>()
     whenever(snsClient.publish(any<PublishRequest>())).thenReturn(completedFuture(publishResponse))
-    val occurredAt = Instant.now()
 
     service.createAndPublishPlanCreationSchedule("A1234AC")
     verify(snsClient).publish(
