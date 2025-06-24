@@ -15,7 +15,7 @@ services:
       - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
       - SPRING_PROFILES_ACTIVE=dev
       - MANAGE_USERS_API_URL=https://manage-users-api-dev.hmpps.service.justice.gov.uk
-      - SERVICE_BASE_URL=http://localhost:8081"
+      - SERVICE_BASE_URL=http://localhost:8081
 
   hmpps-auth:
     image: quay.io/hmpps/hmpps-auth:latest
