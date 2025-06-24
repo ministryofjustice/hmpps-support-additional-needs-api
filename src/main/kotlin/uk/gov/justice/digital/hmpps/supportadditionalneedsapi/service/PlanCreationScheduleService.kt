@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -20,6 +21,7 @@ class PlanCreationScheduleService(
   private val educationSupportPlanService: EducationSupportPlanService,
   private val educationService: EducationService,
   private val needService: NeedService,
+  private val eventPublisher: EventPublisher,
 ) {
 
   /**
@@ -50,6 +52,7 @@ class PlanCreationScheduleService(
         version = 1,
       )
       planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+      eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
     }
   }
 
@@ -64,6 +67,7 @@ class PlanCreationScheduleService(
       ?.let {
         it.status = status
         planCreationScheduleRepository.save(it)
+        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
       }
   }
 

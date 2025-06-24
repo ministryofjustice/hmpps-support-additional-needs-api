@@ -15,6 +15,7 @@ generic-service:
     PRISONER_SEARCH_API_URL: https://prisoner-search-preprod.prison.service.justice.gov.uk
     CURIOUS_API_URL: https://preprodservices.sequation.net/sequation-virtual-campus2-api
     MANAGE_USERS_API_URL: https://manage-users-api-preprod.hmpps.service.justice.gov.uk
+    SERVICE_BASE_URL: https://support-for-additional-needs-api-preprod.hmpps.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
