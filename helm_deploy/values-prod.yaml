@@ -10,7 +10,7 @@ generic-service:
     HMPPS_AUTH_URL: "https://sign-in.hmpps.service.justice.gov.uk/auth"
     PRISONER_SEARCH_API_URL: https://prisoner-search.prison.service.justice.gov.uk
     CURIOUS_API_URL: https://liveservices.sequation.com/sequation-virtual-campus2-api
-    MANAGE_USERS_API_URL: https://manage-users-api-preprod.hmpps.service.justice.gov.uk
+    MANAGE_USERS_API_URL: https://manage-users-api.hmpps.service.justice.gov.uk
     SERVICE_BASE_URL: https://support-for-additional-needs-api.hmpps.service.justice.gov.uk
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
