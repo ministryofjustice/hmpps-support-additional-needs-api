@@ -51,3 +51,6 @@ apis:
     url: http://localhost:9094
   manage-users-api:
     url: http://localhost:9095
+
+service:
+  base-url: http://localhost:8081

@@ -7,6 +7,7 @@ import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import java.time.Instant
 import java.time.LocalDate
@@ -41,6 +43,9 @@ class PlanCreationScheduleServiceTest {
 
   @Mock
   private lateinit var needService: NeedService
+
+  @Mock
+  private lateinit var eventPublisher: EventPublisher
 
   @InjectMocks
   private lateinit var service: PlanCreationScheduleService
@@ -111,5 +116,6 @@ class PlanCreationScheduleServiceTest {
         assert(it.deadlineDate == LocalDate.now().plusDays(10))
       },
     )
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(eq(prisonNumber), any<Instant>())
   }
 }

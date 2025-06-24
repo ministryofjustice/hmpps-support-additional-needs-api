@@ -857,7 +857,7 @@ components:
         A Scheduled Review of a Prisoner's support additional needs plan.
 
         A DPS user will create a new Review Schedule (and therefore they will be recorded in the `createdBy...` fields)
-        when they complete a prisoner's Induction or their previous Review. IE. completing an Induction will create
+        when they complete a prisoner's additional needs plan or their previous Review. IE. completing the plan will create
         the prisoner's first Review Schedule. Completing their Review will create their next Review Schedule.
       properties:
         reference:
