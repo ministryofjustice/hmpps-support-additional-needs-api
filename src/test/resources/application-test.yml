@@ -54,3 +54,5 @@ apis:
 
 service:
   base-url: http://localhost:8081
+
+pes_contract_date: "2025-10-01"

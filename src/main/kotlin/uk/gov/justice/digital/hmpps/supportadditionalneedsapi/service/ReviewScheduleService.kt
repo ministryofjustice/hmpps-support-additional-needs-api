@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Revi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ReviewScheduleHistoryMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
 
 @Service
@@ -12,6 +13,7 @@ class ReviewScheduleService(
   private val reviewScheduleRepository: ReviewScheduleRepository,
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
   private val reviewScheduleHistoryMapper: ReviewScheduleHistoryMapper,
+  private val eventPublisher: EventPublisher,
 ) {
 
   fun getSchedules(prisonId: String): ReviewSchedulesResponse = ReviewSchedulesResponse(
@@ -24,6 +26,7 @@ class ReviewScheduleService(
       ?.let {
         it.status = status
         reviewScheduleRepository.save(it)
+        eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
       }
   }
 }

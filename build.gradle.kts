@@ -70,6 +70,10 @@ kotlin {
 tasks {
   withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+    /* added as a result of this:
+    https://youtrack.jetbrains.com/issue/KT-73255
+     */
+    compilerOptions.freeCompilerArgs.add("-Xannotation-default-target=first-only")
   }
 }
 
