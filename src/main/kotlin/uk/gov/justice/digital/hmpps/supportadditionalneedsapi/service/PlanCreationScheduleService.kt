@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -22,6 +23,7 @@ class PlanCreationScheduleService(
   private val educationService: EducationService,
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
+  @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
 ) {
 
   /**
@@ -39,6 +41,7 @@ class PlanCreationScheduleService(
       // No plan found — carry on
     }
 
+    // already have a schedule so exit here.
     if (planCreationScheduleRepository.findByPrisonNumber(prisonNumber) != null) return
 
     if (educationService.inEducation(prisonNumber) && needService.hasNeed(prisonNumber)) {
@@ -71,6 +74,9 @@ class PlanCreationScheduleService(
       }
   }
 
-  // TODO This needs to be a date from the PES contract date.
-  private fun getDeadlineDate(): LocalDate = LocalDate.now().plus(10, ChronoUnit.DAYS)
+  fun getDeadlineDate(): LocalDate {
+    val todayPlusTen = LocalDate.now().plus(10, ChronoUnit.DAYS)
+    val pesPlusTen = pesContractDate.plus(10, ChronoUnit.DAYS)
+    return maxOf(todayPlusTen, pesPlusTen)
+  }
 }

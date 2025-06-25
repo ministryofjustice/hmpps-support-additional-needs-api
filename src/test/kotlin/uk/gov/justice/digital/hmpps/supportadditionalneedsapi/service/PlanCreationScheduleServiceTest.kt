@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -50,6 +51,9 @@ class PlanCreationScheduleServiceTest {
   @InjectMocks
   private lateinit var service: PlanCreationScheduleService
 
+  @Mock
+  private lateinit var pesContractDate: LocalDate
+
   private val prisonNumber = randomValidPrisonNumber()
 
   @Test
@@ -85,7 +89,32 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `creates plan schedule and history if no plan, no existing schedule, in education, and has need`() {
+  fun `creates plan schedule and history when PES contract date is in the past`() {
+    val pesContractDate = LocalDate.parse("2024-10-01")
+    assertCreatesPlanWithExpectedDeadline(pesContractDate, LocalDate.now().plusDays(10))
+  }
+
+  @Test
+  fun `creates plan schedule and history when PES contract date is in the future`() {
+    val pesContractDate = LocalDate.now().plusMonths(6)
+    assertCreatesPlanWithExpectedDeadline(pesContractDate, pesContractDate.plusDays(10))
+  }
+
+  private fun assertCreatesPlanWithExpectedDeadline(
+    pesContractDate: LocalDate,
+    expectedDeadline: LocalDate,
+  ) {
+    val service = PlanCreationScheduleService(
+      planCreationScheduleHistoryRepository,
+      planCreationScheduleRepository,
+      planCreationScheduleHistoryMapper,
+      educationSupportPlanService,
+      educationService,
+      needService,
+      eventPublisher,
+      pesContractDate,
+    )
+
     whenever(educationSupportPlanService.getPlan(prisonNumber)).thenThrow(PlanNotFoundException("not found"))
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
@@ -94,7 +123,7 @@ class PlanCreationScheduleServiceTest {
     val savedEntity = PlanCreationScheduleEntity(
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
-      deadlineDate = LocalDate.now().plusDays(10),
+      deadlineDate = expectedDeadline,
       createdAtPrison = "N/A",
       updatedAtPrison = "N/A",
       version = 1,
@@ -112,8 +141,8 @@ class PlanCreationScheduleServiceTest {
     verify(planCreationScheduleRepository).saveAndFlush(
       check {
         assert(it.prisonNumber == prisonNumber)
-        assert(it.status == PlanCreationScheduleStatus.SCHEDULED)
-        assert(it.deadlineDate == LocalDate.now().plusDays(10))
+        assertEquals(it.status, PlanCreationScheduleStatus.SCHEDULED)
+        assertEquals(expectedDeadline, it.deadlineDate)
       },
     )
     verify(eventPublisher).createAndPublishPlanCreationSchedule(eq(prisonNumber), any<Instant>())
