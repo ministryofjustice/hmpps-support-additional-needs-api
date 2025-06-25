@@ -122,8 +122,8 @@ abstract class IntegrationTestBase {
   lateinit var hmppsQueueService: HmppsQueueService
 
   val domainEventQueue by lazy {
-    hmppsQueueService.findByQueueId("suppportadditionalneeds")
-      ?: throw MissingQueueException("HmppsQueue suppportadditionalneeds not found")
+    hmppsQueueService.findByQueueId("supportadditionalneeds")
+      ?: throw MissingQueueException("HmppsQueue supportadditionalneeds not found")
   }
   val domainEventQueueClient by lazy { domainEventQueue.sqsClient }
   val domainEventQueueDlqClient by lazy { domainEventQueue.sqsDlqClient }
