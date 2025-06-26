@@ -29,6 +29,7 @@ class PlanCreationScheduleHistoryMapper(
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason,
+      exemptionDetail = exemptionDetail,
       version = version!!.plus(1),
     )
   }
