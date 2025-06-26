@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -11,8 +12,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationUpdateStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdatePlanCreationStatusRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.validator.ReasonSpecifiedForExemptionStatusRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus as PlanCreationScheduleStatusEntity
 
+@Validated
 @RestController
 @RequestMapping("/profile/{prisonNumber}/plan-creation-schedule")
 class PlanCreationScheduleController(private val planCreationScheduleService: PlanCreationScheduleService) {
@@ -24,6 +27,7 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
 
   @PreAuthorize(HAS_EDIT_ELSP)
   @PatchMapping("/status")
+  @ReasonSpecifiedForExemptionStatusRequest
   fun updatePlanCreationScheduleStatus(
     @PathVariable prisonNumber: String,
     @RequestBody request: UpdatePlanCreationStatusRequest,
