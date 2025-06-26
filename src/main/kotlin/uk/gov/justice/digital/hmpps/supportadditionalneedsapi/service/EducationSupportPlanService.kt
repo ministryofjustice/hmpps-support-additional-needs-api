@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
@@ -20,6 +21,7 @@ class EducationSupportPlanService(
     return elspPlanMapper.toModel(entity)
   }
 
+  @Transactional
   fun create(prisonNumber: String, request: CreateEducationSupportPlanRequest): EducationSupportPlanResponse {
     checkPlanDoesNotExist(prisonNumber)
 

@@ -28,7 +28,7 @@ data class PlanCreationScheduleEntity(
   val prisonNumber: String,
 
   @Column
-  var deadlineDate: LocalDate,
+  var deadlineDate: LocalDate?,
 
   @Column
   @Enumerated(value = EnumType.STRING)
@@ -36,6 +36,9 @@ data class PlanCreationScheduleEntity(
 
   @Column
   var exemptionReason: String? = null,
+
+  @Column
+  var exemptionDetail: String? = null,
 
   @Column(updatable = false)
   val createdAtPrison: String,
