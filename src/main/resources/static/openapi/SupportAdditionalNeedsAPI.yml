@@ -1075,8 +1075,7 @@ components:
         request object to update a the status of a plan creation schedule.
       properties:
         exemptionReason:
-          type: string
-          description: The reason for the exemption - mandatory IF the status is an exemption
+          $ref: '#/components/schemas/PlanCreationScheduleExemptionReason'
         exemptionDetail:
           type: string
           description: More Detail about the reason for the exemption
@@ -1149,12 +1148,7 @@ components:
         status:
           $ref: '#/components/schemas/PlanCreationStatus'
         exemptionReason:
-          type: string
-          description: |
-            An optional reason as to why the plan creation Schedule is exempted.
-
-            Only present when the `status` field is one of the `EXEMPTION_` statuses and the user entered an exemption 
-            reason when marking the Review as Exempted.
+          $ref: '#/components/schemas/PlanCreationScheduleExemptionReason'
         exemptionDetail:
           type: string
           description: |
@@ -1188,6 +1182,16 @@ components:
       type: string
       enum:
         - EXEMPT_PRISONER_NOT_COMPLY
+
+    PlanCreationScheduleExemptionReason:
+      title: PlanCreationScheduleExemptionReason
+      description: Enum of the list of reasons a plan is exempted for.
+      type: string
+      enum:
+        - EXEMPT_REFUSED_TO_ENGAGE
+        - EXEMPT_NOT_REQUIRED
+        - EXEMPT_INACCURATE_IDENTIFICATION
+
 
     EducationSupportPlanResponse:
       title: EducationSupportPlanResponse

@@ -35,7 +35,7 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
     planCreationScheduleService.exemptSchedule(
       prisonNumber = prisonNumber,
       status = mapStatus(request.status),
-      exemptionReason = request.exemptionReason,
+      exemptionReason = request.exemptionReason?.value,
       exemptionDetail = request.exemptionDetail,
       updatedAtPrison = request.prisonId,
       clearDeadlineDate = true,
