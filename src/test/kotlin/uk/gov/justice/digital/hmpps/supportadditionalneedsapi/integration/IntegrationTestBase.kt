@@ -17,8 +17,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntityKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
@@ -46,7 +44,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationS
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
-import java.time.Instant
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
@@ -176,31 +173,8 @@ abstract class IntegrationTestBase {
       ).build(),
   ).get()
 
-  fun createPlanCreationScheduleRecords(
-    prisonNumber: String,
-    reference: UUID = UUID.randomUUID(),
-  ): List<PlanCreationScheduleHistoryEntity> = (1..3).map {
-    val planCreationScheduleHistoryEntity = PlanCreationScheduleHistoryEntity(
-      reference = reference,
-      prisonNumber = prisonNumber,
-      deadlineDate = LocalDate.now().minusMonths(1),
-      status = if (it == 3) PlanCreationScheduleStatus.SCHEDULED else PlanCreationScheduleStatus.COMPLETED,
-      exemptionReason = null,
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
-      createdBy = "testuser",
-      createdAt = Instant.now(),
-      updatedBy = "testuser",
-      updatedAt = Instant.now(),
-      id = PlanCreationScheduleHistoryEntityKey(revisionNumber = 0, id = UUID.randomUUID()),
-      version = 1,
-    )
-    planCreationScheduleHistoryRepository.saveAndFlush(planCreationScheduleHistoryEntity)
-  }
-
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
-    reference: UUID = UUID.randomUUID(),
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
   ) {
     val planCreationScheduleEntity =

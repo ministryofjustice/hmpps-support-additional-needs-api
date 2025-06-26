@@ -12,6 +12,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Edu
 class EducationSupportPlanService(
   private val elspPlanRepository: ElspPlanRepository,
   private val elspPlanMapper: ElspPlanMapper,
+  private val planCreationScheduleService: PlanCreationScheduleService,
+  private val planReviewScheduleService: ReviewScheduleService,
 ) {
   fun getPlan(prisonNumber: String): EducationSupportPlanResponse {
     val entity = elspPlanRepository.findByPrisonNumber(prisonNumber) ?: throw PlanNotFoundException(prisonNumber)
@@ -24,12 +26,12 @@ class EducationSupportPlanService(
     val entity = elspPlanMapper.toEntity(prisonNumber, request)
     val savedEntity = elspPlanRepository.saveAndFlush(entity)
 
-    return elspPlanMapper.toModel(savedEntity)
-
-    // TODO RR-1627
-    // Also need to update the plan creation schedule (if it exists)
+    // Update the plan creation schedule (if it exists)
+    planCreationScheduleService.completeSchedule(prisonNumber, request.prisonId)
     // Create the review Schedule - with the deadline date from this request
-    // and generate messages for MN
+    planReviewScheduleService.createReviewSchedule(prisonNumber, request.reviewDate, request.prisonId)
+
+    return elspPlanMapper.toModel(savedEntity)
   }
 
   private fun checkPlanDoesNotExist(prisonNumber: String) {
