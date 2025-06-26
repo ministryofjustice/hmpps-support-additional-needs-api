@@ -59,11 +59,24 @@ class PlanCreationScheduleService(
       .map { planCreationScheduleHistoryMapper.toModel(it) },
   )
 
-  fun exemptSchedule(prisonNumber: String, status: PlanCreationScheduleStatus) {
+  fun exemptSchedule(
+    prisonNumber: String,
+    status: PlanCreationScheduleStatus,
+    exemptionReason: String? = null,
+    exemptionDetail: String? = null,
+    updatedAtPrison: String = "N/A",
+    clearDeadlineDate: Boolean = false,
+  ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
       ?.let {
         it.status = status
+        it.exemptionReason = exemptionReason
+        it.exemptionDetail = exemptionDetail
+        it.updatedAtPrison = updatedAtPrison
+        if (clearDeadlineDate) {
+          it.deadlineDate = null
+        }
         planCreationScheduleRepository.save(it)
         eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
       }
