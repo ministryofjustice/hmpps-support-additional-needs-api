@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
@@ -11,6 +12,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Err
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus as ReviewScheduleStatusEntity
 
 class CreateELSPPlanTest : IntegrationTestBase() {
   companion object {
@@ -24,6 +26,7 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     val planRequest = createPlanRequest()
+    aValidPlanCreationScheduleExists(prisonNumber)
 
     // When
     val response = webTestClient.post()
@@ -42,6 +45,7 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     val planFromService = elspPlanService.getPlan(prisonNumber)
 
     assertThat(planFromService).isNotNull()
+    assertThat(planFromService.createdByDisplayName).isEqualTo("Test User")
     assertThat(planFromService.planCreatedBy?.name).isEqualTo(planRequest.planCreatedBy?.name)
     assertThat(planFromService.planCreatedBy?.jobRole).isEqualTo(planRequest.planCreatedBy?.jobRole)
     assertThat(planFromService.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
@@ -52,6 +56,13 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     assertThat(planFromService.detail).isEqualTo(planRequest.detail)
     assertThat(planFromService.otherContributors?.get(0)?.name).isEqualTo(planRequest.otherContributors?.get(0)?.name)
     assertThat(planFromService.otherContributors?.get(0)?.jobRole).isEqualTo(planRequest.otherContributors?.get(0)?.jobRole)
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.COMPLETED)
+
+    val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    assertThat(reviewSchedule!!.status).isEqualTo(ReviewScheduleStatusEntity.SCHEDULED)
+    assertThat(reviewSchedule.deadlineDate).isEqualTo(planRequest.reviewDate)
   }
 
   private fun createPlanRequest(): CreateEducationSupportPlanRequest = CreateEducationSupportPlanRequest(

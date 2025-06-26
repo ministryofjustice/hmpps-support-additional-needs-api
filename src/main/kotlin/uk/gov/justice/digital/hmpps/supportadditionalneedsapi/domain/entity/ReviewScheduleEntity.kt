@@ -35,7 +35,7 @@ data class ReviewScheduleEntity(
   var status: ReviewScheduleStatus,
 
   @Column
-  var exemptionReason: String?,
+  var exemptionReason: String? = null,
 
   @Column(updatable = false)
   val createdAtPrison: String,

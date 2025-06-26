@@ -15,9 +15,9 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -37,7 +37,7 @@ class PlanCreationScheduleServiceTest {
   private lateinit var planCreationScheduleHistoryMapper: PlanCreationScheduleHistoryMapper
 
   @Mock
-  private lateinit var educationSupportPlanService: EducationSupportPlanService
+  private lateinit var educationSupportPlanRepository: ElspPlanRepository
 
   @Mock
   private lateinit var educationService: EducationService
@@ -58,7 +58,7 @@ class PlanCreationScheduleServiceTest {
 
   @Test
   fun `does nothing if plan already exists`() {
-    whenever(educationSupportPlanService.getPlan(prisonNumber)).thenReturn(mock())
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
 
     service.attemptToCreate(prisonNumber)
 
@@ -68,7 +68,7 @@ class PlanCreationScheduleServiceTest {
 
   @Test
   fun `does nothing if schedule already exists`() {
-    whenever(educationSupportPlanService.getPlan(prisonNumber)).thenThrow(PlanNotFoundException("not found"))
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
 
     service.attemptToCreate(prisonNumber)
@@ -79,7 +79,7 @@ class PlanCreationScheduleServiceTest {
 
   @Test
   fun `does nothing if not in education or no need`() {
-    whenever(educationSupportPlanService.getPlan(prisonNumber)).thenThrow(PlanNotFoundException("not found"))
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(educationService.inEducation(prisonNumber)).thenReturn(false)
 
@@ -108,14 +108,14 @@ class PlanCreationScheduleServiceTest {
       planCreationScheduleHistoryRepository,
       planCreationScheduleRepository,
       planCreationScheduleHistoryMapper,
-      educationSupportPlanService,
+      educationSupportPlanRepository,
       educationService,
       needService,
       eventPublisher,
       pesContractDate,
     )
 
-    whenever(educationSupportPlanService.getPlan(prisonNumber)).thenThrow(PlanNotFoundException("not found"))
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
     whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
