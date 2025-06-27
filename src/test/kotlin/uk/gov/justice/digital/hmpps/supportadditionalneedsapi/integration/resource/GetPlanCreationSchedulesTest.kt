@@ -56,7 +56,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
       .uri { uriBuilder ->
         uriBuilder
           .path(URI_TEMPLATE)
-          .queryParam("includePastSchedules", true)
+          .queryParam("includeAllHistory", true)
           .build(prisonNumber)
       }
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
@@ -92,7 +92,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
       .uri { uriBuilder ->
         uriBuilder
           .path(URI_TEMPLATE)
-          .queryParam("includePastSchedules", false)
+          .queryParam("includeAllHistory", false)
           .build(prisonNumber)
       }
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))

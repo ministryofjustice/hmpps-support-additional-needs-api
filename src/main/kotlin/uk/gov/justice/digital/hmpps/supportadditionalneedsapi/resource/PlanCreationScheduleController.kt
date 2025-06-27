@@ -24,8 +24,8 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
   @GetMapping
   fun getPlanCreationSchedules(
     @PathVariable prisonNumber: String,
-    @RequestParam(name = "includePastSchedules", defaultValue = "false") includePastSchedules: Boolean,
-  ): PlanCreationSchedulesResponse = planCreationScheduleService.getSchedules(prisonNumber, includePastSchedules)
+    @RequestParam(name = "includeAllHistory", defaultValue = "false") includeAllHistory: Boolean,
+  ): PlanCreationSchedulesResponse = planCreationScheduleService.getSchedules(prisonNumber, includeAllHistory)
 
   @PreAuthorize(HAS_EDIT_ELSP)
   @PatchMapping("/status")

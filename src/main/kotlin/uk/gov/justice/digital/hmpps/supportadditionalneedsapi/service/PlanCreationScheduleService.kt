@@ -54,11 +54,11 @@ class PlanCreationScheduleService(
     }
   }
 
-  fun getSchedules(prisonId: String, includePastSchedules: Boolean): PlanCreationSchedulesResponse {
+  fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
     val schedules = planCreationScheduleHistoryRepository
       .findAllByPrisonNumberOrderByVersionAsc(prisonId)
 
-    val models = if (includePastSchedules) {
+    val models = if (includeAllHistory) {
       schedules.map { planCreationScheduleHistoryMapper.toModel(it) }
     } else {
       schedules.maxByOrNull { it.version!! }
