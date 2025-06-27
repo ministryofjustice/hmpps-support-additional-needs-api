@@ -280,6 +280,13 @@ paths:
   '/profile/{prisonNumber}/plan-creation-schedule':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: includePastSchedules
+        in: query
+        description: Whether to include past plan creation schedules
+        required: false
+        schema:
+          type: boolean
+          default: false
     get:
       summary: Returns the plan creation Schedule for a prisoner
       description: |

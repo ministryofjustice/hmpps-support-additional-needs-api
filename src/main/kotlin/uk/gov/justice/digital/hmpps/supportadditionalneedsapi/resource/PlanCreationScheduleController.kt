@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationUpdateStatus
@@ -23,7 +24,8 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
   @GetMapping
   fun getPlanCreationSchedules(
     @PathVariable prisonNumber: String,
-  ): PlanCreationSchedulesResponse = planCreationScheduleService.getSchedules(prisonNumber)
+    @RequestParam(name = "includePastSchedules", defaultValue = "false") includePastSchedules: Boolean,
+  ): PlanCreationSchedulesResponse = planCreationScheduleService.getSchedules(prisonNumber, includePastSchedules)
 
   @PreAuthorize(HAS_EDIT_ELSP)
   @PatchMapping("/status")
@@ -40,7 +42,7 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
       updatedAtPrison = request.prisonId,
       clearDeadlineDate = true,
     )
-    return planCreationScheduleService.getSchedules(prisonNumber)
+    return planCreationScheduleService.getSchedules(prisonNumber, false)
   }
 
   fun mapStatus(status: PlanCreationUpdateStatus): PlanCreationScheduleStatusEntity = when (status) {

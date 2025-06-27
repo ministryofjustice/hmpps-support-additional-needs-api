@@ -54,10 +54,20 @@ class PlanCreationScheduleService(
     }
   }
 
-  fun getSchedules(prisonId: String): PlanCreationSchedulesResponse = PlanCreationSchedulesResponse(
-    planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonId)
-      .map { planCreationScheduleHistoryMapper.toModel(it) },
-  )
+  fun getSchedules(prisonId: String, includePastSchedules: Boolean): PlanCreationSchedulesResponse {
+    val schedules = planCreationScheduleHistoryRepository
+      .findAllByPrisonNumberOrderByVersionAsc(prisonId)
+
+    val models = if (includePastSchedules) {
+      schedules.map { planCreationScheduleHistoryMapper.toModel(it) }
+    } else {
+      schedules.maxByOrNull { it.version!! }
+        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
+        ?: emptyList()
+    }
+
+    return PlanCreationSchedulesResponse(models)
+  }
 
   fun exemptSchedule(
     prisonNumber: String,
