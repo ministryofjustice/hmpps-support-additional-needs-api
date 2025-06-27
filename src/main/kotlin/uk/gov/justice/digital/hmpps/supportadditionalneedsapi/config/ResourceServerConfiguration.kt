@@ -33,6 +33,7 @@ class ResourceServerConfiguration {
           "/swagger-ui/**",
           "/swagger-ui.html",
           "/openapi/**",
+          "/queue-admin/retry-all-dlqs",
         ).forEach { authorize(it, permitAll) }
         authorize(anyRequest, authenticated)
       }
