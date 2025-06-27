@@ -5,9 +5,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
@@ -19,7 +19,7 @@ class PlanCreationScheduleService(
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
   private val planCreationScheduleRepository: PlanCreationScheduleRepository,
   private val planCreationScheduleHistoryMapper: PlanCreationScheduleHistoryMapper,
-  private val educationSupportPlanService: EducationSupportPlanService,
+  private val educationSupportPlanRepository: ElspPlanRepository,
   private val educationService: EducationService,
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
@@ -34,12 +34,7 @@ class PlanCreationScheduleService(
    */
   @Transactional
   fun attemptToCreate(prisonNumber: String) {
-    try {
-      educationSupportPlanService.getPlan(prisonNumber)
-      return // Plan exists, so exit
-    } catch (e: PlanNotFoundException) {
-      // No plan found — carry on
-    }
+    if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
     // already have a schedule so exit here.
     if (planCreationScheduleRepository.findByPrisonNumber(prisonNumber) != null) return
@@ -59,16 +54,39 @@ class PlanCreationScheduleService(
     }
   }
 
-  fun getSchedules(prisonId: String): PlanCreationSchedulesResponse = PlanCreationSchedulesResponse(
-    planCreationScheduleHistoryRepository.findAllByPrisonNumber(prisonId)
-      .map { planCreationScheduleHistoryMapper.toModel(it) },
-  )
+  fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
+    val schedules = planCreationScheduleHistoryRepository
+      .findAllByPrisonNumberOrderByVersionAsc(prisonId)
 
-  fun exemptSchedule(prisonNumber: String, status: PlanCreationScheduleStatus) {
+    val models = if (includeAllHistory) {
+      schedules.map { planCreationScheduleHistoryMapper.toModel(it) }
+    } else {
+      schedules.maxByOrNull { it.version!! }
+        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
+        ?: emptyList()
+    }
+
+    return PlanCreationSchedulesResponse(models)
+  }
+
+  fun exemptSchedule(
+    prisonNumber: String,
+    status: PlanCreationScheduleStatus,
+    exemptionReason: String? = null,
+    exemptionDetail: String? = null,
+    updatedAtPrison: String = "N/A",
+    clearDeadlineDate: Boolean = false,
+  ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
       ?.let {
         it.status = status
+        it.exemptionReason = exemptionReason
+        it.exemptionDetail = exemptionDetail
+        it.updatedAtPrison = updatedAtPrison
+        if (clearDeadlineDate) {
+          it.deadlineDate = null
+        }
         planCreationScheduleRepository.save(it)
         eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
       }
@@ -78,5 +96,16 @@ class PlanCreationScheduleService(
     val todayPlusTen = LocalDate.now().plus(10, ChronoUnit.DAYS)
     val pesPlusTen = pesContractDate.plus(10, ChronoUnit.DAYS)
     return maxOf(todayPlusTen, pesPlusTen)
+  }
+
+  fun completeSchedule(prisonNumber: String, prisonId: String) {
+    planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
+      ?.let {
+        it.status = PlanCreationScheduleStatus.COMPLETED
+        it.updatedAtPrison = prisonId
+        planCreationScheduleRepository.save(it)
+        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      }
   }
 }

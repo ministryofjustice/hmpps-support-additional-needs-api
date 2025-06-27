@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -21,6 +22,7 @@ class ScheduleService(
   val reviewScheduleService: ReviewScheduleService,
 ) {
 
+  @Transactional
   fun updateSchedules(additionalInformation: AdditionalInformation) {
     when (additionalInformation) {
       is PrisonerReceivedAdditionalInformation -> processReceived(additionalInformation)

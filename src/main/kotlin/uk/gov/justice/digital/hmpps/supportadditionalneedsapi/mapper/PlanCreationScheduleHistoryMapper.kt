@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleExemptionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus as PlanCreationStatusEntity
@@ -28,7 +29,8 @@ class PlanCreationScheduleHistoryMapper(
       updatedByDisplayName = userService.getUserDetails(updatedBy).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
-      exemptionReason = exemptionReason,
+      exemptionReason = exemptionReason?.let { PlanCreationScheduleExemptionReason.forValue(exemptionReason) },
+      exemptionDetail = exemptionDetail,
       version = version!!.plus(1),
     )
   }

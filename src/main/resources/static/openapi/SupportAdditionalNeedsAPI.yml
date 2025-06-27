@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.3.3'
+  version: '0.4.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -280,6 +280,13 @@ paths:
   '/profile/{prisonNumber}/plan-creation-schedule':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: includeAllHistory
+        in: query
+        description: Whether to include the history of the schedule changes
+        required: false
+        schema:
+          type: boolean
+          default: false
     get:
       summary: Returns the plan creation Schedule for a prisoner
       description: |
@@ -298,6 +305,31 @@ paths:
         '404':
           $ref: '#/components/responses/404Error'
       operationId: get-plan-creation-schedule
+
+  '/profile/{prisonNumber}/plan-creation-schedule/status':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    patch:
+      summary: Update the status of the plan creation schedule for a prisoner
+      description: |
+        Updates the status of the plan creation schedule for the specified prisoner.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+
+      tags:
+        - Plan
+      requestBody:
+        $ref: '#/components/requestBodies/UpdatePlanCreationStatus'
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPlanCreationSchedule'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: update-plan-creation-schedule-status
   '/reference-data/{domain}':
     get:
       tags:
@@ -416,6 +448,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CreateEducationSupportPlanRequest'
+    UpdatePlanCreationStatus:
+      description: Request body to update the status of the plan creation schedule.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdatePlanCreationStatusRequest'
 
   #
   # Schema and Enum Definitions
@@ -1037,6 +1075,26 @@ components:
         - active
         - prisonId
 
+    UpdatePlanCreationStatusRequest:
+      title: UpdatePlanCreationStatusRequest
+      type: object
+      description: |
+        request object to update a the status of a plan creation schedule.
+      properties:
+        exemptionReason:
+          $ref: '#/components/schemas/PlanCreationScheduleExemptionReason'
+        exemptionDetail:
+          type: string
+          description: More Detail about the reason for the exemption
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prison the schedule was updated at
+        status:
+          $ref: '#/components/schemas/PlanCreationUpdateStatus'
+      required:
+        - status
+        - prisonId
+
     Source:
       title: Source
       description: Enum of the source of the need.
@@ -1097,18 +1155,16 @@ components:
         status:
           $ref: '#/components/schemas/PlanCreationStatus'
         exemptionReason:
+          $ref: '#/components/schemas/PlanCreationScheduleExemptionReason'
+        exemptionDetail:
           type: string
           description: |
-            An optional reason as to why the plan creation Schedule is exempted.
-
-            Only present when the `status` field is one of the `EXEMPTION_` statuses and the user entered an exemption 
-            reason when marking the Review as Exempted.
+            More detail about the reason for this exemption. This is mainly used for EXEMPT_PRISONER_NOT_COMPLY.
         version:
           type: integer
           description: the version number of this schedule (the highest number is the most recent version of this plan creation schedule)
       required:
         - reference
-        - deadlineDate
         - status
 
     PlanCreationStatus:
@@ -1126,6 +1182,23 @@ components:
         - EXEMPT_NOT_IN_EDUCATION
         - EXEMPT_UNKNOWN
         - COMPLETED
+
+    PlanCreationUpdateStatus:
+      title: PlanCreationUpdateStatus
+      description: Enum of the list of statuses the plan creation schedule can be updated to.
+      type: string
+      enum:
+        - EXEMPT_PRISONER_NOT_COMPLY
+
+    PlanCreationScheduleExemptionReason:
+      title: PlanCreationScheduleExemptionReason
+      description: Enum of the list of reasons a plan is exempted for.
+      type: string
+      enum:
+        - EXEMPT_REFUSED_TO_ENGAGE
+        - EXEMPT_NOT_REQUIRED
+        - EXEMPT_INACCURATE_IDENTIFICATION
+
 
     EducationSupportPlanResponse:
       title: EducationSupportPlanResponse

@@ -33,7 +33,7 @@ hmpps.sqs:
   enabled: true
   provider: localstack
   queues:
-    suppportadditionalneeds:
+    supportadditionalneeds:
       queueName: support-additional-needs-queue
       subscribeFilter: "{\"eventType\":[\"prison-offender-events.prisoner.received\", \"prison-offender-events.prisoner.released\"]}"
       dlqName: support-additional-needs-dead-letter-queue

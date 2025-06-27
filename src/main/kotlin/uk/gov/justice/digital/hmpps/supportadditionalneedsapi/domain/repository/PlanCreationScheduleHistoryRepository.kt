@@ -7,5 +7,5 @@ import java.util.UUID
 
 @Repository
 interface PlanCreationScheduleHistoryRepository : JpaRepository<PlanCreationScheduleHistoryEntity, UUID> {
-  fun findAllByPrisonNumber(prisonNumber: String): List<PlanCreationScheduleHistoryEntity>
+  fun findAllByPrisonNumberOrderByVersionAsc(prisonNumber: String): List<PlanCreationScheduleHistoryEntity>
 }
