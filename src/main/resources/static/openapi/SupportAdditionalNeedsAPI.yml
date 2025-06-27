@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.4.0'
+  version: '0.4.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -280,6 +280,13 @@ paths:
   '/profile/{prisonNumber}/plan-creation-schedule':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: includeAllHistory
+        in: query
+        description: Whether to include the history of the schedule changes
+        required: false
+        schema:
+          type: boolean
+          default: false
     get:
       summary: Returns the plan creation Schedule for a prisoner
       description: |

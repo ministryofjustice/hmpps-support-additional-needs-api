@@ -45,11 +45,11 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
 
     assertThat(actual).isNotNull()
-    assertThat(actual!!.planCreationSchedules[1].status).isEqualTo(PlanCreationStatus.EXEMPT_PRISONER_NOT_COMPLY)
-    assertThat(actual.planCreationSchedules[1].deadlineDate).isNull()
-    assertThat(actual.planCreationSchedules[1].exemptionReason).isEqualTo(PlanCreationScheduleExemptionReason.EXEMPT_NOT_REQUIRED)
-    assertThat(actual.planCreationSchedules[1].exemptionDetail).isEqualTo("because I say so")
-    assertThat(actual.planCreationSchedules[1].updatedAtPrison).isEqualTo("LWI")
+    assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.EXEMPT_PRISONER_NOT_COMPLY)
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isNull()
+    assertThat(actual.planCreationSchedules[0].exemptionReason).isEqualTo(PlanCreationScheduleExemptionReason.EXEMPT_NOT_REQUIRED)
+    assertThat(actual.planCreationSchedules[0].exemptionDetail).isEqualTo("because I say so")
+    assertThat(actual.planCreationSchedules[0].updatedAtPrison).isEqualTo("LWI")
   }
 
   @Test
