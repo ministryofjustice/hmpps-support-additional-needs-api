@@ -8,7 +8,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0"
   kotlin("plugin.spring") version "2.2.0"
   kotlin("plugin.jpa") version "2.2.0"
-  id("org.openapi.generator") version "7.13.0"
+  id("org.openapi.generator") version "7.14.0"
 
   `java-test-fixtures`
 }
