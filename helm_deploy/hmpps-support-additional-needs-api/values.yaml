@@ -11,8 +11,9 @@ generic-service:
 
   ingress:
     enabled: true
-    host: app-hostname.local # override per environment
-    tlsSecretName: hmpps-education-and-work-plan-api-cert
+    hosts:
+      - app-hostname.local # override per environment
+    tlsSecretName: hmpps-support-additional-needs-api-cert
     annotations:
       # Secure the endpoints related to k8s jobs from outside the Kubernetes ingress
       nginx.ingress.kubernetes.io/server-snippet: |
