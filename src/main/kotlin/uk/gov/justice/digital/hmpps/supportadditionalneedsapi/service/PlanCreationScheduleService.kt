@@ -8,6 +8,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
@@ -65,8 +67,36 @@ class PlanCreationScheduleService(
         ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
         ?: emptyList()
     }
-
     return PlanCreationSchedulesResponse(models)
+  }
+
+  fun exemptScheduleWithValidate(
+    prisonNumber: String,
+    status: PlanCreationScheduleStatus,
+    exemptionReason: String? = null,
+    exemptionDetail: String? = null,
+    updatedAtPrison: String = "N/A",
+    clearDeadlineDate: Boolean = false,
+  ) {
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?: throw PlanCreationScheduleNotFoundException(prisonNumber)
+
+    if (schedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+      throw PlanCreationScheduleStateException(
+        prisonNumber,
+        PlanCreationScheduleStatus.SCHEDULED,
+        schedule.status,
+      )
+    }
+
+    exemptSchedule(
+      prisonNumber = prisonNumber,
+      status = status,
+      exemptionReason = exemptionReason,
+      exemptionDetail = exemptionDetail,
+      updatedAtPrison = updatedAtPrison,
+      clearDeadlineDate = clearDeadlineDate,
+    )
   }
 
   fun exemptSchedule(

@@ -25,6 +25,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.Conditi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateChallengeException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
@@ -161,6 +163,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       ConditionNotFoundException::class,
       ChallengeNotFoundException::class,
       PlanNotFoundException::class,
+      PlanCreationScheduleNotFoundException::class,
     ],
   )
   fun handleExceptionReturnNotFoundErrorResponse(
@@ -186,6 +189,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       DuplicateConditionException::class,
       DuplicateChallengeException::class,
       PersonAlreadyHasAPlanException::class,
+      PlanCreationScheduleStateException::class,
     ],
   )
   protected fun handleExceptionReturnConflictErrorResponse(
