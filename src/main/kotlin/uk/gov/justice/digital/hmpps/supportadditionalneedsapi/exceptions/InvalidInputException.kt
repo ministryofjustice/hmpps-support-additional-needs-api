@@ -37,5 +37,5 @@ class PlanCreationScheduleNotFoundException(prisonNumber: String) : RuntimeExcep
 class PlanCreationScheduleStateException(
   prisonNumber: String,
   status: PlanCreationScheduleStatus,
-  existingStatus: PlanCreationScheduleStatus
+  existingStatus: PlanCreationScheduleStatus,
 ) : RuntimeException("Plan creation schedule status must be [$status] but was [$existingStatus] for prisoner [$prisonNumber]")
