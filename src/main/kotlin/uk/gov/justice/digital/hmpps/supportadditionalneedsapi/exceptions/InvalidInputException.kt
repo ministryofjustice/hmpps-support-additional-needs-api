@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions
 
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import java.util.*
 
 interface InvalidUserRequest {
@@ -30,3 +31,11 @@ class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : Runtim
 class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
 
 class PlanNotFoundException(prisonNumber: String) : RuntimeException("ELSP plan not found for prisoner [$prisonNumber]")
+
+class PlanCreationScheduleNotFoundException(prisonNumber: String) : RuntimeException("Plan creation schedule not found for prisoner [$prisonNumber]")
+
+class PlanCreationScheduleStateException(
+  prisonNumber: String,
+  status: PlanCreationScheduleStatus,
+  existingStatus: PlanCreationScheduleStatus
+) : RuntimeException("Plan creation schedule status must be [$status] but was [$existingStatus] for prisoner [$prisonNumber]")
