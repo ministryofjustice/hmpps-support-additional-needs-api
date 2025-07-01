@@ -82,7 +82,7 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `update a plan creation schedule status to EXEMPT_PRISONER_NOT_COMPLY fail due to no schedule`() {
+  fun `update a plan creation schedule status to EXEMPT_PRISONER_NOT_COMPLY fail due to status not being SCHEDULED`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("system")
@@ -112,7 +112,7 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `update a plan creation schedule status to EXEMPT_PRISONER_NOT_COMPLY fail due to status not being SCHEDULED`() {
+  fun `update a plan creation schedule status to EXEMPT_PRISONER_NOT_COMPLY fail due to no schedule`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("system")

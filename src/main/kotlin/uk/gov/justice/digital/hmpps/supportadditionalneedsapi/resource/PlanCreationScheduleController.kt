@@ -35,7 +35,7 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
     @PathVariable prisonNumber: String,
     @Valid @RequestBody request: UpdatePlanCreationStatusRequest,
   ): PlanCreationSchedulesResponse {
-    planCreationScheduleService.exemptSchedule(
+    planCreationScheduleService.exemptScheduleWithValidate(
       prisonNumber = prisonNumber,
       status = mapStatus(request.status),
       exemptionReason = request.exemptionReason?.value,

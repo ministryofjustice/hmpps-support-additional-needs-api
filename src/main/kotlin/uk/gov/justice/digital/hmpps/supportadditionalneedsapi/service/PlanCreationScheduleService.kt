@@ -67,11 +67,10 @@ class PlanCreationScheduleService(
         ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
         ?: emptyList()
     }
-
     return PlanCreationSchedulesResponse(models)
   }
 
-  fun exemptSchedule(
+  fun exemptScheduleWithValidate(
     prisonNumber: String,
     status: PlanCreationScheduleStatus,
     exemptionReason: String? = null,
@@ -82,19 +81,45 @@ class PlanCreationScheduleService(
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?: throw PlanCreationScheduleNotFoundException(prisonNumber)
 
-    if (schedule.status != PlanCreationScheduleStatus.SCHEDULED) throw PlanCreationScheduleStateException(prisonNumber, PlanCreationScheduleStatus.SCHEDULED, schedule.status)
-
-    schedule.status = status
-    schedule.exemptionReason = exemptionReason
-    schedule.exemptionDetail = exemptionDetail
-    schedule.updatedAtPrison = updatedAtPrison
-
-    if (clearDeadlineDate) {
-      schedule.deadlineDate = null
+    if (schedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+      throw PlanCreationScheduleStateException(
+        prisonNumber,
+        PlanCreationScheduleStatus.SCHEDULED,
+        schedule.status,
+      )
     }
 
-    planCreationScheduleRepository.save(schedule)
-    eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+    exemptSchedule(
+      prisonNumber = prisonNumber,
+      status = status,
+      exemptionReason = exemptionReason,
+      exemptionDetail = exemptionDetail,
+      updatedAtPrison = updatedAtPrison,
+      clearDeadlineDate = clearDeadlineDate,
+    )
+  }
+
+  fun exemptSchedule(
+    prisonNumber: String,
+    status: PlanCreationScheduleStatus,
+    exemptionReason: String? = null,
+    exemptionDetail: String? = null,
+    updatedAtPrison: String = "N/A",
+    clearDeadlineDate: Boolean = false,
+  ) {
+    planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
+      ?.let {
+        it.status = status
+        it.exemptionReason = exemptionReason
+        it.exemptionDetail = exemptionDetail
+        it.updatedAtPrison = updatedAtPrison
+        if (clearDeadlineDate) {
+          it.deadlineDate = null
+        }
+        planCreationScheduleRepository.save(it)
+        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      }
   }
 
   fun getDeadlineDate(): LocalDate {
