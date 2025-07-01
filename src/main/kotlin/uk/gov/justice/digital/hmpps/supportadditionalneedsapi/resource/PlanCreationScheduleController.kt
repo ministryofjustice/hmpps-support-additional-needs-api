@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
+import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -32,7 +33,7 @@ class PlanCreationScheduleController(private val planCreationScheduleService: Pl
   @ReasonSpecifiedForExemptionStatusRequest
   fun updatePlanCreationScheduleStatus(
     @PathVariable prisonNumber: String,
-    @RequestBody request: UpdatePlanCreationStatusRequest,
+    @Valid @RequestBody request: UpdatePlanCreationStatusRequest,
   ): PlanCreationSchedulesResponse {
     planCreationScheduleService.exemptSchedule(
       prisonNumber = prisonNumber,
