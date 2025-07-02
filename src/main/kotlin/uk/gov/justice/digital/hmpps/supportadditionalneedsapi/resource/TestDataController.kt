@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
-import jakarta.validation.Valid
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
