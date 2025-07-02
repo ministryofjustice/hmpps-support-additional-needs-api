@@ -25,7 +25,6 @@ class TestDataController(private val planCreationScheduleRepository: PlanCreatio
   @ResponseStatus(HttpStatus.CREATED)
   fun createPlanCreationSchedule(
     @PathVariable prisonNumber: String,
-    @Valid
     @RequestBody request: Request,
   ): PlanCreationScheduleEntity = planCreationScheduleRepository.save(
     PlanCreationScheduleEntity(
@@ -38,4 +37,4 @@ class TestDataController(private val planCreationScheduleRepository: PlanCreatio
   )
 }
 
-data class Request(val deadlineDate: LocalDate, val prisonId: String)
+data class Request(val deadlineDate: LocalDate = LocalDate.now().plusDays(10), val prisonId: String = "BXI")
