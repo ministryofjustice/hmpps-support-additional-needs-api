@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleExemptionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus as PlanCreationStatusEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.NeedSource as NeedSourceModel
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus as PlanCreationStatusModel
 
 @Component
@@ -31,9 +33,14 @@ class PlanCreationScheduleHistoryMapper(
       updatedAtPrison = updatedAtPrison,
       exemptionReason = exemptionReason?.let { PlanCreationScheduleExemptionReason.forValue(exemptionReason) },
       exemptionDetail = exemptionDetail,
+      needSources = toNeedSources(needSources),
       version = version!!.plus(1),
     )
   }
+
+  private fun toNeedSources(needSources: Set<NeedSource>): List<NeedSourceModel>? = needSources
+    .takeIf { it.isNotEmpty() }
+    ?.map { NeedSourceModel.valueOf(it.name) }
 
   private fun toPlanCreationStatus(status: PlanCreationStatusEntity): PlanCreationStatusModel = when (status) {
     PlanCreationStatusEntity.SCHEDULED -> PlanCreationStatusModel.SCHEDULED

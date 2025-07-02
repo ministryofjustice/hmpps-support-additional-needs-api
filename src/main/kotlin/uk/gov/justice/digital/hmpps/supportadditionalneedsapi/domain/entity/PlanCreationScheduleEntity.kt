@@ -1,6 +1,9 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
+import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
+import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
@@ -16,7 +19,7 @@ import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 @Table(name = "plan_creation_schedule")
 @Entity
@@ -39,6 +42,10 @@ data class PlanCreationScheduleEntity(
 
   @Column
   var exemptionDetail: String? = null,
+
+  @Convert(converter = NeedSourceConverter::class)
+  @Column(name = "need_sources")
+  val needSources: Set<NeedSource> = emptySet(),
 
   @Column(updatable = false)
   val createdAtPrison: String,
@@ -85,4 +92,24 @@ enum class PlanCreationScheduleStatus(val activeReview: Boolean) {
   EXEMPT_NOT_IN_EDUCATION(false),
   EXEMPT_UNKNOWN(false),
   COMPLETED(false),
+}
+
+enum class NeedSource {
+  LDD_SCREENER,
+  ALN_SCREENER,
+  CONDITION_SELF_DECLARED,
+  CONDITION_CONFIRMED_DIAGNOSIS,
+  CHALLENGE_NOT_ALN_SCREENER,
+}
+
+@Converter
+class NeedSourceConverter : AttributeConverter<Set<NeedSource>, String> {
+
+  override fun convertToDatabaseColumn(attribute: Set<NeedSource>?): String? = attribute?.joinToString(",") { it.name }
+
+  override fun convertToEntityAttribute(dbData: String?): Set<NeedSource> = dbData
+    ?.split(",")
+    ?.mapNotNull { it.trim().takeIf { it.isNotEmpty() }?.let(NeedSource::valueOf) }
+    ?.toSet()
+    ?: emptySet()
 }

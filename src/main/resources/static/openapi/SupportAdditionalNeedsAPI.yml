@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.4.1'
+  version: '0.4.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1160,6 +1160,12 @@ components:
           type: string
           description: |
             More detail about the reason for this exemption. This is mainly used for EXEMPT_PRISONER_NOT_COMPLY.
+        needSources:
+          type: array
+          items:
+            $ref: '#/components/schemas/NeedSource'
+          description: |
+            The source(s) for why this plan creation schedule is needed. Multiple reasons may apply.
         version:
           type: integer
           description: the version number of this schedule (the highest number is the most recent version of this plan creation schedule)
@@ -1182,6 +1188,17 @@ components:
         - EXEMPT_NOT_IN_EDUCATION
         - EXEMPT_UNKNOWN
         - COMPLETED
+
+    NeedSource:
+      title: NeedSource
+      description: The source(s) for why this plan creation schedule is needed.
+      type: string
+      enum:
+        - LDD_SCREENER
+        - ALN_SCREENER
+        - CONDITION_SELF_DECLARED
+        - CONDITION_CONFIRMED_DIAGNOSIS
+        - CHALLENGE_NOT_ALN_SCREENER
 
     PlanCreationUpdateStatus:
       title: PlanCreationUpdateStatus
