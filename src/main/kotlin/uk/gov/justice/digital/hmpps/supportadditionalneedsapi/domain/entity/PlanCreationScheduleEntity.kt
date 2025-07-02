@@ -1,8 +1,9 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
+import io.hypersistence.utils.hibernate.type.array.EnumArrayType
+import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Converter
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
@@ -12,6 +13,8 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.CreationTimestamp
+import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.Type
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.envers.Audited
 import org.springframework.data.annotation.CreatedBy
@@ -43,9 +46,9 @@ data class PlanCreationScheduleEntity(
   @Column
   var exemptionDetail: String? = null,
 
-  @Convert(converter = NeedSourceConverter::class)
-  @Column(name = "need_sources")
-  val needSources: Set<NeedSource> = emptySet(),
+  @Column
+  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
+  var needSources: Set<NeedSource> = emptySet(),
 
   @Column(updatable = false)
   val createdAtPrison: String,
