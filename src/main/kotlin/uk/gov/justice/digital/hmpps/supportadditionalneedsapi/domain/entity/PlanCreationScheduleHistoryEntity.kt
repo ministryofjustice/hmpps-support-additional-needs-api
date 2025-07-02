@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
 import jakarta.persistence.Column
+import jakarta.persistence.Convert
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
@@ -38,6 +39,10 @@ data class PlanCreationScheduleHistoryEntity(
 
   @Column(name = "exemption_detail")
   val exemptionDetail: String?,
+
+  @Convert(converter = NeedSourceConverter::class)
+  @Column(name = "need_sources")
+  val needSources: Set<NeedSource> = emptySet(),
 
   @Column(name = "created_by")
   val createdBy: String,
