@@ -1,7 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
+import io.hypersistence.utils.hibernate.type.array.EnumArrayType
+import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.Column
-import jakarta.persistence.Convert
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
@@ -9,6 +10,8 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
+import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.Type
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -40,8 +43,8 @@ data class PlanCreationScheduleHistoryEntity(
   @Column(name = "exemption_detail")
   val exemptionDetail: String?,
 
-  @Convert(converter = NeedSourceConverter::class)
   @Column(name = "need_sources")
+  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   val needSources: Set<NeedSource> = emptySet(),
 
   @Column(name = "created_by")
