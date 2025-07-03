@@ -13,6 +13,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource.ALN_SCREENER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -119,6 +120,7 @@ class PlanCreationScheduleServiceTest {
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
     whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
     whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+    whenever(needService.getNeedSources(prisonNumber)).thenReturn(setOf(ALN_SCREENER))
 
     val savedEntity = PlanCreationScheduleEntity(
       prisonNumber = prisonNumber,
@@ -127,6 +129,7 @@ class PlanCreationScheduleServiceTest {
       createdAtPrison = "N/A",
       updatedAtPrison = "N/A",
       version = 1,
+      needSources = setOf(ALN_SCREENER),
     ).apply {
       createdAt = Instant.now()
       updatedAt = Instant.now()
@@ -143,6 +146,7 @@ class PlanCreationScheduleServiceTest {
         assert(it.prisonNumber == prisonNumber)
         assertEquals(it.status, PlanCreationScheduleStatus.SCHEDULED)
         assertEquals(expectedDeadline, it.deadlineDate)
+        assertEquals(savedEntity.needSources, it.needSources)
       },
     )
     verify(eventPublisher).createAndPublishPlanCreationSchedule(eq(prisonNumber), any<Instant>())

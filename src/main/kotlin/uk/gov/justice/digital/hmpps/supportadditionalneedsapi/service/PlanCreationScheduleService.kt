@@ -49,6 +49,7 @@ class PlanCreationScheduleService(
         deadlineDate = getDeadlineDate(),
         createdAtPrison = "N/A",
         updatedAtPrison = "N/A",
+        needSources = needService.getNeedSources(prisonNumber),
         version = 1,
       )
       planCreationScheduleRepository.saveAndFlush(planCreationSchedule)

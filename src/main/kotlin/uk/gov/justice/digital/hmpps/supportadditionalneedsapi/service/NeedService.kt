@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
@@ -71,4 +73,26 @@ class NeedService(
   fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber, includingALN = false) ||
     hasALNScreenerNeed(prisonNumber) ||
     hasLDDNeed(prisonNumber)
+
+  fun getNeedSources(prisonNumber: String): Set<NeedSource> {
+    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
+    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
+
+    return buildSet {
+      if (hasALNScreenerNeed(prisonNumber)) add(NeedSource.ALN_SCREENER)
+      if (hasLDDNeed(prisonNumber)) add(NeedSource.LDD_SCREENER)
+
+      if (challenges.any { it.active && !it.fromALNScreener }) {
+        add(NeedSource.CHALLENGE_NOT_ALN_SCREENER)
+      }
+
+      if (conditions.any { it.active && it.source == Source.CONFIRMED_DIAGNOSIS }) {
+        add(NeedSource.CONDITION_CONFIRMED_DIAGNOSIS)
+      }
+
+      if (conditions.any { it.active && it.source == Source.SELF_DECLARED }) {
+        add(NeedSource.CONDITION_SELF_DECLARED)
+      }
+    }
+  }
 }
