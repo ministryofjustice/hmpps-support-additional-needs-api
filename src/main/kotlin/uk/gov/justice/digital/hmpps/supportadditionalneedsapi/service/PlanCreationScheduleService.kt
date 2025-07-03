@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
+private val log = KotlinLogging.logger {}
 @Service
 class PlanCreationScheduleService(
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
@@ -36,12 +38,14 @@ class PlanCreationScheduleService(
    */
   @Transactional
   fun attemptToCreate(prisonNumber: String, prisonId: String = "N/A") {
+    log.debug("Attempting to create a new plan creation schedule for prisoner $prisonNumber")
     if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
     // already have a schedule so exit here.
     if (planCreationScheduleRepository.findByPrisonNumber(prisonNumber) != null) return
 
     if (educationService.inEducation(prisonNumber) && needService.hasNeed(prisonNumber)) {
+      log.debug("Person [$prisonNumber] was in education and has a need")
       // Create a new schedule
       val planCreationSchedule = PlanCreationScheduleEntity(
         prisonNumber = prisonNumber,
@@ -52,6 +56,7 @@ class PlanCreationScheduleService(
         needSources = needService.getNeedSources(prisonNumber),
         version = 1,
       )
+      log.debug("saving plan creation schedule for prisoner $prisonNumber")
       planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
       eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
     }
