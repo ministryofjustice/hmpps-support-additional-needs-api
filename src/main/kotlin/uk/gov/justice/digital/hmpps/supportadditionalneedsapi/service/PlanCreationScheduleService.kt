@@ -35,7 +35,7 @@ class PlanCreationScheduleService(
    * - SAN Condition or Challenge is created or made inactive.
    */
   @Transactional
-  fun attemptToCreate(prisonNumber: String) {
+  fun attemptToCreate(prisonNumber: String, prisonId: String = "N/A") {
     if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
     // already have a schedule so exit here.
@@ -47,8 +47,8 @@ class PlanCreationScheduleService(
         prisonNumber = prisonNumber,
         status = PlanCreationScheduleStatus.SCHEDULED,
         deadlineDate = getDeadlineDate(),
-        createdAtPrison = "N/A",
-        updatedAtPrison = "N/A",
+        createdAtPrison = prisonId,
+        updatedAtPrison = prisonId,
         needSources = needService.getNeedSources(prisonNumber),
         version = 1,
       )
