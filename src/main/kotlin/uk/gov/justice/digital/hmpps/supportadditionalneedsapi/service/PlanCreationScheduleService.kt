@@ -55,7 +55,6 @@ class PlanCreationScheduleService(
         createdAtPrison = prisonId,
         updatedAtPrison = prisonId,
         needSources = needService.getNeedSources(prisonNumber),
-        version = 1,
       )
       log.debug("saving plan creation schedule for prisoner $prisonNumber")
       planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
