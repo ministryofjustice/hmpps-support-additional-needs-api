@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -30,6 +31,7 @@ class ChallengeService(
     return ChallengeListResponse(models)
   }
 
+  @Transactional
   fun createChallenges(prisonNumber: String, request: CreateChallengesRequest): ChallengeListResponse {
     validateNoDuplicateCodesInRequest(prisonNumber, request)
 
@@ -49,7 +51,7 @@ class ChallengeService(
       )
     }
 
-    val savedChallenges = challengeRepository.saveAll(challenges)
+    val savedChallenges = challengeRepository.saveAllAndFlush(challenges)
     return ChallengeListResponse(savedChallenges.map { challengeMapper.toModel(it) })
   }
 

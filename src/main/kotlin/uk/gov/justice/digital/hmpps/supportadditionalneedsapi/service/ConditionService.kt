@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
@@ -29,6 +30,7 @@ class ConditionService(
     return ConditionListResponse(models)
   }
 
+  @Transactional
   fun createConditions(prisonNumber: String, request: CreateConditionsRequest): ConditionListResponse {
     validateNoDuplicateCodesInRequest(prisonNumber, request)
 
@@ -40,7 +42,7 @@ class ConditionService(
       conditionMapper.toEntity(prisonNumber, conditionType, requestItem)
     }
 
-    val savedConditions = conditionRepository.saveAll(conditions)
+    val savedConditions = conditionRepository.saveAllAndFlush(conditions)
     return ConditionListResponse(savedConditions.map { conditionMapper.toModel(it) })
   }
 

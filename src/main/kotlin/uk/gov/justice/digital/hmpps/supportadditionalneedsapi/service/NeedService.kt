@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
@@ -25,6 +26,7 @@ class NeedService(
    * We record this record when we receive an Aln screener message from Curious.
    *
    */
+  @Transactional
   fun recordAlnScreenerNeed(prisonNumber: String, hasNeed: Boolean, curiousReference: UUID) {
     alnAssessmentRepository.save(
       AlnAssessmentEntity(
@@ -42,6 +44,7 @@ class NeedService(
    * We are hoping that this data will be given to use and loaded directly in
    * to our database.
    */
+  @Transactional
   fun recordLddScreenerNeed(prisonNumber: String, hasNeed: Boolean, curiousReference: UUID) {
     lddAssessmentRepository.save(
       LddAssessmentEntity(
