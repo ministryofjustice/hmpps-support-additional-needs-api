@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
 import java.util.*
+private val log = KotlinLogging.logger {}
 
 @Service
 class NeedService(
@@ -75,6 +77,7 @@ class NeedService(
     hasLDDNeed(prisonNumber)
 
   fun getNeedSources(prisonNumber: String): Set<NeedSource> {
+    log.debug("Getting need sources for $prisonNumber")
     val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
