@@ -27,7 +27,7 @@ import java.time.LocalDate
 import java.util.*
 
 @RestController
-@RequestMapping("/profile/{prisonNumber}/plan-creation-schedule")
+@RequestMapping("/profile/{prisonNumber}")
 @ConditionalOnProperty(name = ["ENABLE_TEST_ENDPOINTS"], havingValue = "true", matchIfMissing = false)
 class TestDataController(
   private val planCreationScheduleRepository: PlanCreationScheduleRepository,
@@ -38,7 +38,7 @@ class TestDataController(
   private val planCreationScheduleService: PlanCreationScheduleService,
 ) {
   @PreAuthorize(HAS_EDIT_ELSP)
-  @PostMapping
+  @PostMapping("/plan-creation-schedule")
   @ResponseStatus(HttpStatus.CREATED)
   fun createPlanCreationSchedule(
     @PathVariable prisonNumber: String,
@@ -58,7 +58,7 @@ class TestDataController(
    *
    */
   @PreAuthorize(HAS_EDIT_ELSP)
-  @PostMapping
+  @PostMapping("/set-up-data")
   @ResponseStatus(HttpStatus.CREATED)
   @Transactional
   fun createPersonInEducationWithNeeds(
