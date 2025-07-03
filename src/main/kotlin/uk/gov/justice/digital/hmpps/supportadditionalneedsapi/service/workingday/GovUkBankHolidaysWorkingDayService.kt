@@ -13,8 +13,8 @@ class GovUkBankHolidaysWorkingDayService(private val bankHolidaysApiClient: Bank
   override fun getNextWorkingDayNDaysFromToday(numberOfDays: Long): LocalDate = getNextWorkingDayNDaysFromDate(numberOfDays, LocalDate.now())
 
   override fun getNextWorkingDayNDaysFromDate(numberOfDays: Long, fromDate: LocalDate): LocalDate {
-    // TODO - check with BAs - assume we are only concerned with calculating dates with consideration of Bank Holidays in England and Wales
-    // Scotland and NI have different Bank Holidays, so could end up adding some significant complexity here
+    // SAN requirements are that we only need to consider Bank Holidays and England & Wales.
+    // Calculating dates considering Scotland and NI Bank Holidays is not required for SAN
     val englandBankHolidays: List<LocalDate> = bankHolidaysApiClient.getBankHolidays() //
       .englandAndWales
       .events

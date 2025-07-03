@@ -150,6 +150,12 @@ class GovUkBankHolidaysWorkingDayServiceTest {
         numberOfDays = 3,
         expectedDate = LocalDate.parse("2026-12-30"),
       ),
+      DateCalculationTestCase(
+        description = "5 working days from Monday July 7th 2025",
+        fromDate = LocalDate.parse("2025-07-07"),
+        numberOfDays = 5,
+        expectedDate = LocalDate.parse("2025-07-14"),
+      ),
     )
 
     @JvmStatic
