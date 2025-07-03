@@ -18,6 +18,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 private val log = KotlinLogging.logger {}
+
 @Service
 class PlanCreationScheduleService(
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,

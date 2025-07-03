@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
 import java.util.*
 private val log = KotlinLogging.logger {}
+
 @Service
 class NeedService(
   private val challengeRepository: ChallengeRepository,
