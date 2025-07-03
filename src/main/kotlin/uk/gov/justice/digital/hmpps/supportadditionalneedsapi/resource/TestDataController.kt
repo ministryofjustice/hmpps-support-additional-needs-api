@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
-import jakarta.transaction.Transactional
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -60,7 +59,6 @@ class TestDataController(
   @PreAuthorize(HAS_EDIT_ELSP)
   @PostMapping("/set-up-data")
   @ResponseStatus(HttpStatus.CREATED)
-  @Transactional
   fun createPersonInEducationWithNeeds(
     @PathVariable prisonNumber: String,
     @RequestBody request: EducationNeedRequest,

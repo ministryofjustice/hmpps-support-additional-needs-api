@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
@@ -20,6 +21,7 @@ class EducationService(private val educationRepository: EducationRepository) {
    * latest record being the current status.
    * We record this record when we receive an education message from Curious.
    */
+  @Transactional
   fun recordEducationRecord(prisonNumber: String, inEducation: Boolean, curiousReference: UUID) {
     educationRepository.save(
       EducationEntity(
