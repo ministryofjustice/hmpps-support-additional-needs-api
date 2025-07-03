@@ -43,6 +43,12 @@ class WebClientConfiguration(
     @Value("\${apis.manage-users-api.url}") manageUsersApiUri: String,
   ): WebClient = builder.authorisedWebClient(authorizedClientManager, registrationId = "manage-users-api", url = manageUsersApiUri)
 
+  @Bean(name = ["bankHolidaysApiWebClient"])
+  fun bankHolidaysApiWebClient(
+    builder: WebClient.Builder,
+    @Value("\${apis.bank-holidays-api.url}") bankHolidaysApiUri: String,
+  ): WebClient = builder.baseUrl(bankHolidaysApiUri).build()
+
   private fun WebClient.Builder.authorisedWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     registrationId: String,

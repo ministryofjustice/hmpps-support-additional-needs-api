@@ -117,6 +117,8 @@ apis:
     url: ${CURIOUS_API_URL}
   manage-users-api:
     url: ${MANAGE_USERS_API_URL}
+  bank-holidays-api:
+    url: ${BANK_HOLIDAYS_API_URL}
 
 service:
   base-url: ${SERVICE_BASE_URL}
