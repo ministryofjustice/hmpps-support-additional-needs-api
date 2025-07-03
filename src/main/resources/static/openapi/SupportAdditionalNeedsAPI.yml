@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.4.2'
+  version: '0.4.3'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -818,6 +818,11 @@ components:
           description: Optional Additional information about the plan that is not covered in the other questions.
           example: Chris is very open about his issues and is a pleasure to talk to.
           maxLength: 4096
+        individualSupport:
+          type: string
+          description: Details of education support that the person feels they need or would benefit from.
+          example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
+          maxLength: 4096
       required:
         - prisonId
         - hasCurrentEhcp
@@ -1260,7 +1265,10 @@ components:
           type: string
           description: Optional Additional information about the plan that is not covered in the other questions.
           example: Chris is very open about his issues and is a pleasure to talk to.
-          maxLength: 4096
+        individualSupport:
+          type: string
+          description: Details of education support that the person feels they need or would benefit from.
+          example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
       required:
         - hasCurrentEhcp
 
