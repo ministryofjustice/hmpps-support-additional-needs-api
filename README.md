@@ -174,3 +174,7 @@ The following environment variables are required in order for the app to start:
 | CURIOUS_API_URL                   | The URL of the Meganexus Curious API                                        |
 | CURIOUS_API_CLIENT_ID             | hmpps-auth oauth2 client-id for connecting to the Meganexus Curious API     |
 | CURIOUS_API_CLIENT_SECRET         | hmpps-auth oauth2 client-secret for connecting to the Meganexus Curious API |
+| MANAGE_USERS_API_URL              | The URL of the HMPPS Manage Users API                                       |
+| MANAGE_USERS_API_CLIENT_ID        | hmpps-auth oauth2 client-id for connecting to the Manage Users API          |
+| MANAGE_USERS_API_CLIENT_SECRET    | hmpps-auth oauth2 client-secret for connecting to the Manage Users API      |
+| BANK_HOLIDAYS_API_URL             | The URL of the Government Bank Holidays API                                 |
