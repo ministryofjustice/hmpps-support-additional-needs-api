@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
 import java.time.LocalDate
@@ -37,6 +38,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.SCHEDULED)
     assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[0].needSources).isEqualTo(listOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED))
   }
 
   @Test

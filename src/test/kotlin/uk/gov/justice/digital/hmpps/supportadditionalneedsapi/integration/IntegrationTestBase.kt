@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
@@ -187,6 +188,7 @@ abstract class IntegrationTestBase {
         exemptionReason = null,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
+        needSources = setOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED),
       )
     planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
   }
