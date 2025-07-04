@@ -120,6 +120,7 @@ class TestDataController(
     }
 
     planCreationScheduleService.attemptToCreate(prisonNumber, request.prisonId)
+    planCreationScheduleService.attemptToUpdate(prisonNumber, request.prisonId)
 
     return planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
   }
