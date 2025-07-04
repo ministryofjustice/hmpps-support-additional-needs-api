@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.4.3'
+  version: '0.5.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -827,6 +827,7 @@ components:
         - prisonId
         - hasCurrentEhcp
         - reviewDate
+        - individualSupport
 
     PlanContributor:
       title: PlanContributor
@@ -1271,6 +1272,7 @@ components:
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
       required:
         - hasCurrentEhcp
+        - individualSupport
 
   #
   # Response Body Definitions
