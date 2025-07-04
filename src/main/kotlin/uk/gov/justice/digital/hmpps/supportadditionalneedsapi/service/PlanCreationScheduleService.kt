@@ -79,7 +79,7 @@ class PlanCreationScheduleService(
     if (!educationService.inEducation(prisonNumber)) {
       log.debug("Person [$prisonNumber] was not in education")
       // Update the schedule
-      if (planCreationSchedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+      if (planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
         planCreationSchedule.updatedAtPrison = prisonId
         planCreationSchedule.status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION
 
@@ -88,7 +88,7 @@ class PlanCreationScheduleService(
         eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
       } else if (!needService.hasNeed(prisonNumber)) {
         // Update the schedule
-        if (planCreationSchedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+        if (planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
           log.debug("Person [$prisonNumber] no longer has a need")
           TODO("update schedule so that they are exempt due to not having a need")
         }
