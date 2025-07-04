@@ -62,6 +62,40 @@ class PlanCreationScheduleService(
     }
   }
 
+  /**
+   * This is called whenever:
+   * - An education message is processed
+   * - An ALN screener message is processed
+   * - SAN Condition or Challenge is created or made inactive.
+   */
+  @Transactional
+  fun attemptToUpdate(prisonNumber: String, prisonId: String = "N/A") {
+    log.debug("Attempting to update a plan creation schedule for prisoner $prisonNumber")
+    if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
+
+    // no schedule so exit here.
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber) ?: return
+
+    if (!educationService.inEducation(prisonNumber)) {
+      log.debug("Person [$prisonNumber] was not in education")
+      // Update the schedule
+      if (planCreationSchedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+        planCreationSchedule.updatedAtPrison = prisonId
+        planCreationSchedule.status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION
+
+        log.debug("updating plan creation schedule for prisoner $prisonNumber")
+        planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      } else if (!needService.hasNeed(prisonNumber)) {
+        // Update the schedule
+        if (planCreationSchedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+          log.debug("Person [$prisonNumber] no longer has a need")
+          TODO("update schedule so that they are exempt due to not having a need")
+        }
+      }
+    }
+  }
+
   fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
     val schedules = planCreationScheduleHistoryRepository
       .findAllByPrisonNumberOrderByVersionAsc(prisonId)
