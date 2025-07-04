@@ -71,28 +71,43 @@ class PlanCreationScheduleService(
   @Transactional
   fun attemptToUpdate(prisonNumber: String, prisonId: String = "N/A") {
     log.debug("Attempting to update a plan creation schedule for prisoner $prisonNumber")
+
     if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
-    // no schedule so exit here.
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber) ?: return
 
-    if (!educationService.inEducation(prisonNumber)) {
-      log.debug("Person [$prisonNumber] was not in education")
-      // Update the schedule
-      if (planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
-        planCreationSchedule.updatedAtPrison = prisonId
-        planCreationSchedule.status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION
+    val inEducation = educationService.inEducation(prisonNumber)
+    val hasNeed = needService.hasNeed(prisonNumber)
 
-        log.debug("updating plan creation schedule for prisoner $prisonNumber")
-        planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
-        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
-      } else if (!needService.hasNeed(prisonNumber)) {
-        // Update the schedule
-        if (planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
-          log.debug("Person [$prisonNumber] no longer has a need")
-          TODO("update schedule so that they are exempt due to not having a need")
-        }
-      }
+    // Transition: No longer in education
+    if (!inEducation && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
+      log.debug("Prisoner $prisonNumber is no longer in education")
+      planCreationSchedule.status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION
+      planCreationSchedule.updatedAtPrison = prisonId
+      planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+      eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      return
+    }
+
+    // Transition: Back in education and has a need
+    if (inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION) {
+      log.debug("Prisoner $prisonNumber is back in education")
+      planCreationSchedule.status = PlanCreationScheduleStatus.SCHEDULED
+      planCreationSchedule.updatedAtPrison = prisonId
+      planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+      eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      return
+    }
+
+    // Transition: No longer has a need
+    if (!hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED) {
+      log.debug("Prisoner $prisonNumber no longer has a need")
+      // TODO: Implement status change to something like EXEMPT_NO_NEED
+      // planCreationSchedule.status = PlanCreationScheduleStatus.EXEMPT_NO_NEED
+      // planCreationSchedule.updatedAtPrison = prisonId
+      // planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+      // eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      return
     }
   }
 
