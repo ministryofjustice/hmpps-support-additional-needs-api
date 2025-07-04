@@ -15,6 +15,7 @@ generic-service:
     shutdown: '00 21 * * 1-5' # Stop at 9.00pm UTC Monday-Friday
 
   env:
+    SPRING_PROFILES_ACTIVE: dev
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: "applicationinsights.dev.json"
     HMPPS_AUTH_URL: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
     PRISONER_SEARCH_API_URL: https://prisoner-search-dev.prison.service.justice.gov.uk
