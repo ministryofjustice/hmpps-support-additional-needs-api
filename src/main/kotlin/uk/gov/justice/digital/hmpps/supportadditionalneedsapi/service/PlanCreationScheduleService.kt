@@ -217,9 +217,9 @@ class PlanCreationScheduleService(
   }
 
   fun getDeadlineDate(): LocalDate {
-    val todayPlusTen = LocalDate.now().plus(5, ChronoUnit.DAYS)
-    val pesPlusTen = pesContractDate.plus(5, ChronoUnit.DAYS)
-    return maxOf(todayPlusTen, pesPlusTen)
+    val todayPlusFive = LocalDate.now().plus(5, ChronoUnit.DAYS)
+    val pesPlusFive = pesContractDate.plus(5, ChronoUnit.DAYS)
+    return maxOf(todayPlusFive, pesPlusFive)
   }
 
   fun completeSchedule(prisonNumber: String, prisonId: String) {
