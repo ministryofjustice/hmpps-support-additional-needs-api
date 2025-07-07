@@ -52,6 +52,7 @@ class PlanCreationScheduleHistoryMapper(
     PlanCreationStatusEntity.EXEMPT_PRISONER_MERGE -> PlanCreationStatusModel.EXEMPT_PRISONER_MERGE
     PlanCreationStatusEntity.EXEMPT_PRISONER_NOT_COMPLY -> PlanCreationStatusModel.EXEMPT_PRISONER_NOT_COMPLY
     PlanCreationStatusEntity.EXEMPT_NOT_IN_EDUCATION -> PlanCreationStatusModel.EXEMPT_NOT_IN_EDUCATION
+    PlanCreationStatusEntity.EXEMPT_NO_NEED -> PlanCreationStatusModel.EXEMPT_NO_NEED
     PlanCreationStatusEntity.EXEMPT_UNKNOWN -> PlanCreationStatusModel.EXEMPT_UNKNOWN
   }
 }

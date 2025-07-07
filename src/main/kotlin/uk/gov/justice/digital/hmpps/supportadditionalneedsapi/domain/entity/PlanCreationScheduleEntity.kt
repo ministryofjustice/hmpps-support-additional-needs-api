@@ -93,6 +93,7 @@ enum class PlanCreationScheduleStatus(val activeReview: Boolean) {
   EXEMPT_PRISONER_MERGE(false),
   EXEMPT_PRISONER_NOT_COMPLY(false),
   EXEMPT_NOT_IN_EDUCATION(false),
+  EXEMPT_NO_NEED(false),
   EXEMPT_UNKNOWN(false),
   COMPLETED(false),
 }

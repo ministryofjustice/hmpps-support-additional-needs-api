@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.4.3'
+  version: '0.4.4'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1121,6 +1121,7 @@ components:
         - EXEMPT_PRISONER_MERGE
         - EXEMPT_PRISONER_NOT_COMPLY
         - EXEMPT_NOT_IN_EDUCATION
+        - EXEMPT_NO_NEED
         - EXEMPT_UNKNOWN
         - COMPLETED
 
@@ -1191,6 +1192,7 @@ components:
         - EXEMPT_PRISONER_MERGE
         - EXEMPT_PRISONER_NOT_COMPLY
         - EXEMPT_NOT_IN_EDUCATION
+        - EXEMPT_NO_NEED
         - EXEMPT_UNKNOWN
         - COMPLETED
 
