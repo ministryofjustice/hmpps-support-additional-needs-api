@@ -85,7 +85,6 @@ class PlanCreationScheduleService(
     val hasNeed = needService.hasNeed(prisonNumber)
 
     when {
-
       inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
         log.debug("Prisoner $prisonNumber has a need and is in education do nothing to the schedule")
       }
@@ -93,11 +92,11 @@ class PlanCreationScheduleService(
       !inEducation && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
         log.debug("Prisoner $prisonNumber is no longer in education, clearing deadline date, setting status to EXEMPT_NOT_IN_EDUCATION")
         updatePlan(
-            planCreationSchedule,
-            PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
-            prisonId,
-            null,
-            prisonNumber,
+          planCreationSchedule,
+          PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+          prisonId,
+          null,
+          prisonNumber,
         )
       }
 
@@ -105,33 +104,33 @@ class PlanCreationScheduleService(
         val deadlineDate = getDeadlineDate()
         log.debug("Prisoner $prisonNumber is back in education, setting deadline date to $deadlineDate, setting status to SCHEDULED")
         updatePlan(
-            planCreationSchedule,
-            PlanCreationScheduleStatus.SCHEDULED,
-            prisonId,
-            deadlineDate,
-            prisonNumber,
+          planCreationSchedule,
+          PlanCreationScheduleStatus.SCHEDULED,
+          prisonId,
+          deadlineDate,
+          prisonNumber,
         )
       }
 
       !hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
         log.debug("Prisoner $prisonNumber no longer has a need, clearing deadline date, setting status to EXEMPT_NO_NEED ")
         updatePlan(
-            planCreationSchedule,
-            PlanCreationScheduleStatus.EXEMPT_NO_NEED,
-            prisonId,
-            null,
-            prisonNumber,
+          planCreationSchedule,
+          PlanCreationScheduleStatus.EXEMPT_NO_NEED,
+          prisonId,
+          null,
+          prisonNumber,
         )
       }
 
       hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED -> {
         log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SHEDULED")
         updatePlan(
-            planCreationSchedule,
-            PlanCreationScheduleStatus.SCHEDULED,
-            prisonId,
-            null,
-            prisonNumber,
+          planCreationSchedule,
+          PlanCreationScheduleStatus.SCHEDULED,
+          prisonId,
+          null,
+          prisonNumber,
         )
       }
     }
@@ -150,7 +149,6 @@ class PlanCreationScheduleService(
     planCreationScheduleRepository.saveAndFlush(schedule)
     eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
   }
-
 
   fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
     val schedules = planCreationScheduleHistoryRepository

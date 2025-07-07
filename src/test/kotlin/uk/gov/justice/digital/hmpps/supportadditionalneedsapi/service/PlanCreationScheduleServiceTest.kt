@@ -189,14 +189,13 @@ class PlanCreationScheduleServiceTest {
     verify(planCreationScheduleRepository, never()).saveAndFlush(any())
   }
 
-  private fun planCreationScheduleEntity(status: PlanCreationScheduleStatus) =
-    PlanCreationScheduleEntity(
-      prisonNumber = prisonNumber,
-      status = status,
-      deadlineDate = LocalDate.now(),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
-    )
+  private fun planCreationScheduleEntity(status: PlanCreationScheduleStatus) = PlanCreationScheduleEntity(
+    prisonNumber = prisonNumber,
+    status = status,
+    deadlineDate = LocalDate.now(),
+    createdAtPrison = "BXI",
+    updatedAtPrison = "BXI",
+  )
 
   @Test
   fun `attemptToUpdate transition from SCHEDULED to EXEMPT_NOT_IN_EDUCATION`() {
