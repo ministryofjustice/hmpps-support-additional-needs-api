@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import jakarta.servlet.RequestDispatcher
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.ConstraintViolationException
+import jakarta.validation.ElementKind
 import mu.KotlinLogging
+import org.hibernate.validator.internal.engine.path.PathImpl
 import org.springframework.beans.TypeMismatchException
 import org.springframework.dao.DataAccessException
 import org.springframework.http.HttpHeaders
@@ -90,7 +92,13 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
   ): ResponseEntity<Any>? {
     val violations: Set<ConstraintViolation<*>> = e.constraintViolations
     val errorMessage = if (violations.isNotEmpty()) {
-      violations.joinToString(" ") { it.message }
+      violations.joinToString {
+        if (it.relatesToNamedParameter()) {
+          "${it.propertyPath} ${it.message}"
+        } else {
+          it.message
+        }
+      }
     } else {
       "Validation error"
     }
@@ -145,16 +153,6 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     return populateErrorResponseAndHandleExceptionInternal(e, HttpStatus.INTERNAL_SERVER_ERROR, request)
   }
 
-  private fun populateErrorResponseAndHandleExceptionInternal(
-    exception: Exception,
-    status: HttpStatus,
-    request: WebRequest,
-  ): ResponseEntity<Any>? {
-    request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, status.value(), RequestAttributes.SCOPE_REQUEST)
-    val body = errorAttributes.getErrorResponse(request)
-    return handleExceptionInternal(exception, body, HttpHeaders(), status, request)
-  }
-
   /**
    * Exception handler to return a 404 Not Found ErrorResponse
    */
@@ -206,4 +204,25 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
         ),
       )
   }
+
+  private fun populateErrorResponseAndHandleExceptionInternal(
+    exception: Exception,
+    status: HttpStatus,
+    request: WebRequest,
+  ): ResponseEntity<Any>? {
+    request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, status.value(), RequestAttributes.SCOPE_REQUEST)
+    val body = errorAttributes.getErrorResponse(request)
+    return handleExceptionInternal(exception, body, HttpHeaders(), status, request)
+  }
+
+  /**
+   * Returns true is this [ConstraintViolation] relates to a named parameter such as a constraint annotation on a
+   * property in the request body, or a constraint annotation on the method argument.
+   * Knowing whether the constraint relates to a named parameter means we can use the name in the error response.
+   */
+  private fun ConstraintViolation<*>.relatesToNamedParameter(): Boolean = propertyPath is PathImpl &&
+    when ((propertyPath as PathImpl).leafNode.kind) {
+      ElementKind.PROPERTY, ElementKind.PARAMETER -> true
+      else -> false
+    }
 }

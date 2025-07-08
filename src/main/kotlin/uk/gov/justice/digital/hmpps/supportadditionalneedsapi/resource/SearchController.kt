@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
 import jakarta.validation.constraints.Min
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
@@ -18,6 +19,7 @@ import kotlin.math.min
 
 @RestController
 @RequestMapping("/search/prisons/{prisonId}/people")
+@Validated
 class SearchController(private val searchService: SearchService) {
   @GetMapping
   @PreAuthorize(HAS_SEARCH_PRISONS)

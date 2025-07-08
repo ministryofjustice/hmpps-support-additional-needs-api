@@ -223,4 +223,81 @@ class SearchByPrisonTest : IntegrationTestBase() {
       .hasStatus(HttpStatus.BAD_REQUEST.value())
       .hasUserMessageContaining("Method parameter 'pageSize': Failed to convert value of type 'java.lang.String' to required type")
   }
+
+  @Test
+  fun `should return bad request given request with page value less than 1`() {
+    // Given
+
+    // When
+    val response = webTestClient.get()
+      .uri { uriBuilder ->
+        uriBuilder
+          .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+          .queryParam("page", "0")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult(ErrorResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .hasStatus(HttpStatus.BAD_REQUEST.value())
+      .hasUserMessage("searchByPrison.page must be greater than or equal to 1")
+  }
+
+  @Test
+  fun `should return bad request given request with pageSize less than 1`() {
+    // Given
+
+    // When
+    val response = webTestClient.get()
+      .uri { uriBuilder ->
+        uriBuilder
+          .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+          .queryParam("pageSize", "0")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult(ErrorResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .hasStatus(HttpStatus.BAD_REQUEST.value())
+      .hasUserMessage("searchByPrison.pageSize must be greater than or equal to 1")
+  }
+
+  @Test
+  fun `should return bad request given request with both page and pageSize less than 1`() {
+    // Given
+
+    // When
+    val response = webTestClient.get()
+      .uri { uriBuilder ->
+        uriBuilder
+          .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+          .queryParam("page", "0")
+          .queryParam("pageSize", "0")
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult(ErrorResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .hasStatus(HttpStatus.BAD_REQUEST.value())
+      .hasUserMessageContaining("searchByPrison.pageSize must be greater than or equal to 1")
+      .hasUserMessageContaining("searchByPrison.page must be greater than or equal to 1")
+  }
 }
