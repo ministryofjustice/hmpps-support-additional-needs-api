@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -57,6 +58,11 @@ class PlanCreationScheduleServiceTest {
 
   private val prisonNumber = randomValidPrisonNumber()
 
+  @BeforeEach
+  internal fun setUp() {
+    pesContractDate = LocalDate.now()
+  }
+
   @Test
   fun `does nothing if plan already exists`() {
     whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
@@ -92,13 +98,13 @@ class PlanCreationScheduleServiceTest {
   @Test
   fun `creates plan schedule and history when PES contract date is in the past`() {
     val pesContractDate = LocalDate.parse("2024-10-01")
-    assertCreatesPlanWithExpectedDeadline(pesContractDate, LocalDate.now().plusDays(10))
+    assertCreatesPlanWithExpectedDeadline(pesContractDate, LocalDate.now().plusDays(5))
   }
 
   @Test
   fun `creates plan schedule and history when PES contract date is in the future`() {
     val pesContractDate = LocalDate.now().plusMonths(6)
-    assertCreatesPlanWithExpectedDeadline(pesContractDate, pesContractDate.plusDays(10))
+    assertCreatesPlanWithExpectedDeadline(pesContractDate, pesContractDate.plusDays(5))
   }
 
   private fun assertCreatesPlanWithExpectedDeadline(
@@ -150,5 +156,127 @@ class PlanCreationScheduleServiceTest {
       },
     )
     verify(eventPublisher).createAndPublishPlanCreationSchedule(eq(prisonNumber), any<Instant>())
+  }
+
+  @Test
+  fun `attemptToUpdate does nothing if plan already exists`() {
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
+
+    service.attemptToUpdate(prisonNumber)
+
+    verify(planCreationScheduleRepository, never()).findByPrisonNumber(any())
+  }
+
+  @Test
+  fun `attemptToUpdate does nothing if no schedule exists`() {
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+
+    service.attemptToUpdate(prisonNumber)
+
+    verify(planCreationScheduleRepository).findByPrisonNumber(prisonNumber)
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+  }
+
+  @Test
+  fun `attemptToUpdate does nothing if schedule is already completed`() {
+    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.COMPLETED)
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
+
+    service.attemptToUpdate(prisonNumber)
+
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+  }
+
+  private fun planCreationScheduleEntity(status: PlanCreationScheduleStatus) = PlanCreationScheduleEntity(
+    prisonNumber = prisonNumber,
+    status = status,
+    deadlineDate = LocalDate.now(),
+    createdAtPrison = "BXI",
+    updatedAtPrison = "BXI",
+  )
+
+  @Test
+  fun `attemptToUpdate transition from SCHEDULED to EXEMPT_NOT_IN_EDUCATION`() {
+    val service = setUpService()
+    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.SCHEDULED)
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
+    whenever(educationService.inEducation(prisonNumber)).thenReturn(false)
+    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+
+    service.attemptToUpdate(prisonNumber, "MDI")
+
+    assertEquals(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, schedule.status)
+    assertEquals("MDI", schedule.updatedAtPrison)
+    assertEquals(null, schedule.deadlineDate)
+    verify(planCreationScheduleRepository).saveAndFlush(schedule)
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+  }
+
+  private fun setUpService() = PlanCreationScheduleService(
+    planCreationScheduleHistoryRepository,
+    planCreationScheduleRepository,
+    planCreationScheduleHistoryMapper,
+    educationSupportPlanRepository,
+    educationService,
+    needService,
+    eventPublisher,
+    LocalDate.parse("2024-10-01"),
+  )
+
+  @Test
+  fun `attemptToUpdate transition from EXEMPT_NOT_IN_EDUCATION to SCHEDULED`() {
+    val service = setUpService()
+    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
+    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
+    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+
+    service.attemptToUpdate(prisonNumber, "MDI")
+
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, schedule.status)
+    assertEquals("MDI", schedule.updatedAtPrison)
+    assertEquals(LocalDate.now().plusDays(5), schedule.deadlineDate)
+    verify(planCreationScheduleRepository).saveAndFlush(schedule)
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+  }
+
+  @Test
+  fun `attemptToUpdate transition from SCHEDULED to EXEMPT_NO_NEED`() {
+    val service = setUpService()
+    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.SCHEDULED)
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
+    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
+    whenever(needService.hasNeed(prisonNumber)).thenReturn(false)
+
+    service.attemptToUpdate(prisonNumber, "MDI")
+
+    assertEquals(PlanCreationScheduleStatus.EXEMPT_NO_NEED, schedule.status)
+    assertEquals("MDI", schedule.updatedAtPrison)
+    assertEquals(null, schedule.deadlineDate)
+    verify(planCreationScheduleRepository).saveAndFlush(schedule)
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+  }
+
+  @Test
+  fun `attemptToUpdate transition from EXEMPT_NO_NEED to SCHEDULED`() {
+    val service = setUpService()
+    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.EXEMPT_NO_NEED)
+    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
+    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
+    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+
+    service.attemptToUpdate(prisonNumber, "MDI")
+
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, schedule.status)
+    assertEquals("MDI", schedule.updatedAtPrison)
+    assertEquals(null, schedule.deadlineDate)
+    verify(planCreationScheduleRepository).saveAndFlush(schedule)
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
   }
 }

@@ -42,6 +42,7 @@ class ReviewScheduleHistoryMapper(
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_DEATH -> ReviewScheduleStatusModel.EXEMPT_PRISONER_DEATH
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_MERGE -> ReviewScheduleStatusModel.EXEMPT_PRISONER_MERGE
     ReviewScheduleStatusEntity.EXEMPT_NOT_IN_EDUCATION -> ReviewScheduleStatusModel.EXEMPT_NOT_IN_EDUCATION
+    ReviewScheduleStatusEntity.EXEMPT_NO_NEED -> ReviewScheduleStatusModel.EXEMPT_NO_NEED
     ReviewScheduleStatusEntity.EXEMPT_PRISONER_NOT_COMPLY -> ReviewScheduleStatusModel.EXEMPT_PRISONER_NOT_COMPLY
     ReviewScheduleStatusEntity.EXEMPT_UNKNOWN -> ReviewScheduleStatusModel.EXEMPT_UNKNOWN
   }

@@ -62,6 +62,94 @@ class PlanCreationScheduleService(
     }
   }
 
+  /**
+   * This is called whenever:
+   * - An education message is processed
+   * - An ALN screener message is processed
+   * - SAN Condition or Challenge is created or made inactive.
+   *
+   * if there is a schedule and the person no longer has a need or is no longer in education
+   * then set the deadline date to null - only reset the deadline date in the case where the person
+   * is back in education.
+   */
+  @Transactional
+  fun attemptToUpdate(prisonNumber: String, prisonId: String = "N/A") {
+    log.debug("Attempting to update a plan creation schedule for prisoner $prisonNumber")
+
+    if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
+
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber) ?: return
+    if (planCreationSchedule.status == PlanCreationScheduleStatus.COMPLETED) return
+
+    val inEducation = educationService.inEducation(prisonNumber)
+    val hasNeed = needService.hasNeed(prisonNumber)
+
+    when {
+      inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
+        log.debug("Prisoner $prisonNumber has a need and is in education do nothing to the schedule")
+      }
+
+      !inEducation && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
+        log.debug("Prisoner $prisonNumber is no longer in education, clearing deadline date, setting status to EXEMPT_NOT_IN_EDUCATION")
+        updatePlan(
+          planCreationSchedule,
+          PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+          prisonId,
+          null,
+          prisonNumber,
+        )
+      }
+
+      inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION -> {
+        val deadlineDate = getDeadlineDate()
+        log.debug("Prisoner $prisonNumber is back in education, setting deadline date to $deadlineDate, setting status to SCHEDULED")
+        updatePlan(
+          planCreationSchedule,
+          PlanCreationScheduleStatus.SCHEDULED,
+          prisonId,
+          deadlineDate,
+          prisonNumber,
+        )
+      }
+
+      !hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
+        log.debug("Prisoner $prisonNumber no longer has a need, clearing deadline date, setting status to EXEMPT_NO_NEED ")
+        updatePlan(
+          planCreationSchedule,
+          PlanCreationScheduleStatus.EXEMPT_NO_NEED,
+          prisonId,
+          null,
+          prisonNumber,
+        )
+      }
+
+      hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED -> {
+        log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SHEDULED")
+        updatePlan(
+          planCreationSchedule,
+          PlanCreationScheduleStatus.SCHEDULED,
+          prisonId,
+          null,
+          prisonNumber,
+        )
+      }
+    }
+  }
+
+  private fun updatePlan(
+    schedule: PlanCreationScheduleEntity,
+    newStatus: PlanCreationScheduleStatus,
+    prisonId: String,
+    deadlineDate: LocalDate?,
+    prisonNumber: String,
+  ) {
+    schedule.status = newStatus
+    schedule.updatedAtPrison = prisonId
+    schedule.deadlineDate = deadlineDate
+    planCreationScheduleRepository.saveAndFlush(schedule)
+    eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
   fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
     val schedules = planCreationScheduleHistoryRepository
       .findAllByPrisonNumberOrderByVersionAsc(prisonId)
@@ -129,9 +217,9 @@ class PlanCreationScheduleService(
   }
 
   fun getDeadlineDate(): LocalDate {
-    val todayPlusTen = LocalDate.now().plus(10, ChronoUnit.DAYS)
-    val pesPlusTen = pesContractDate.plus(10, ChronoUnit.DAYS)
-    return maxOf(todayPlusTen, pesPlusTen)
+    val todayPlusFive = LocalDate.now().plus(5, ChronoUnit.DAYS)
+    val pesPlusFive = pesContractDate.plus(5, ChronoUnit.DAYS)
+    return maxOf(todayPlusFive, pesPlusFive)
   }
 
   fun completeSchedule(prisonNumber: String, prisonId: String) {
