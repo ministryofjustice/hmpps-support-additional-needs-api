@@ -63,6 +63,7 @@ class GetELSPPlanTest : IntegrationTestBase() {
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",
+    individualSupport = "individualSupport",
     detail = "detail",
     reviewDate = LocalDate.now(),
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
