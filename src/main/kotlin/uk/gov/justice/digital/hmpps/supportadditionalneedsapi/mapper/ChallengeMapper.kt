@@ -25,7 +25,7 @@ class ChallengeMapper(
       updatedByDisplayName = userService.getUserDetails(updatedBy!!).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
-      challengeType = challengeType.toModel(),
+      challengeTypeCode = challengeType.code,
       symptoms = symptoms,
       howIdentified = howIdentified,
       screeningDate = screeningDate,

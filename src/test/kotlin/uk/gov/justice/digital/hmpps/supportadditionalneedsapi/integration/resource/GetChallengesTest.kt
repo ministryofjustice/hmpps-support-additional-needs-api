@@ -56,7 +56,7 @@ class GetChallengesTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
     assertThat(actual!!.challenges).hasSize(2)
 
-    val challengeCodes = actual.challenges.map { it.challengeType.code }
+    val challengeCodes = actual.challenges.map { it.challengeTypeCode }
     assertThat(challengeCodes).containsExactlyInAnyOrder("MEMORY", "SENSORY_PROCESSING")
   }
 

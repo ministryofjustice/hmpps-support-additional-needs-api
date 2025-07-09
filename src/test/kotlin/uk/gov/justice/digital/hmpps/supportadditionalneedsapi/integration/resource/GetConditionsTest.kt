@@ -69,7 +69,7 @@ class GetConditionsTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
     assertThat(actual!!.conditions).hasSize(3)
 
-    val conditionCodes = actual.conditions.map { it.conditionType.code }
+    val conditionCodes = actual.conditions.map { it.conditionTypeCode }
     assertThat(conditionCodes).containsExactlyInAnyOrder("ADHD", "DYSLEXIA", "MENTAL_HEALTH")
   }
 
