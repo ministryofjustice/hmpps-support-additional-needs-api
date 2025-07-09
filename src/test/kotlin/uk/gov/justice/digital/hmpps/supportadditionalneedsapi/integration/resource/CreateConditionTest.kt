@@ -72,14 +72,14 @@ class CreateConditionTest : IntegrationTestBase() {
     val duplicateConditionsList = CreateConditionsRequest(
       listOf(
         ConditionRequest(
-          Source.SELF_DECLARED,
-          "BXI",
-          "ADHD",
+          source = Source.SELF_DECLARED,
+          prisonId = "BXI",
+          conditionTypeCode = "ADHD",
         ),
         ConditionRequest(
           Source.SELF_DECLARED,
-          "BXI",
-          "ADHD", // Duplicate code
+          prisonId = "BXI",
+          conditionTypeCode = "ADHD", // Duplicate code
         ),
       ),
     )
