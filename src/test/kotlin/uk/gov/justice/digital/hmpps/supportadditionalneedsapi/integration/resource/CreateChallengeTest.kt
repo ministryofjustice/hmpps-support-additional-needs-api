@@ -68,12 +68,12 @@ class CreateChallengeTest : IntegrationTestBase() {
     val duplicateChallengesList = CreateChallengesRequest(
       listOf(
         ChallengeRequest(
-          "BXI",
-          "MEMORY",
+          prisonId = "BXI",
+          challengeTypeCode = "MEMORY",
         ),
         ChallengeRequest(
-          "BXI",
-          "MEMORY", // Duplicate code
+          prisonId = "BXI",
+          challengeTypeCode = "MEMORY", // Duplicate code
         ),
       ),
     )

@@ -24,7 +24,7 @@ class CreateConditionTest : IntegrationTestBase() {
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
-    val conditionsList: CreateConditionsRequest = createConditionsList(prisonNumber)
+    val conditionsList: CreateConditionsRequest = createConditionsList()
 
     // When
     val response = webTestClient.post()
@@ -72,14 +72,14 @@ class CreateConditionTest : IntegrationTestBase() {
     val duplicateConditionsList = CreateConditionsRequest(
       listOf(
         ConditionRequest(
-          Source.SELF_DECLARED,
-          "BXI",
-          "ADHD",
+          source = Source.SELF_DECLARED,
+          prisonId = "BXI",
+          conditionTypeCode = "ADHD",
         ),
         ConditionRequest(
           Source.SELF_DECLARED,
-          "BXI",
-          "ADHD", // Duplicate code
+          prisonId = "BXI",
+          conditionTypeCode = "ADHD", // Duplicate code
         ),
       ),
     )
@@ -102,7 +102,7 @@ class CreateConditionTest : IntegrationTestBase() {
       .hasUserMessage("Attempted to add duplicate condition(s) ADHD for prisoner [$prisonNumber]")
   }
 
-  private fun createConditionsList(prisonNumber: String): CreateConditionsRequest = CreateConditionsRequest(
+  private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(
     listOf(
       ConditionRequest(
         source = Source.SELF_DECLARED,
@@ -111,14 +111,14 @@ class CreateConditionTest : IntegrationTestBase() {
         detail = "Bob struggles to sit still for longer than one hour",
       ),
       ConditionRequest(
-        Source.SELF_DECLARED,
-        "BXI",
-        "DYSLEXIA",
+        source = Source.SELF_DECLARED,
+        prisonId = "BXI",
+        conditionTypeCode = "DYSLEXIA",
       ),
       ConditionRequest(
-        Source.CONFIRMED_DIAGNOSIS,
-        "BXI",
-        "MENTAL_HEALTH",
+        source = Source.CONFIRMED_DIAGNOSIS,
+        prisonId = "BXI",
+        conditionTypeCode = "MENTAL_HEALTH",
       ),
     ),
   )
