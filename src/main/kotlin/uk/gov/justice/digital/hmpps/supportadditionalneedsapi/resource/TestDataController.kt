@@ -78,10 +78,10 @@ class TestDataController(
           CreateConditionsRequest(
             listOf(
               ConditionRequest(
-                Source.SELF_DECLARED,
-                prisonId,
-                "ADHD",
-                "Added by test endpoint",
+                source = Source.SELF_DECLARED,
+                prisonId = prisonId,
+                conditionTypeCode = "ADHD",
+                detail = "Added by test endpoint",
               ),
             ),
           ),
@@ -93,10 +93,10 @@ class TestDataController(
           CreateConditionsRequest(
             listOf(
               ConditionRequest(
-                Source.CONFIRMED_DIAGNOSIS,
-                prisonId,
-                "TOURETTES",
-                "Added by test endpoint",
+                source = Source.CONFIRMED_DIAGNOSIS,
+                prisonId = prisonId,
+                conditionTypeCode = "TOURETTES",
+                detail = "Added by test endpoint",
               ),
             ),
           ),
@@ -108,10 +108,10 @@ class TestDataController(
           CreateChallengesRequest(
             listOf(
               ChallengeRequest(
-                prisonId,
-                "FINISHING_TASKS",
-                "Symptoms by test endpoint",
-                "Identified by test endpoint",
+                prisonId = prisonId,
+                challengeTypeCode = "FINISHING_TASKS",
+                symptoms = "Symptoms by test endpoint",
+                howIdentified = "Identified by test endpoint",
               ),
             ),
           ),
