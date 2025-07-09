@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.5.0'
+  version: '0.5.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1023,7 +1023,7 @@ components:
           $ref: '#/components/schemas/PrisonId'
       required:
         - source
-        - conditionType
+        - conditionTypeCode
         - prisonId
 
     UpdateConditionRequest:
@@ -1062,7 +1062,7 @@ components:
           description: Details about how this challenge was identified
           example: The trainer noticed that John could read better on a cream background.
       required:
-        - challengeType
+        - challengeTypeCode
         - prisonId
 
     UpdateChallengeRequest:
