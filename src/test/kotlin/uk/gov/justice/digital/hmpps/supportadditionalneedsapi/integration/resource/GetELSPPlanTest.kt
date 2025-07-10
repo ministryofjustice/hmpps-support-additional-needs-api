@@ -47,7 +47,6 @@ class GetELSPPlanTest : IntegrationTestBase() {
     assertThat(actual.planCreatedBy?.jobRole).isEqualTo(planRequest.planCreatedBy?.jobRole)
     assertThat(actual.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
     assertThat(actual.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
-    assertThat(actual.learningEnvironmentAdjustments).isEqualTo(planRequest.learningEnvironmentAdjustments)
     assertThat(actual.lnspSupport).isEqualTo(planRequest.lnspSupport)
     assertThat(actual.detail).isEqualTo(planRequest.detail)
     assertThat(actual.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
@@ -59,7 +58,6 @@ class GetELSPPlanTest : IntegrationTestBase() {
     prisonId = "BXI",
     hasCurrentEhcp = false,
     lnspSupport = "lnspSupport",
-    learningEnvironmentAdjustments = "learningEnvironmentAdjustments",
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",
