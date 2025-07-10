@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
 class CreateChallengeTest : IntegrationTestBase() {
   companion object {
@@ -45,7 +47,7 @@ class CreateChallengeTest : IntegrationTestBase() {
     assertThat(memoryChallenge.challengeType.key.code).isEqualTo("MEMORY")
     assertThat(memoryChallenge.fromALNScreener).isFalse()
     assertThat(memoryChallenge.createdAtPrison).isEqualTo("BXI")
-    assertThat(memoryChallenge.howIdentified).isEqualTo("In the classroom by tutor.")
+    assertThat(memoryChallenge.howIdentified).isEqualTo(setOf(IdentificationSource.WIDER_PRISON))
     assertThat(memoryChallenge.symptoms).isEqualTo("Struggles to remember a sequence of numbers")
 
     val processingSpeedChallenge = savedChallenges.find { it.challengeType.key.code == "SPEED_OF_CALCULATION" }
@@ -101,7 +103,7 @@ class CreateChallengeTest : IntegrationTestBase() {
       ChallengeRequest(
         prisonId = "BXI",
         challengeTypeCode = "MEMORY",
-        howIdentified = "In the classroom by tutor.",
+        howIdentified = listOf(IdentificationSourceModel.WIDER_PRISON),
         symptoms = "Struggles to remember a sequence of numbers",
       ),
       ChallengeRequest(

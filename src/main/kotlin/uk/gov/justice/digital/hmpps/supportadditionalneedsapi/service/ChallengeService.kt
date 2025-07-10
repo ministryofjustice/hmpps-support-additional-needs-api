@@ -46,7 +46,8 @@ class ChallengeService(
         createdAtPrison = requestItem.prisonId,
         updatedAtPrison = requestItem.prisonId,
         symptoms = requestItem.symptoms,
-        howIdentified = requestItem.howIdentified,
+        howIdentified = challengeMapper.toEntity(requestItem.howIdentified),
+        howIdentifiedOther = requestItem.howIdentifiedOther,
         active = true,
       )
     }
@@ -57,7 +58,7 @@ class ChallengeService(
 
   private fun validateNoDuplicateCodesInRequest(prisonNumber: String, request: CreateChallengesRequest) {
     val duplicateCodes = request.challenges
-      .mapNotNull { it.challengeTypeCode }
+      .map { it.challengeTypeCode }
       .groupingBy { it }
       .eachCount()
       .filterValues { it > 1 }

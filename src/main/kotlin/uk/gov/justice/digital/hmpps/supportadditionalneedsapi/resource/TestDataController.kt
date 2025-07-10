@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedServic
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
 import java.time.LocalDate
 import java.util.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
 @RestController
 @RequestMapping("/profile/{prisonNumber}")
@@ -111,7 +112,7 @@ class TestDataController(
                 prisonId = prisonId,
                 challengeTypeCode = "FINISHING_TASKS",
                 symptoms = "Symptoms by test endpoint",
-                howIdentified = "Identified by test endpoint",
+                howIdentified = listOf(IdentificationSourceModel.WIDER_PRISON),
               ),
             ),
           ),
