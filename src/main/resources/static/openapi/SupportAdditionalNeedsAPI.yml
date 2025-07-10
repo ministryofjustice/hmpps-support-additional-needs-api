@@ -788,11 +788,6 @@ components:
           items:
             $ref: '#/components/schemas/PlanContributor'
           min: 1
-        learningEnvironmentAdjustments:
-          type: string
-          description: Optional details of any adjustments that are required for the person's learning environment or materials.
-          example: Needs to sit near the front of the class and used coloured overlays for reading text.
-          maxLength: 4096
         teachingAdjustments:
           type: string
           description: Optional details of any adjustments that need to be made to the teaching or curriculum.
@@ -1244,10 +1239,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlanContributor'
-        learningEnvironmentAdjustments:
-          type: string
-          description: Optional details of any adjustments that are required for the person's learning environment or materials.
-          example: Needs to sit near the front of the class and used coloured overlays for reading text.
         teachingAdjustments:
           type: string
           description: Optional details of any adjustments that need to be made to the teaching or curriculum.
