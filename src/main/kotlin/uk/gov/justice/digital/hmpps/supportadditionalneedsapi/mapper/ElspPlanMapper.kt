@@ -20,7 +20,6 @@ class ElspPlanMapper(
     EducationSupportPlanResponse(
       hasCurrentEhcp = hasCurrentEhcp,
       planCreatedBy = planCreatedByName?.let { PlanContributor(planCreatedByName, planCreatedByJobRole!!) },
-      learningEnvironmentAdjustments = learningEnvironmentAdjustments,
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
       examAccessArrangements = examAccessArrangements,
@@ -49,7 +48,6 @@ class ElspPlanMapper(
         planCreatedByJobRole = planCreatedBy?.jobRole,
         hasCurrentEhcp = hasCurrentEhcp,
         lnspSupport = lnspSupport,
-        learningEnvironmentAdjustments = learningEnvironmentAdjustments,
         teachingAdjustments = teachingAdjustments,
         examAccessArrangements = examAccessArrangements,
         specificTeachingSkills = specificTeachingSkills,

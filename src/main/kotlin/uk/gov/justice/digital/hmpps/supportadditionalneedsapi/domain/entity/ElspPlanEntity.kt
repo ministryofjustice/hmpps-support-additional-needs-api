@@ -26,9 +26,6 @@ data class ElspPlanEntity(
   val hasCurrentEhcp: Boolean = false,
 
   @Column
-  val learningEnvironmentAdjustments: String? = null,
-
-  @Column
   val teachingAdjustments: String? = null,
 
   @Column
