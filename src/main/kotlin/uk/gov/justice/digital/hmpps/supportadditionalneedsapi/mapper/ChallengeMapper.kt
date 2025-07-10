@@ -4,6 +4,8 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource as IdentificationSourceEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
 @Component
 class ChallengeMapper(
@@ -27,9 +29,19 @@ class ChallengeMapper(
       updatedAtPrison = updatedAtPrison,
       challengeType = challengeType.toModel(),
       symptoms = symptoms,
-      howIdentified = howIdentified,
+      howIdentified = toModel(howIdentified),
+      howIdentifiedOther = howIdentifiedOther,
       screeningDate = screeningDate,
       active = active,
     )
   }
+
+  private fun toModel(identificationSources: Set<IdentificationSourceEntity>): List<IdentificationSourceModel>? = identificationSources
+    .takeIf { it.isNotEmpty() }
+    ?.map { IdentificationSourceModel.valueOf(it.name) }
+
+  fun toEntity(identificationSources: List<IdentificationSourceModel>?): Set<IdentificationSourceEntity> = identificationSources
+    ?.map { IdentificationSourceEntity.valueOf(it.name) }
+    ?.toSet()
+    ?: emptySet()
 }

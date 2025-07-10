@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.5.1'
+  version: '0.5.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -957,6 +957,7 @@ components:
         - conditionType
         - active
 
+
     ChallengeResponse:
       title: ChallengeResponse
       type: object
@@ -979,8 +980,14 @@ components:
           description: Optional details about the symptoms of this challenge
           example: John struggles to read text on white background.
         howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this challenge was identified. Multiple reasons may apply.
+        howIdentifiedOther:
           type: string
-          description: Details about how this challenge was identified
+          description: Details about how this challenge was identified when the OTHER IdentificationSource enum option is chosen
           example: The trainer noticed that John could read better on a cream background.
         screeningDate:
           type: string
@@ -1053,8 +1060,14 @@ components:
           description: Optional details about the symptoms of this challenge
           example: John struggles to read text on white background.
         howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this challenge was identified. Multiple reasons may apply.
+        howIdentifiedOther:
           type: string
-          description: Details about how this challenge was identified
+          description: Details about how this challenge was identified when the OTHER IdentificationSource enum option is chosen
           example: The trainer noticed that John could read better on a cream background.
       required:
         - challengeTypeCode
@@ -1103,6 +1116,20 @@ components:
       enum:
         - SELF_DECLARED
         - CONFIRMED_DIAGNOSIS
+
+    IdentificationSource:
+      title: IdentificationSource
+      description: How a challenge was identified.
+      type: string
+      enum:
+        - EDUCATION_SKILLS_WORK
+        - WIDER_PRISON
+        - CONVERSATIONS
+        - COLLEAGUE_INFO
+        - FORMAL_PROCESSES
+        - SELF_DISCLOSURE
+        - OTHER_SCREENING_TOOL
+        - OTHER
 
     ReviewScheduleStatus:
       title: ReviewScheduleStatus

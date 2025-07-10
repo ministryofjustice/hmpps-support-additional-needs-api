@@ -1,11 +1,15 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
+import io.hypersistence.utils.hibernate.type.array.EnumArrayType
+import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.annotations.Parameter
+import org.hibernate.annotations.Type
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDate
 
@@ -27,7 +31,11 @@ data class ChallengeEntity(
   val symptoms: String? = null,
 
   @Column
-  val howIdentified: String? = null,
+  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
+  var howIdentified: Set<IdentificationSource> = emptySet(),
+
+  @Column
+  val howIdentifiedOther: String? = null,
 
   @Column
   val screeningDate: LocalDate? = null,
@@ -41,3 +49,14 @@ data class ChallengeEntity(
   @Column
   var updatedAtPrison: String,
 ) : BaseAuditableEntity()
+
+enum class IdentificationSource {
+  EDUCATION_SKILLS_WORK,
+  WIDER_PRISON,
+  CONVERSATIONS,
+  COLLEAGUE_INFO,
+  FORMAL_PROCESSES,
+  SELF_DISCLOSURE,
+  OTHER_SCREENING_TOOL,
+  OTHER,
+}
