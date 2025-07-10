@@ -29,7 +29,7 @@ class ConditionMapper(
       updatedByDisplayName = userService.getUserDetails(updatedBy!!).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
-      conditionType = conditionType.toModel(),
+      conditionTypeCode = conditionType.code,
       active = active,
       detail = detail,
     )

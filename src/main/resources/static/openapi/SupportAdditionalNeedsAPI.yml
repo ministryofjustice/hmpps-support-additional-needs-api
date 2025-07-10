@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.5.1'
+  version: '0.6.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -947,8 +947,10 @@ components:
           example: c88a6c48-97e2-4c04-93b5-98619966447b
         source:
           $ref: '#/components/schemas/Source'
-        conditionType:
-          $ref: '#/components/schemas/ReferenceData'
+        conditionTypeCode:
+          type: string
+          description: The reference data type code of the condition. Refer to the reference data endpoint to get the full list of conditions and associated meta data.
+          example: DYSLEXIA
         detail:
           type: string
           description: additional detail about the condition
@@ -959,7 +961,7 @@ components:
       required:
         - reference
         - source
-        - conditionType
+        - conditionTypeCode
         - active
 
     ChallengeResponse:
@@ -993,8 +995,10 @@ components:
           description: |
             An ISO-8601 date representing date that the screening was carried out.
           example: '2023-11-19'
-        challengeType:
-          $ref: '#/components/schemas/ReferenceData'
+        challengeTypeCode:
+          type: string
+          description: The reference data type code of the challenge. Refer to the reference data endpoint to get the full list of challenges and associated meta data.
+          example: PROBLEM_SOLVING
         active:
           type: boolean
           description: |
@@ -1002,7 +1006,7 @@ components:
       required:
         - reference
         - fromALNScreener
-        - challengeType
+        - challengeTypeCode
         - active
 
     ConditionRequest:
@@ -1015,7 +1019,8 @@ components:
           $ref: '#/components/schemas/Source'
         conditionTypeCode:
           type: string
-          description: the reference data type code of the condition
+          description: The reference data type code of the condition. Refer to the reference data endpoint to get the full list of conditions and associated meta data.
+          example: DYSLEXIA
         detail:
           type: string
           description: additional detail about the condition
@@ -1050,7 +1055,8 @@ components:
       properties:
         challengeTypeCode:
           type: string
-          description: the reference data type code of the challenge
+          description: The reference data type code of the challenge. Refer to the reference data endpoint to get the full list of challenges and associated meta data.
+          example: PROBLEM_SOLVING
         prisonId:
           $ref: '#/components/schemas/PrisonId'
         symptoms:
