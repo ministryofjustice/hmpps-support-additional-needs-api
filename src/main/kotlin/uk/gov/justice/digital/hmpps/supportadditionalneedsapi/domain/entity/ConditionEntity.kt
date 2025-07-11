@@ -26,6 +26,9 @@ data class ConditionEntity(
   val conditionType: ReferenceDataEntity,
 
   @Column
+  val conditionDetail: String? = null,
+
+  @Column
   val detail: String? = null,
 
   @Column(nullable = false)

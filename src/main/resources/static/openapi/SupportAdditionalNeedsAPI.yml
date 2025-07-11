@@ -1059,6 +1059,10 @@ components:
           $ref: '#/components/schemas/Source'
         conditionType:
           $ref: '#/components/schemas/ReferenceData'
+        conditionDetail:
+          type: string
+          description: more granular information about the condition
+          example: (for Mental Health) Social Anxiety
         detail:
           type: string
           description: additional detail about the condition
@@ -1183,6 +1187,10 @@ components:
         conditionTypeCode:
           type: string
           description: the reference data type code of the condition
+        conditionDetail:
+          type: string
+          description: more granular information about the condition
+          example: (for Mental Health) Social Anxiety
         detail:
           type: string
           description: additional detail about the condition
