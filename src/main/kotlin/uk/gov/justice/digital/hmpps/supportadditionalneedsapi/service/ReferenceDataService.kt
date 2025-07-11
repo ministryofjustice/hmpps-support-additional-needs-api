@@ -11,7 +11,15 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Ref
 class ReferenceDataService(
   private val referenceDataRepository: ReferenceDataRepository,
 ) {
-  fun getReferenceDataForDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainOrderByListSequenceAsc(domain).filter { includeInactive || it.isActive() }
+  fun getReferenceDataForDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainOrderByListSequenceAsc(domain)
+    .filter { includeInactive || it.isActive() }
+    .let { list ->
+      if (domain == Domain.CHALLENGE || domain == Domain.STRENGTH) {
+        list.filter { it.screenerOption }
+      } else {
+        list
+      }
+    }
     .map {
       ReferenceData(
         it.code,
@@ -25,7 +33,8 @@ class ReferenceDataService(
       )
     }
 
-  fun getReferenceDataCategoriesDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainAndDefaultForCategoryIsTrueOrderByListSequenceAsc(domain).filter { includeInactive || it.isActive() }
+  fun getReferenceDataCategoriesDomain(domain: Domain, includeInactive: Boolean): List<ReferenceData> = referenceDataRepository.findByKeyDomainAndDefaultForCategoryIsTrueOrderByListSequenceAsc(domain)
+    .filter { includeInactive || it.isActive() }
     .map {
       ReferenceData(
         it.code,
