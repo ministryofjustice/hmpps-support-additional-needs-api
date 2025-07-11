@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.5.2'
+  version: '0.6.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -113,7 +113,7 @@ paths:
         
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
         - Condition
       responses:
@@ -135,7 +135,8 @@ paths:
         
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
       tags:
         - Condition
       responses:
@@ -161,7 +162,7 @@ paths:
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
         - Condition
       operationId: update-condition
@@ -188,7 +189,7 @@ paths:
                 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
         - Challenge
       responses:
@@ -210,7 +211,8 @@ paths:
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
       tags:
         - Challenge
       responses:
@@ -236,7 +238,8 @@ paths:
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+
       tags:
         - Challenge
       operationId: update-challenge
@@ -249,6 +252,82 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Challenge not found
+
+  '/profile/{prisonNumber}/strengths':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Adds one or more strengths.
+      description: |
+        Adds one or more Strengths to the specified prisoner's list of Strengths.
+
+        A prisoner cannot have multiple or duplicate Strengths of the same type recorded. A 409 response is returned if
+        the request contains any Strengths that the prisoner already has.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      responses:
+        '200':
+          $ref: '#/components/responses/StrengthList'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+      operationId: post-strengths
+      requestBody:
+        $ref: '#/components/requestBodies/CreateStrengthList'
+
+    get:
+      summary: Retrieves the list of strengths.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Strength
+      responses:
+        '200':
+          $ref: '#/components/responses/StrengthList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-strengths
+
+  '/profile/{prisonNumber}/strengths/{strengthReference}':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: strengthReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific strength to update
+    put:
+      summary: Updates a single strength by UUID.
+      description: |
+        Updates a specific strength associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+
+      tags:
+        - Strength
+      operationId: update-strength
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateStrength'
+      responses:
+        '200':
+          $ref: '#/components/responses/Strength'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          description: Strength not found
+
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
@@ -442,6 +521,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UpdateChallengeRequest'
+    CreateStrengthList:
+      description: Request body to create strength for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateStrengthsRequest'
+    UpdateStrength:
+      description: Request body to update a strength for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateStrengthRequest'
     CreateEducationSupportPlan:
       description: Request body to create an Education Support Plan for a person.
       content:
@@ -732,6 +823,18 @@ components:
             $ref: '#/components/schemas/ChallengeResponse'
       required:
         - challenges
+    StrengthListResponse:
+      title: StrengthListResponse
+      description: A list of strengths for a prisoner.
+      type: object
+      properties:
+        strengths:
+          type: array
+          description: A List containing zero or more Strengths.
+          items:
+            $ref: '#/components/schemas/StrengthResponse'
+      required:
+        - challenges
 
     CreateConditionsRequest:
       title: ConditionListRequest
@@ -755,6 +858,18 @@ components:
           description: A List containing zero or more Challenges.
           items:
             $ref: '#/components/schemas/ChallengeRequest'
+      required:
+        - challenges
+    CreateStrengthsRequest:
+      title: StrengthsListRequest
+      description: A request to create a list of strengths for a person.
+      type: object
+      properties:
+        challenges:
+          type: array
+          description: A List containing zero or more Strengths.
+          items:
+            $ref: '#/components/schemas/StrengthRequest'
       required:
         - challenges
 
@@ -1007,6 +1122,56 @@ components:
         - challengeType
         - active
 
+    StrengthResponse:
+      title: StrengthResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A strength a person has.
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this strength
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        fromALNScreener:
+          type: boolean
+          description: |
+            Whether or not this strength is from the ALN screener
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this strength
+          example: John is great at reading.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this strength was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this strength was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John was great at reading.
+        screeningDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the screening was carried out.
+          example: '2023-11-19'
+        challengeType:
+          $ref: '#/components/schemas/ReferenceData'
+        active:
+          type: boolean
+          description: |
+            Whether or not this strength is active
+      required:
+        - reference
+        - fromALNScreener
+        - strengthType
+        - active
+
+
     ConditionRequest:
       title: ConditionRequest
       type: object
@@ -1072,7 +1237,6 @@ components:
       required:
         - challengeTypeCode
         - prisonId
-
     UpdateChallengeRequest:
       title: UpdateChallengeRequest
       type: object
@@ -1085,6 +1249,50 @@ components:
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the challenge was updated at
+      required:
+        - active
+        - prisonId
+    StrengthRequest:
+      title: StrengthRequest
+      type: object
+      description: |
+        A strength a person has.
+      properties:
+        challengeTypeCode:
+          type: string
+          description: the reference data type code of the strength
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this strength
+          example: John struggles is great at reading.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this strength was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this strength was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John was great at reading.
+      required:
+        - strengthTypeCode
+        - prisonId
+
+    UpdateStrengthRequest:
+      title: UpdateStrengthRequest
+      type: object
+      description: |
+        request object to update a strength.
+      properties:
+        active:
+          type: boolean
+          description: Whether or not the strength is active
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prison the strength was updated at
       required:
         - active
         - prisonId
@@ -1409,6 +1617,23 @@ components:
           schema:
             $ref: '#/components/schemas/ChallengeListResponse'
 
+    StrengthList:
+      description: Response body containing the a list of strenghts.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StrengthListResponse'
+
     Condition:
       description: Response body containing a single condition.
       headers:
@@ -1442,6 +1667,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ChallengeResponse'
+
+    Strength:
+      description: Response body containing a single strength.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StrengthResponse'
 
     GetReviewSchedules:
       description: Response body containing the a list of review schedules.
