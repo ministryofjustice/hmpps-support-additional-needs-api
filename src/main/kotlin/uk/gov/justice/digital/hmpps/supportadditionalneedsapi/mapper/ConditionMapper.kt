@@ -32,6 +32,7 @@ class ConditionMapper(
       conditionType = conditionType.toModel(),
       active = active,
       detail = detail,
+      conditionDetail = conditionDetail,
     )
   }
 
@@ -46,6 +47,7 @@ class ConditionMapper(
     createdAtPrison = requestItem.prisonId,
     updatedAtPrison = requestItem.prisonId,
     detail = requestItem.detail,
+    conditionDetail = requestItem.conditionDetail,
   )
 
   fun toModel(source: EntitySource): ModelSource = when (source) {
