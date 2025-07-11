@@ -120,7 +120,7 @@ class CreateConditionTest : IntegrationTestBase() {
         source = Source.CONFIRMED_DIAGNOSIS,
         prisonId = "BXI",
         conditionTypeCode = "MENTAL_HEALTH",
-        conditionDetail = "Social anxiety"
+        conditionDetail = "Social anxiety",
       ),
     ),
   )
