@@ -28,7 +28,7 @@ class GetReferenceDataTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.referenceDataList.size).isEqualTo(22)
+    assertThat(actual!!.referenceDataList.size).isEqualTo(21)
 
     // Example check for specific entry (e.g. code = "ADHD")
     val adhd = actual.referenceDataList.find { it.code == "ADHD" }

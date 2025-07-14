@@ -1,0 +1,1 @@
+delete from reference_data where domain = 'CONDITION' and code = 'ASC_OTHER';
