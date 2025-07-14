@@ -2,14 +2,12 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
@@ -58,44 +56,6 @@ class CreateChallengeTest : IntegrationTestBase() {
     assertThat(processingSpeedChallenge.fromALNScreener).isFalse()
     assertThat(processingSpeedChallenge.createdAtPrison).isEqualTo("BXI")
     assertThat(processingSpeedChallenge.reference).isNotNull()
-  }
-
-  @Test
-  fun `Fail when request contains duplicate challenge codes`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val duplicateChallengesList = CreateChallengesRequest(
-      listOf(
-        ChallengeRequest(
-          prisonId = "BXI",
-          challengeTypeCode = "MEMORY",
-        ),
-        ChallengeRequest(
-          prisonId = "BXI",
-          challengeTypeCode = "MEMORY", // Duplicate code
-        ),
-      ),
-    )
-
-    // When
-    val response = webTestClient.post()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(duplicateChallengesList)
-      .exchange()
-      .expectStatus()
-      .is4xxClientError
-      .expectBody(ErrorResponse::class.java)
-      .returnResult()
-
-    // Then
-    val actual = response.responseBody
-    assertThat(actual)
-      .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Attempted to add duplicate challenge(s) MEMORY for prisoner [$prisonNumber]")
   }
 
   private fun createChallengesList(prisonNumber: String): CreateChallengesRequest = CreateChallengesRequest(

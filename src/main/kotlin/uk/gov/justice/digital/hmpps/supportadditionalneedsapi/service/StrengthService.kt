@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Stre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateStrengthException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
@@ -33,11 +32,7 @@ class StrengthService(
 
   @Transactional
   fun createStrengths(prisonNumber: String, request: CreateStrengthsRequest): StrengthListResponse {
-    validateNoDuplicateCodesInRequest(prisonNumber, request)
-
     val strengthTypeEntities = resolveStrengthTypes(request)
-
-    validateNoDuplicateStrengthsInDatabase(prisonNumber, strengthTypeEntities)
 
     val strengths = strengthTypeEntities.map { (strengthType, requestItem) ->
       StrengthEntity(
@@ -56,39 +51,10 @@ class StrengthService(
     return StrengthListResponse(savedStrengths.map { strengthMapper.toModel(it) })
   }
 
-  private fun validateNoDuplicateCodesInRequest(prisonNumber: String, request: CreateStrengthsRequest) {
-    val duplicateCodes = request.strengths
-      .map { it.strengthTypeCode }
-      .groupingBy { it }
-      .eachCount()
-      .filterValues { it > 1 }
-      .keys
-
-    if (duplicateCodes.isNotEmpty()) {
-      throw DuplicateStrengthException(prisonNumber, duplicateCodes.joinToString(", "))
-    }
-  }
-
   private fun resolveStrengthTypes(request: CreateStrengthsRequest): List<Pair<ReferenceDataEntity, StrengthRequest>> = request.strengths.map { strengthRequest ->
     val code = requireNotNull(strengthRequest.strengthTypeCode) { "Strength type code must not be null" }
     val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CHALLENGE, code))
     type to strengthRequest
-  }
-
-  private fun validateNoDuplicateStrengthsInDatabase(
-    prisonNumber: String,
-    strengthTypeEntities: List<Pair<ReferenceDataEntity, StrengthRequest>>,
-  ) {
-    val existingCodes = strengthRepository.findAllByPrisonNumber(prisonNumber)
-      .map { it.strengthType.key.code }
-      .toSet()
-
-    val newCodes = strengthTypeEntities.map { (type, _) -> type.key.code }
-
-    val alreadyExists = newCodes.intersect(existingCodes)
-    if (alreadyExists.isNotEmpty()) {
-      throw DuplicateStrengthException(prisonNumber, alreadyExists.joinToString(", "))
-    }
   }
 
   fun updateStrength(
