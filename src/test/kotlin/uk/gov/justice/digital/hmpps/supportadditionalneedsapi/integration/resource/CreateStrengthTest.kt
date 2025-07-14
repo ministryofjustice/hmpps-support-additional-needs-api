@@ -2,12 +2,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
@@ -58,44 +56,6 @@ class CreateStrengthTest : IntegrationTestBase() {
     assertThat(processingSpeedStrength.fromALNScreener).isFalse()
     assertThat(processingSpeedStrength.createdAtPrison).isEqualTo("BXI")
     assertThat(processingSpeedStrength.reference).isNotNull()
-  }
-
-  @Test
-  fun `Fail when request contains duplicate strength codes`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val duplicateStrengthsList = CreateStrengthsRequest(
-      listOf(
-        StrengthRequest(
-          prisonId = "BXI",
-          strengthTypeCode = "MEMORY",
-        ),
-        StrengthRequest(
-          prisonId = "BXI",
-          strengthTypeCode = "MEMORY", // Duplicate code
-        ),
-      ),
-    )
-
-    // When
-    val response = webTestClient.post()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(duplicateStrengthsList)
-      .exchange()
-      .expectStatus()
-      .is4xxClientError
-      .expectBody(ErrorResponse::class.java)
-      .returnResult()
-
-    // Then
-    val actual = response.responseBody
-    assertThat(actual)
-      .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Attempted to add duplicate strength(s) MEMORY for prisoner [$prisonNumber]")
   }
 
   private fun createStrengthsList(prisonNumber: String): CreateStrengthsRequest = CreateStrengthsRequest(

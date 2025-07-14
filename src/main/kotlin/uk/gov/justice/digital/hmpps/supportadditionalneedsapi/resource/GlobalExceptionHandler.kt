@@ -24,9 +24,6 @@ import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateChallengeException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateStrengthException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
@@ -187,9 +184,6 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
    */
   @ExceptionHandler(
     value = [
-      DuplicateConditionException::class,
-      DuplicateChallengeException::class,
-      DuplicateStrengthException::class,
       PersonAlreadyHasAPlanException::class,
       PlanCreationScheduleStateException::class,
     ],

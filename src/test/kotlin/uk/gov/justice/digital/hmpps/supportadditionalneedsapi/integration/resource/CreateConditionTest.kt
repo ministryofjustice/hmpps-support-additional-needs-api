@@ -2,13 +2,11 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source as EntitySource
@@ -61,46 +59,6 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(mentalHealthCondition.source).isEqualTo(EntitySource.CONFIRMED_DIAGNOSIS)
     assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
     assertThat(mentalHealthCondition.conditionDetail).isEqualTo("Social anxiety")
-  }
-
-  @Test
-  fun `Fail when request contains duplicate condition codes`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val duplicateConditionsList = CreateConditionsRequest(
-      listOf(
-        ConditionRequest(
-          source = Source.SELF_DECLARED,
-          prisonId = "BXI",
-          conditionTypeCode = "ADHD",
-        ),
-        ConditionRequest(
-          Source.SELF_DECLARED,
-          prisonId = "BXI",
-          conditionTypeCode = "ADHD", // Duplicate code
-        ),
-      ),
-    )
-
-    // When
-    val response = webTestClient.post()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(duplicateConditionsList)
-      .exchange()
-      .expectStatus()
-      .is4xxClientError
-      .expectBody(ErrorResponse::class.java)
-      .returnResult()
-
-    // Then
-    val actual = response.responseBody
-    assertThat(actual)
-      .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Attempted to add duplicate condition(s) ADHD for prisoner [$prisonNumber]")
   }
 
   private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(
