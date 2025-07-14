@@ -15,12 +15,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthsService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import java.util.*
 
 @RestController
 @RequestMapping("/profile/{prisonNumber}/strengths")
-class StrengthController(private val strengthsService: StrengthsService) {
+class StrengthController(private val strengthService: StrengthService) {
   @PreAuthorize(HAS_EDIT_ELSP)
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -28,19 +28,19 @@ class StrengthController(private val strengthsService: StrengthsService) {
     @PathVariable prisonNumber: String,
     @Valid
     @RequestBody request: CreateStrengthsRequest,
-  ): StrengthListResponse = strengthsService.createStrengths(prisonNumber, request)
+  ): StrengthListResponse = strengthService.createStrengths(prisonNumber, request)
 
   @PreAuthorize(HAS_VIEW_ELSP)
   @GetMapping
   fun getStrengths(
     @PathVariable prisonNumber: String,
-  ): StrengthListResponse = strengthsService.getStrengths(prisonNumber)
+  ): StrengthListResponse = strengthService.getStrengths(prisonNumber)
 
-  @PutMapping("/{StrengthReference}")
+  @PutMapping("/{strengthReference}")
   @PreAuthorize(HAS_EDIT_ELSP)
   fun updateStrength(
     @PathVariable prisonNumber: String,
-    @PathVariable StrengthReference: UUID,
+    @PathVariable strengthReference: UUID,
     @Valid @RequestBody request: UpdateStrengthRequest,
-  ): StrengthResponse = strengthsService.updateStrength(prisonNumber, StrengthReference, request)
+  ): StrengthResponse = strengthService.updateStrength(prisonNumber, strengthReference, request)
 }

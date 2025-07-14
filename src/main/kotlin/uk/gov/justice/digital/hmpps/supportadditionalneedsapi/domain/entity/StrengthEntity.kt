@@ -15,8 +15,8 @@ import java.time.LocalDate
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
-@Table(name = "challenge")
-data class ChallengeEntity(
+@Table(name = "strength")
+data class StrengthEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 
@@ -24,8 +24,8 @@ data class ChallengeEntity(
   var fromALNScreener: Boolean = false,
 
   @ManyToOne(optional = false)
-  @JoinColumn(name = "challenge_type_id", referencedColumnName = "id")
-  val challengeType: ReferenceDataEntity,
+  @JoinColumn(name = "strength_type_id", referencedColumnName = "id")
+  val strengthType: ReferenceDataEntity,
 
   @Column
   val symptoms: String? = null,
@@ -49,14 +49,3 @@ data class ChallengeEntity(
   @Column
   var updatedAtPrison: String,
 ) : BaseAuditableEntity()
-
-enum class IdentificationSource {
-  EDUCATION_SKILLS_WORK,
-  WIDER_PRISON,
-  CONVERSATIONS,
-  COLLEAGUE_INFO,
-  FORMAL_PROCESSES,
-  SELF_DISCLOSURE,
-  OTHER_SCREENING_TOOL,
-  OTHER,
-}

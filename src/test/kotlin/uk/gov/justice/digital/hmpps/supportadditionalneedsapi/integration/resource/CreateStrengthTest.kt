@@ -6,76 +6,76 @@ import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
-class CreateChallengeTest : IntegrationTestBase() {
+class CreateStrengthTest : IntegrationTestBase() {
   companion object {
-    private const val URI_TEMPLATE = "/profile/{prisonNumber}/challenges"
+    private const val URI_TEMPLATE = "/profile/{prisonNumber}/strengths"
   }
 
   @Test
-  fun `Create a list of challenges for a given prisoner`() {
+  fun `Create a list of strengths for a given prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
-    val challengesList = createChallengesList(prisonNumber)
+    val strengthsList = createStrengthsList(prisonNumber)
 
     // When
     val response = webTestClient.post()
       .uri(URI_TEMPLATE, prisonNumber)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(challengesList)
+      .bodyValue(strengthsList)
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(ChallengeListResponse::class.java)
+      .returnResult(StrengthListResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
 
-    val savedChallenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(savedChallenges.size).isEqualTo(2)
-    val memoryChallenge = savedChallenges.find { it.challengeType.key.code == "MEMORY" }
-    assertThat(memoryChallenge!!.prisonNumber).isEqualTo(prisonNumber)
-    assertThat(memoryChallenge.challengeType.key.code).isEqualTo("MEMORY")
-    assertThat(memoryChallenge.fromALNScreener).isFalse()
-    assertThat(memoryChallenge.createdAtPrison).isEqualTo("BXI")
-    assertThat(memoryChallenge.howIdentified).isEqualTo(setOf(IdentificationSource.WIDER_PRISON))
-    assertThat(memoryChallenge.symptoms).isEqualTo("Struggles to remember a sequence of numbers")
+    val savedStrengths = strengthRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(savedStrengths.size).isEqualTo(2)
+    val memoryStrength = savedStrengths.find { it.strengthType.key.code == "MEMORY" }
+    assertThat(memoryStrength!!.prisonNumber).isEqualTo(prisonNumber)
+    assertThat(memoryStrength.strengthType.key.code).isEqualTo("MEMORY")
+    assertThat(memoryStrength.fromALNScreener).isFalse()
+    assertThat(memoryStrength.createdAtPrison).isEqualTo("BXI")
+    assertThat(memoryStrength.howIdentified).isEqualTo(setOf(IdentificationSource.WIDER_PRISON))
+    assertThat(memoryStrength.symptoms).isEqualTo("Is really good at remembering a sequence of numbers")
 
-    val processingSpeedChallenge = savedChallenges.find { it.challengeType.key.code == "SPEED_OF_CALCULATION" }
-    assertThat(processingSpeedChallenge!!.prisonNumber).isEqualTo(prisonNumber)
-    assertThat(processingSpeedChallenge.challengeType.key.code).isEqualTo("SPEED_OF_CALCULATION")
-    assertThat(processingSpeedChallenge.challengeType.areaDescription).isEqualTo("Cognition & Learning")
-    assertThat(processingSpeedChallenge.challengeType.categoryDescription).isEqualTo("Numeracy Skills")
-    assertThat(processingSpeedChallenge.fromALNScreener).isFalse()
-    assertThat(processingSpeedChallenge.createdAtPrison).isEqualTo("BXI")
-    assertThat(processingSpeedChallenge.reference).isNotNull()
+    val processingSpeedStrength = savedStrengths.find { it.strengthType.key.code == "SPEED_OF_CALCULATION" }
+    assertThat(processingSpeedStrength!!.prisonNumber).isEqualTo(prisonNumber)
+    assertThat(processingSpeedStrength.strengthType.key.code).isEqualTo("SPEED_OF_CALCULATION")
+    assertThat(processingSpeedStrength.strengthType.areaDescription).isEqualTo("Cognition & Learning")
+    assertThat(processingSpeedStrength.strengthType.categoryDescription).isEqualTo("Numeracy Skills")
+    assertThat(processingSpeedStrength.fromALNScreener).isFalse()
+    assertThat(processingSpeedStrength.createdAtPrison).isEqualTo("BXI")
+    assertThat(processingSpeedStrength.reference).isNotNull()
   }
 
   @Test
-  fun `Fail when request contains duplicate challenge codes`() {
+  fun `Fail when request contains duplicate strength codes`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val duplicateChallengesList = CreateChallengesRequest(
+    val duplicateStrengthsList = CreateStrengthsRequest(
       listOf(
-        ChallengeRequest(
+        StrengthRequest(
           prisonId = "BXI",
-          challengeTypeCode = "MEMORY",
+          strengthTypeCode = "MEMORY",
         ),
-        ChallengeRequest(
+        StrengthRequest(
           prisonId = "BXI",
-          challengeTypeCode = "MEMORY", // Duplicate code
+          strengthTypeCode = "MEMORY", // Duplicate code
         ),
       ),
     )
@@ -84,7 +84,7 @@ class CreateChallengeTest : IntegrationTestBase() {
     val response = webTestClient.post()
       .uri(URI_TEMPLATE, prisonNumber)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(duplicateChallengesList)
+      .bodyValue(duplicateStrengthsList)
       .exchange()
       .expectStatus()
       .is4xxClientError
@@ -95,20 +95,20 @@ class CreateChallengeTest : IntegrationTestBase() {
     val actual = response.responseBody
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Attempted to add duplicate challenge(s) MEMORY for prisoner [$prisonNumber]")
+      .hasUserMessage("Attempted to add duplicate strength(s) MEMORY for prisoner [$prisonNumber]")
   }
 
-  private fun createChallengesList(prisonNumber: String): CreateChallengesRequest = CreateChallengesRequest(
+  private fun createStrengthsList(prisonNumber: String): CreateStrengthsRequest = CreateStrengthsRequest(
     listOf(
-      ChallengeRequest(
+      StrengthRequest(
         prisonId = "BXI",
-        challengeTypeCode = "MEMORY",
+        strengthTypeCode = "MEMORY",
         howIdentified = listOf(IdentificationSourceModel.WIDER_PRISON),
-        symptoms = "Struggles to remember a sequence of numbers",
+        symptoms = "Is really good at remembering a sequence of numbers",
       ),
-      ChallengeRequest(
+      StrengthRequest(
         prisonId = "BXI",
-        challengeTypeCode = "SPEED_OF_CALCULATION",
+        strengthTypeCode = "SPEED_OF_CALCULATION",
       ),
     ),
   )

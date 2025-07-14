@@ -26,10 +26,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.Challen
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateChallengeException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateConditionException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateStrengthException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
 private val log = KotlinLogging.logger {}
@@ -160,6 +162,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     value = [
       ConditionNotFoundException::class,
       ChallengeNotFoundException::class,
+      StrengthNotFoundException::class,
       PlanNotFoundException::class,
       PlanCreationScheduleNotFoundException::class,
     ],
@@ -186,6 +189,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     value = [
       DuplicateConditionException::class,
       DuplicateChallengeException::class,
+      DuplicateStrengthException::class,
       PersonAlreadyHasAPlanException::class,
       PlanCreationScheduleStateException::class,
     ],

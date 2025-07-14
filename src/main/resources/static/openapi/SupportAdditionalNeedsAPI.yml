@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.6.0'
+  version: '0.6.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -865,13 +865,13 @@ components:
       description: A request to create a list of strengths for a person.
       type: object
       properties:
-        challenges:
+        strengths:
           type: array
           description: A List containing zero or more Strengths.
           items:
             $ref: '#/components/schemas/StrengthRequest'
       required:
-        - challenges
+        - strengths
 
     CreateEducationSupportPlanRequest:
       title: CreateEducationSupportPlanRequest
@@ -1163,7 +1163,7 @@ components:
           description: |
             An ISO-8601 date representing date that the screening was carried out.
           example: '2023-11-19'
-        challengeType:
+        strengthType:
           $ref: '#/components/schemas/ReferenceData'
         active:
           type: boolean
@@ -1266,7 +1266,7 @@ components:
       description: |
         A strength a person has.
       properties:
-        challengeTypeCode:
+        strengthTypeCode:
           type: string
           description: the reference data type code of the strength
         prisonId:

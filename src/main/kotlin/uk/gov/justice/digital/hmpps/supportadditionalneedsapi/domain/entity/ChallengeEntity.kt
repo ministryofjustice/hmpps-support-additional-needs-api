@@ -49,14 +49,3 @@ data class ChallengeEntity(
   @Column
   var updatedAtPrison: String,
 ) : BaseAuditableEntity()
-
-enum class IdentificationSource {
-  EDUCATION_SKILLS_WORK,
-  WIDER_PRISON,
-  CONVERSATIONS,
-  COLLEAGUE_INFO,
-  FORMAL_PROCESSES,
-  SELF_DISCLOSURE,
-  OTHER_SCREENING_TOOL,
-  OTHER,
-}

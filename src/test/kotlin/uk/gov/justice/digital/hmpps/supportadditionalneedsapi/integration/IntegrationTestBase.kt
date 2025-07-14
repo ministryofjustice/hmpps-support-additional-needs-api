@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.PostgresContainer
@@ -105,6 +106,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var challengeRepository: ChallengeRepository
+
+  @Autowired
+  protected lateinit var strengthRepository: StrengthRepository
 
   @Autowired
   protected lateinit var elspPlanRepository: ElspPlanRepository

@@ -26,7 +26,11 @@ class ConditionNotFoundException(prisonNumber: String, reference: UUID) : Runtim
 
 class DuplicateChallengeException(prisonNumber: String, conditions: String) : RuntimeException("Attempted to add duplicate challenge(s) $conditions for prisoner [$prisonNumber]")
 
+class DuplicateStrengthException(prisonNumber: String, strengths: String) : RuntimeException("Attempted to add duplicate strength(s) $strengths for prisoner [$prisonNumber]")
+
 class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] not found for prisoner [$prisonNumber]")
+
+class StrengthNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Strength with reference [$reference] not found for prisoner [$prisonNumber]")
 
 class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
 

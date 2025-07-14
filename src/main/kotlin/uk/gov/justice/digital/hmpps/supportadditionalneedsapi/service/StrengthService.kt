@@ -2,20 +2,20 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.DuplicateStrengthException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
 import java.util.*
 
@@ -97,7 +97,7 @@ class StrengthService(
     request: UpdateStrengthRequest,
   ): StrengthResponse {
     val
-      strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+    strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
     strength.active = request.active
