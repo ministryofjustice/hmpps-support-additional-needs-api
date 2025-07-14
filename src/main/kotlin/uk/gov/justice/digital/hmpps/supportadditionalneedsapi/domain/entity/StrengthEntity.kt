@@ -11,7 +11,7 @@ import jakarta.persistence.Table
 import org.hibernate.annotations.Parameter
 import org.hibernate.annotations.Type
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
-import java.time.LocalDate
+import java.util.*
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
@@ -20,8 +20,8 @@ data class StrengthEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 
-  @Column(name = "from_aln_screener", nullable = false)
-  var fromALNScreener: Boolean = false,
+  @Column(name = "aln_screener_id", nullable = false)
+  var alnScreenerId: UUID? = null,
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "strength_type_id", referencedColumnName = "id")
@@ -37,9 +37,6 @@ data class StrengthEntity(
   @Column
   val howIdentifiedOther: String? = null,
 
-  @Column
-  val screeningDate: LocalDate? = null,
-
   @Column(nullable = false)
   var active: Boolean = true,
 
@@ -48,4 +45,9 @@ data class StrengthEntity(
 
   @Column
   var updatedAtPrison: String,
-) : BaseAuditableEntity()
+
+) : BaseAuditableEntity() {
+
+  val fromALNScreener: Boolean
+    get() = alnScreenerId != null
+}

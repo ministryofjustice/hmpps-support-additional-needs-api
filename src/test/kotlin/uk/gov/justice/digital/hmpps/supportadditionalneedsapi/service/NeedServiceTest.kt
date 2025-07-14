@@ -176,7 +176,7 @@ class NeedServiceTest {
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
     active = active,
-    fromALNScreener = alnScreener,
+    alnScreenerId = if (alnScreener) UUID.randomUUID() else null,
   )
 
   private fun getConditionEntity(prisonNumber: String, active: Boolean = true): ConditionEntity = ConditionEntity(

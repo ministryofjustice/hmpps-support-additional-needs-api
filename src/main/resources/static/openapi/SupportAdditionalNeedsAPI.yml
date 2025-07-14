@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.6.1'
+  version: '0.6.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1108,12 +1108,6 @@ components:
           type: string
           description: Details about how this challenge was identified when the OTHER IdentificationSource enum option is chosen
           example: The trainer noticed that John could read better on a cream background.
-        screeningDate:
-          type: string
-          format: date
-          description: |
-            An ISO-8601 date representing date that the screening was carried out.
-          example: '2023-11-19'
         challengeType:
           $ref: '#/components/schemas/ReferenceData'
         active:
@@ -1157,12 +1151,6 @@ components:
           type: string
           description: Details about how this strength was identified when the OTHER IdentificationSource enum option is chosen
           example: The trainer noticed that John was great at reading.
-        screeningDate:
-          type: string
-          format: date
-          description: |
-            An ISO-8601 date representing date that the screening was carried out.
-          example: '2023-11-19'
         strengthType:
           $ref: '#/components/schemas/ReferenceData'
         active:
