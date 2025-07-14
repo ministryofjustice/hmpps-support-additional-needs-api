@@ -31,7 +31,6 @@ class StrengthMapper(
       symptoms = symptoms,
       howIdentified = toModel(howIdentified),
       howIdentifiedOther = howIdentifiedOther,
-      screeningDate = screeningDate,
       active = active,
     )
   }
