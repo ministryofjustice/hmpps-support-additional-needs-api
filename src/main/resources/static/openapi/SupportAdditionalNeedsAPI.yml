@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.6.2'
+  version: '0.7.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -117,7 +117,7 @@ paths:
       tags:
         - Condition
       responses:
-        '200':
+        '201':
           $ref: '#/components/responses/ConditionList'
         '400':
           $ref: '#/components/responses/400Error'
@@ -193,7 +193,7 @@ paths:
       tags:
         - Challenge
       responses:
-        '200':
+        '201':
           $ref: '#/components/responses/ChallengeList'
         '400':
           $ref: '#/components/responses/400Error'
@@ -270,7 +270,7 @@ paths:
       tags:
         - Strength
       responses:
-        '200':
+        '201':
           $ref: '#/components/responses/StrengthList'
         '400':
           $ref: '#/components/responses/400Error'
@@ -279,6 +279,33 @@ paths:
       operationId: post-strengths
       requestBody:
         $ref: '#/components/requestBodies/CreateStrengthList'
+
+  '/profile/{prisonNumber}/aln-screener':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Endpoint to take in all of the aln screener information.
+      description: |
+        End point used to input the information from the ALN screener. This is a manual
+        data entry process where the user keys in the information from the ALN screener form. 
+        It is essentially a date and a list of challenge and strength codes. If only a date is 
+        sent then this means the screener was completed but there were no needs identified.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - ALN Screener
+      responses:
+        '201':
+          description: Successfully created ALN screener (no response body)
+        '400':
+          $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+      operationId: post-aln-screener
+      requestBody:
+        $ref: '#/components/requestBodies/CreateALNScreenerRequest'
 
     get:
       summary: Retrieves the list of strengths.
@@ -545,6 +572,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UpdatePlanCreationStatusRequest'
+    CreateALNScreenerRequest:
+      description: Request body to save an ALN screener.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ALNScreenerRequest'
 
   #
   # Schema and Enum Definitions
@@ -1120,6 +1153,30 @@ components:
         - challengeType
         - active
 
+    ALNChallenge:
+      title: ALNChallenge
+      type: object
+      description: |
+        An ALN challenge recorded in the screener.
+      properties:
+        challengeTypeCode:
+          type: string
+          description: the reference data type code of the challenge
+      required:
+        - challengeTypeCode
+
+    ALNStrength:
+      title: ALNStrength
+      type: object
+      description: |
+        An ALN strength recorded in the screener.
+      properties:
+        strengthTypeCode:
+          type: string
+          description: the reference data type code of the strength
+      required:
+        - strengthTypeCode
+
     StrengthResponse:
       title: StrengthResponse
       type: object
@@ -1312,6 +1369,37 @@ components:
       required:
         - status
         - prisonId
+
+    ALNScreenerRequest:
+      title: ALNScreenerRequest
+      type: object
+      description: |
+        request object to create an ALN screener.
+      properties:
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prison the ALN screener was keyed in at
+        screenerDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing the date the screener was carried out.
+          example: '2023-11-19'
+        challenges:
+          type: array
+          description: A List containing zero or more challenge codes.
+          items:
+            $ref: '#/components/schemas/ALNChallenge'
+        strengths:
+          type: array
+          description: A List containing zero or more strength codes.
+          items:
+            $ref: '#/components/schemas/ALNStrength'
+      required:
+        - screenerDate
+        - prisonId
+        - challenges
+        - strengths
 
     Source:
       title: Source
