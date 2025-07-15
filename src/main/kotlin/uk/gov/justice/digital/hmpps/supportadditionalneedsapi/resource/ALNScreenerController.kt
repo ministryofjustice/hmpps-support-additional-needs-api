@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,8 +23,5 @@ class ALNScreenerController(private val alnScreenerService: ALNScreenerService) 
     @PathVariable prisonNumber: String,
     @Valid
     @RequestBody request: ALNScreenerRequest,
-  ): ResponseEntity<Void> {
-    alnScreenerService.createScreener(prisonNumber, request)
-    return ResponseEntity.status(HttpStatus.CREATED).build()
-  }
+  ) = alnScreenerService.createScreener(prisonNumber, request)
 }
