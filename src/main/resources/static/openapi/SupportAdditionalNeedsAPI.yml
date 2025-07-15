@@ -867,7 +867,7 @@ components:
           items:
             $ref: '#/components/schemas/StrengthResponse'
       required:
-        - challenges
+        - strengths
 
     CreateConditionsRequest:
       title: ConditionListRequest
