@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ChallengeMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
@@ -55,6 +56,31 @@ class ChallengeService(
     val code = requireNotNull(challengeRequest.challengeTypeCode) { "Challenge type code must not be null" }
     val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CHALLENGE, code))
     type to challengeRequest
+  }
+
+  @Transactional
+  fun createAlnChallenges(prisonNumber: String, alnChallenges: List<ALNChallenge>, prisonId: String, alnScreenerId: UUID) {
+    if (alnChallenges.isNotEmpty()) {
+      val challengeTypeEntities = resolveChallengeTypes(alnChallenges)
+
+      val challenges = challengeTypeEntities.map { (challengeType) ->
+        ChallengeEntity(
+          prisonNumber = prisonNumber,
+          challengeType = challengeType,
+          createdAtPrison = prisonId,
+          updatedAtPrison = prisonId,
+          alnScreenerId = alnScreenerId,
+          active = true,
+        )
+      }
+      challengeRepository.saveAll(challenges)
+    }
+  }
+
+  private fun resolveChallengeTypes(request: List<ALNChallenge>): List<Pair<ReferenceDataEntity, ALNChallenge>> = request.map { challenge ->
+    val code = requireNotNull(challenge.challengeTypeCode) { "Challenge type code must not be null" }
+    val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CHALLENGE, code))
+    type to challenge
   }
 
   fun updateChallenge(
