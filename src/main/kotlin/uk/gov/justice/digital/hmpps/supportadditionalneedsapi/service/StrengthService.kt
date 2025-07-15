@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Doma
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -23,11 +24,21 @@ import java.util.*
 class StrengthService(
   private val strengthRepository: StrengthRepository,
   private val referenceDataRepository: ReferenceDataRepository,
+  private val alnScreenerRepository: AlnScreenerRepository,
   private val strengthMapper: StrengthMapper,
 ) {
   fun getStrengths(prisonNumber: String): StrengthListResponse {
-    val strengths = strengthRepository.findAllByPrisonNumber(prisonNumber)
-    val models = strengths.map { strengthMapper.toModel(it) }
+    val nonAlnStrengths = strengthRepository
+      .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
+
+    val alnStrengths = alnScreenerRepository
+      .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      ?.strengths
+      .orEmpty()
+
+    val allStrengths = nonAlnStrengths + alnStrengths
+
+    val models = allStrengths.map(strengthMapper::toModel)
     return StrengthListResponse(models)
   }
 

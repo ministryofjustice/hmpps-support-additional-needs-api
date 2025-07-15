@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -24,10 +25,20 @@ class ChallengeService(
   private val challengeRepository: ChallengeRepository,
   private val referenceDataRepository: ReferenceDataRepository,
   private val challengeMapper: ChallengeMapper,
+  private val alnScreenerRepository: AlnScreenerRepository,
 ) {
   fun getChallenges(prisonNumber: String): ChallengeListResponse {
-    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    val models = challenges.map { challengeMapper.toModel(it) }
+    val nonAlnChallenges = challengeRepository
+      .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
+
+    val alnChallenges = alnScreenerRepository
+      .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      ?.challenges
+      .orEmpty()
+
+    val allChallenges = nonAlnChallenges + alnChallenges
+
+    val models = allChallenges.map(challengeMapper::toModel)
     return ChallengeListResponse(models)
   }
 
