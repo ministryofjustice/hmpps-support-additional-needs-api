@@ -6,6 +6,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALN
 @Service
 class ALNScreenerService {
   fun createScreener(prisonNumber: String, request: ALNScreenerRequest) {
-    TODO("Not yet implemented")
+
   }
 }

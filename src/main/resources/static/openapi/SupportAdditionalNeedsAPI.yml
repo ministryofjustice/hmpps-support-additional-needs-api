@@ -1398,6 +1398,8 @@ components:
       required:
         - screenerDate
         - prisonId
+        - challenges
+        - strengths
 
     Source:
       title: Source
