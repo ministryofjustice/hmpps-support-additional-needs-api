@@ -7,8 +7,5 @@ import java.util.UUID
 
 @Repository
 interface LddAssessmentRepository : JpaRepository<LddAssessmentEntity, UUID> {
-
-  fun getAllByPrisonNumber(prisonNumber: String): List<LddAssessmentEntity>
-  fun findByPrisonNumber(prisonNumber: String): MutableList<LddAssessmentEntity>
   fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): LddAssessmentEntity?
 }
