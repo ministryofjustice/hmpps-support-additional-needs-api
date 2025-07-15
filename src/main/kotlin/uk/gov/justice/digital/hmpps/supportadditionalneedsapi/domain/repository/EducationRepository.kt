@@ -7,8 +7,5 @@ import java.util.UUID
 
 @Repository
 interface EducationRepository : JpaRepository<EducationEntity, UUID> {
-
-  fun getAllByPrisonNumber(prisonNumber: String): List<EducationEntity>
-  fun findByPrisonNumber(prisonNumber: String): MutableList<EducationEntity>
   fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): EducationEntity?
 }
