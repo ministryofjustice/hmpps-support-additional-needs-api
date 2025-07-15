@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -100,6 +101,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var referenceDataRepository: ReferenceDataRepository
+
+  @Autowired
+  protected lateinit var alnScreenerRepository: AlnScreenerRepository
 
   @Autowired
   protected lateinit var conditionRepository: ConditionRepository

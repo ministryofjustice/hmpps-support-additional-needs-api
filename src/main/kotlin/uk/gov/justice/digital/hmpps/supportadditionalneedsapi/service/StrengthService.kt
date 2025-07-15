@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
@@ -53,8 +54,33 @@ class StrengthService(
 
   private fun resolveStrengthTypes(request: CreateStrengthsRequest): List<Pair<ReferenceDataEntity, StrengthRequest>> = request.strengths.map { strengthRequest ->
     val code = requireNotNull(strengthRequest.strengthTypeCode) { "Strength type code must not be null" }
-    val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.CHALLENGE, code))
+    val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.STRENGTH, code))
     type to strengthRequest
+  }
+
+  @Transactional
+  fun createAlnStrengths(prisonNumber: String, alnStrengths: List<ALNStrength>, prisonId: String, alnScreenerId: UUID) {
+    if (alnStrengths.isNotEmpty()) {
+      val strengthTypeEntities = resolveStrengthTypes(alnStrengths)
+
+      val strengths = strengthTypeEntities.map { (strengthType) ->
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = strengthType,
+          createdAtPrison = prisonId,
+          updatedAtPrison = prisonId,
+          alnScreenerId = alnScreenerId,
+          active = true,
+        )
+      }
+      strengthRepository.saveAll(strengths)
+    }
+  }
+
+  private fun resolveStrengthTypes(request: List<ALNStrength>): List<Pair<ReferenceDataEntity, ALNStrength>> = request.map { Strength ->
+    val code = requireNotNull(Strength.strengthTypeCode) { "Strength type code must not be null" }
+    val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.STRENGTH, code))
+    type to Strength
   }
 
   fun updateStrength(
