@@ -43,6 +43,7 @@ class CreateTestSetupTest : IntegrationTestBase() {
     conditionSelfDeclared = true,
     conditionConfirmed = true,
     challengeNotALN = true,
+    strengthNotALN = true,
     inEducation = true,
     alnScreener = true,
   )

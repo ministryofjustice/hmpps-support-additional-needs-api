@@ -19,7 +19,9 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
@@ -101,8 +103,23 @@ class TestDataController(
               ChallengeRequest(
                 prisonId = prisonId,
                 challengeTypeCode = "FINISHING_TASKS",
-                symptoms = "Symptoms by test endpoint",
+                symptoms = "Challenge Symptoms by test endpoint",
                 howIdentified = listOf(IdentificationSourceModel.WIDER_PRISON),
+              ),
+            ),
+          ),
+        )
+      }
+      if (strengthNotALN) {
+        strengthService.createStrengths(
+          prisonNumber,
+          CreateStrengthsRequest(
+            listOf(
+              StrengthRequest(
+                prisonId = prisonId,
+                strengthTypeCode = "CALM",
+                symptoms = "Calm Symptoms by test endpoint",
+                howIdentified = listOf(IdentificationSourceModel.CONVERSATIONS),
               ),
             ),
           ),
@@ -137,6 +154,7 @@ data class EducationNeedRequest(
   val conditionSelfDeclared: Boolean = false,
   val conditionConfirmed: Boolean = false,
   val challengeNotALN: Boolean = false,
+  val strengthNotALN: Boolean = false,
   val alnScreener: Boolean = false,
   val inEducation: Boolean = false,
 )
