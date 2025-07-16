@@ -9,9 +9,12 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import java.time.LocalDate
 import java.util.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
@@ -35,24 +39,10 @@ class TestDataController(
   private val needService: NeedService,
   private val conditionService: ConditionService,
   private val challengeService: ChallengeService,
+  private val strengthService: StrengthService,
+  private val alnScreenerRepository: AlnScreenerRepository,
   private val planCreationScheduleService: PlanCreationScheduleService,
 ) {
-  @PreAuthorize(HAS_EDIT_ELSP)
-  @PostMapping("/plan-creation-schedule")
-  @ResponseStatus(HttpStatus.CREATED)
-  fun createPlanCreationSchedule(
-    @PathVariable prisonNumber: String,
-    @RequestBody request: Request,
-  ): PlanCreationScheduleEntity = planCreationScheduleRepository.save(
-    PlanCreationScheduleEntity(
-      prisonNumber = prisonNumber,
-      deadlineDate = request.deadlineDate,
-      status = PlanCreationScheduleStatus.SCHEDULED,
-      createdAtPrison = request.prisonId,
-      updatedAtPrison = request.prisonId,
-    ),
-  )
-
   /**
    * Test only endpoint to set up a person with appropriate test data.
    *
@@ -118,6 +108,19 @@ class TestDataController(
           ),
         )
       }
+      if (alnScreener) {
+        // create an aln screener with a default challenge and strength
+        val alnScreener = alnScreenerRepository.saveAndFlush(
+          ALNScreenerEntity(
+            prisonNumber = prisonNumber,
+            createdAtPrison = prisonId,
+            updatedAtPrison = prisonId,
+            screeningDate = LocalDate.now(),
+          ),
+        )
+        challengeService.createAlnChallenges(prisonNumber, listOf(ALNChallenge(challengeTypeCode = "WORD_BASED_PROBLEMS")), prisonId, alnScreener.id)
+        strengthService.createAlnStrengths(prisonNumber, listOf(ALNStrength(strengthTypeCode = "PEOPLE_PERSON")), prisonId, alnScreener.id)
+      }
     }
 
     planCreationScheduleService.attemptToCreate(prisonNumber, request.prisonId)
@@ -127,7 +130,6 @@ class TestDataController(
   }
 }
 
-data class Request(val deadlineDate: LocalDate = LocalDate.now().plusDays(10), val prisonId: String = "BXI")
 data class EducationNeedRequest(
   val prisonId: String = "BXI",
   val alnNeed: Boolean = false,
@@ -135,5 +137,6 @@ data class EducationNeedRequest(
   val conditionSelfDeclared: Boolean = false,
   val conditionConfirmed: Boolean = false,
   val challengeNotALN: Boolean = false,
+  val alnScreener: Boolean = false,
   val inEducation: Boolean = false,
 )
