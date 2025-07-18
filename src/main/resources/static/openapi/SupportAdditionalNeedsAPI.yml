@@ -1062,17 +1062,28 @@ components:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the review was completed.
+            If the status of this Review Schedule is COMPLETED, this field is an ISO-8601 date representing 
+            date that the Review was created. This field will only have a value when the status of the 
+            Review Schedule is COMPLETED, and reflects the date the Review was completed.
           example: '2023-11-19'
         reviewKeyedInBy:
           type: string
           description: |
-            The name of the person who entered the review in SAN.
+            If the status of this Review Schedule is COMPLETED, this field is the DPS 
+            username of the user that keyed the Review into the system.This 
+            field will only have a value when the status of the Review Schedule is COMPLETED, 
+            and reflects the logged in user who interacted with the SAN service.
         reviewCompletedBy:
           type: string
           description: |
-            The name of the person who created the review this will be blank 
-            if the person who keyed in the review is the same person doing the review.
+            If the status of this Review Schedule is COMPLETED, and the person who met with the 
+            prisoner to create their Review was not the same person who keyed it into 
+            the SAN service, this field will be that person's name. This field will only have a value 
+            when the status of the Review Schedule is COMPLETED, and the person who met with 
+            the prisoner to create their Education Support Plan was not the same person who keyed it
+            into the SAN service. If the Review Schedule is COMPLETED and this field is null, 
+            consumers of this API can assume the person who created the Review is 
+            the person who keyed it in. See field reviewKeyedInBy
         reviewCompletedByJobRole:
           type: string
           description: The job role of the person who completed the review.
@@ -1496,17 +1507,29 @@ components:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the plan creation was created.
+            If the status of this Plan Creation Schedule is COMPLETED, this field is an ISO-8601 date representing 
+            date that the Education Support Plan was created. This field will only have a value when the status of the 
+            Plan Creation Schedule is COMPLETED, and reflects the date the Education Support Plan was created 
+            (rather than the Plan Creation Schedule)
           example: '2023-11-19'
         planCompletedBy:
           type: string
           description: |
-            The name of the person who created the plan, this will be blank 
-            if the person who keyed in the plan is the same person doing the review.
+            If the status of this Plan Creation Schedule is COMPLETED, and the person who met with the 
+            prisoner to create their Education Support Plan was not the same person who keyed it into 
+            the SAN service, this field will be that person's name. This field will only have a value 
+            when the status of the Plan Creation Schedule is COMPLETED, and the person who met with 
+            the prisoner to create their Education Support Plan was not the same person who keyed it
+            into the SAN service. If the Plan Creation Schedule is COMPLETED and this field is null, 
+            consumers of this API can assume the person who created the Education Support Plan is 
+            the person who keyed it in. See field planKeyedInBy
         planKeyedInBy:
           type: string
           description: |
-            The name of the person who created tha pan in SAN.
+            If the status of this Plan Creation Schedule is COMPLETED, this field is the DPS 
+            username of the user that keyed the Education Support Plan into the system.This 
+            field will only have a value when the status of the Plan Creation Schedule is COMPLETED, 
+            and reflects the logged in user who interacted with the SAN service.
         planCompletedByJobRole:
           type: string
           description: The job role of the person who completed the plan.
