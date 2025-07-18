@@ -20,6 +20,7 @@ class ReferenceDataEntity(
   @Embedded
   val key: ReferenceDataKey,
   val description: String,
+  val categoryListSequence: Int = 0,
   val listSequence: Int = 0,
   val deactivatedAt: LocalDateTime? = null,
   val categoryCode: String? = null,
