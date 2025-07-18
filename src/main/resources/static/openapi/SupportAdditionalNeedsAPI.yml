@@ -1073,10 +1073,6 @@ components:
           description: |
             The name of the person who created the review this will be blank 
             if the person who keyed in the review is the same person doing the review.
-        reviewCompletedAtPrison:
-          type: string
-          description: The prison where the review was completed.
-          example: 'BXI'
         reviewCompletedByJobRole:
           type: string
           description: The job role of the person who completed the review.
@@ -1511,10 +1507,6 @@ components:
           type: string
           description: |
             The name of the person who created tha pan in SAN.
-        planCompletedAtPrison:
-          type: string
-          description: The prison where the plan was created.
-          example: 'BXI'
         planCompletedByJobRole:
           type: string
           description: The job role of the person who completed the plan.
