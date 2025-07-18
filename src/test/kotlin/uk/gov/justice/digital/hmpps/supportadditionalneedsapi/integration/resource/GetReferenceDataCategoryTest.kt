@@ -37,4 +37,32 @@ class GetReferenceDataCategoryTest : IntegrationTestBase() {
     // Ensure all entries have non-null descriptions
     assertThat(actual.referenceDataList).allMatch { it.description != null }
   }
+
+  @Test
+  fun `should return a list of CHALLENGE category reference data in order`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+
+    val expected = referenceDataRepository
+      .findByKeyDomainAndDefaultForCategoryIsTrueOrderByCategoryListSequenceAsc(Domain.CHALLENGE)
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, Domain.CHALLENGE)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(ReferenceDataListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+    assertThat(actual!!.referenceDataList.size).isEqualTo(expected.size)
+
+    val actualCategoryCodes = actual.referenceDataList.map { it.categoryCode }
+    val expectedCategoryCodes = expected.map { it.categoryCode }
+
+    assertThat(actualCategoryCodes).containsExactlyElementsOf(expectedCategoryCodes)
+  }
 }
