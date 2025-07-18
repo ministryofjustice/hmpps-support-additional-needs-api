@@ -1064,19 +1064,20 @@ components:
           description: |
             An ISO-8601 date representing date that the review was completed.
           example: '2023-11-19'
-        keyedInBy:
+        reviewKeyedInBy:
           type: string
           description: |
             The name of the person who entered the review in SAN.
-        completedBy:
+        reviewCompletedBy:
           type: string
           description: |
-            The name of the person who created the review.
-        completedAtPrison:
+            The name of the person who created the review this will be blank 
+            if the person who keyed in the review is the same person doing the review.
+        reviewCompletedAtPrison:
           type: string
-          description: The prison where the plan was completed.
+          description: The prison where the review was completed.
           example: 'BXI'
-        completedByJobRole:
+        reviewCompletedByJobRole:
           type: string
           description: The job role of the person who completed the review.
           example: 'Education coordinator'
@@ -1501,19 +1502,20 @@ components:
           description: |
             An ISO-8601 date representing date that the plan creation was created.
           example: '2023-11-19'
-        completedBy:
+        planCompletedBy:
           type: string
           description: |
-            The name of the person who created the plan.
-        keyedInBy:
+            The name of the person who created the plan, this will be blank 
+            if the person who keyed in the plan is the same person doing the review.
+        planKeyedInBy:
           type: string
           description: |
             The name of the person who created tha pan in SAN.
-        completedAtPrison:
+        planCompletedAtPrison:
           type: string
           description: The prison where the plan was created.
           example: 'BXI'
-        completedByJobRole:
+        planCompletedByJobRole:
           type: string
           description: The job role of the person who completed the plan.
           example: 'Education coordinator'
