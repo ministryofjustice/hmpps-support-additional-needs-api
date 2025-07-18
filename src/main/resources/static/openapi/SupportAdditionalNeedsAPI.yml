@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.7.0'
+  version: '0.7.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1058,6 +1058,28 @@ components:
           description: |
             An ISO-8601 date representing date that the Review is due.
           example: '2023-11-19'
+        completedDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the review was completed.
+          example: '2023-11-19'
+        keyedInBy:
+          type: string
+          description: |
+            The name of the person who entered the review in SAN.
+        completedBy:
+          type: string
+          description: |
+            The name of the person who created the review.
+        completedAtPrison:
+          type: string
+          description: The prison where the plan was completed.
+          example: 'BXI'
+        completedByJobRole:
+          type: string
+          description: The job role of the person who completed the review.
+          example: 'Education coordinator'
         status:
           $ref: '#/components/schemas/ReviewScheduleStatus'
         exemptionReason:
@@ -1473,6 +1495,28 @@ components:
           description: |
             An ISO-8601 date representing date that the plan creation is due.
           example: '2023-11-19'
+        completedDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the plan creation was created.
+          example: '2023-11-19'
+        completedBy:
+          type: string
+          description: |
+            The name of the person who created the plan.
+        keyedInBy:
+          type: string
+          description: |
+            The name of the person who created tha pan in SAN.
+        completedAtPrison:
+          type: string
+          description: The prison where the plan was created.
+          example: 'BXI'
+        completedByJobRole:
+          type: string
+          description: The job role of the person who completed the plan.
+          example: 'Education coordinator'
         status:
           $ref: '#/components/schemas/PlanCreationStatus'
         exemptionReason:
