@@ -1058,7 +1058,7 @@ components:
           description: |
             An ISO-8601 date representing date that the Review is due.
           example: '2023-11-19'
-        completedDate:
+        reviewCompletedDate:
           type: string
           format: date
           description: |
@@ -1496,7 +1496,7 @@ components:
           description: |
             An ISO-8601 date representing date that the plan creation is due.
           example: '2023-11-19'
-        completedDate:
+        planCompletedDate:
           type: string
           format: date
           description: |
