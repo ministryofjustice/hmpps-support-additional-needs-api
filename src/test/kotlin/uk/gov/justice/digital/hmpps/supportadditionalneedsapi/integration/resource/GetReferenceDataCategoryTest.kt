@@ -43,6 +43,9 @@ class GetReferenceDataCategoryTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
+    val expected = referenceDataRepository
+      .findByKeyDomainAndDefaultForCategoryIsTrueOrderByCategoryListSequenceAsc(Domain.CHALLENGE)
+
     // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE, Domain.CHALLENGE)
@@ -55,16 +58,11 @@ class GetReferenceDataCategoryTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.referenceDataList.size).isEqualTo(9)
+    assertThat(actual!!.referenceDataList.size).isEqualTo(expected.size)
 
-    assertThat(actual.referenceDataList[0].categoryCode).isEqualTo("LITERACY_SKILLS")
-    assertThat(actual.referenceDataList[1].categoryCode).isEqualTo("NUMERACY_SKILLS")
-    assertThat(actual.referenceDataList[2].categoryCode).isEqualTo("ATTENTION_ORGANISING_TIME")
-    assertThat(actual.referenceDataList[3].categoryCode).isEqualTo("LANGUAGE_COMM_SKILLS")
-    assertThat(actual.referenceDataList[4].categoryCode).isEqualTo("EMOTIONS_FEELINGS")
-    assertThat(actual.referenceDataList[5].categoryCode).isEqualTo("PHYSICAL_SKILLS")
-    assertThat(actual.referenceDataList[6].categoryCode).isEqualTo("SENSORY")
-    assertThat(actual.referenceDataList[7].categoryCode).isEqualTo("MEMORY")
-    assertThat(actual.referenceDataList[8].categoryCode).isEqualTo("PROCESSING_SPEED")
+    val actualCategoryCodes = actual.referenceDataList.map { it.categoryCode }
+    val expectedCategoryCodes = expected.map { it.categoryCode }
+
+    assertThat(actualCategoryCodes).containsExactlyElementsOf(expectedCategoryCodes)
   }
 }
