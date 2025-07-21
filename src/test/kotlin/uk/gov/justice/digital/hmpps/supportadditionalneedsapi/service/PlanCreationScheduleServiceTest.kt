@@ -89,7 +89,6 @@ class PlanCreationScheduleServiceTest {
       educationService,
       needService,
       eventPublisher,
-      elspPlanMapper,
       LocalDate.parse("2024-10-01"),
       elspPlanRepository,
     )
@@ -151,7 +150,6 @@ class PlanCreationScheduleServiceTest {
       educationService,
       needService,
       eventPublisher,
-      elspPlanMapper,
       pesContractDate,
       elspPlanRepository,
     )
@@ -257,7 +255,6 @@ class PlanCreationScheduleServiceTest {
     educationService,
     needService,
     eventPublisher,
-    elspPlanMapper,
     LocalDate.parse("2024-10-01"),
     elspPlanRepository,
   )

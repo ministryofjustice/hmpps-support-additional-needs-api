@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
@@ -29,7 +28,6 @@ class PlanCreationScheduleService(
   private val educationService: EducationService,
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
-  private val elspPlanMapper: ElspPlanMapper,
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val elspPlanRepository: ElspPlanRepository,
 ) {
@@ -161,25 +159,13 @@ class PlanCreationScheduleService(
     val schedules = planCreationScheduleHistoryRepository
       .findAllByPrisonNumberOrderByVersionAsc(prisonId)
 
-    schedules.forEach { schedule ->
-      if (schedule.status == PlanCreationScheduleStatus.COMPLETED) {
-        val completedPlan = elspPlanRepository.findByPrisonNumber(prisonId)
-        // this shouldn't be null when a plan is completed but just in case:
-        if (completedPlan != null) {
-          val planModel = elspPlanMapper.toModel(completedPlan)
-          schedule.planCompletedBy = planModel.createdByDisplayName
-          schedule.planKeyedInBy = planModel.planCreatedBy?.name
-          schedule.planCompletedByJobRole = planModel.planCreatedBy?.jobRole
-          schedule.planCompletedDate = planModel.createdAt.toLocalDate()
-        }
-      }
-    }
+    val completedPlan = elspPlanRepository.findByPrisonNumber(prisonId)
 
     val models = if (includeAllHistory) {
-      schedules.map { planCreationScheduleHistoryMapper.toModel(it) }
+      schedules.map { planCreationScheduleHistoryMapper.toModel(it, completedPlan) }
     } else {
       schedules.maxByOrNull { it.version!! }
-        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
+        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it, completedPlan)) }
         ?: emptyList()
     }
 

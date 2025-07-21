@@ -70,18 +70,6 @@ data class PlanCreationScheduleHistoryEntity(
 
   @EmbeddedId
   val id: PlanCreationScheduleHistoryEntityKey,
-
-  @Transient
-  var planCompletedDate: LocalDate? = null,
-
-  @Transient
-  var planKeyedInBy: String? = null,
-
-  @Transient
-  var planCompletedByJobRole: String? = null,
-
-  @Transient
-  var planCompletedBy: String? = null,
 )
 
 @Embeddable
