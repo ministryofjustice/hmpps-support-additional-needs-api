@@ -29,6 +29,7 @@ class PlanCreationScheduleService(
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
+  private val elspPlanRepository: ElspPlanRepository,
 ) {
 
   /**
@@ -102,7 +103,11 @@ class PlanCreationScheduleService(
 
       inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION -> {
         val deadlineDate = getDeadlineDate()
-        log.debug("Prisoner $prisonNumber is back in education, setting deadline date to $deadlineDate, setting status to SCHEDULED")
+        log.debug(
+          "Prisoner {} is back in education, setting deadline date to {}, setting status to SCHEDULED",
+          prisonNumber,
+          deadlineDate,
+        )
         updatePlan(
           planCreationSchedule,
           PlanCreationScheduleStatus.SCHEDULED,
@@ -154,13 +159,16 @@ class PlanCreationScheduleService(
     val schedules = planCreationScheduleHistoryRepository
       .findAllByPrisonNumberOrderByVersionAsc(prisonId)
 
+    val completedPlan = elspPlanRepository.findByPrisonNumber(prisonId)
+
     val models = if (includeAllHistory) {
-      schedules.map { planCreationScheduleHistoryMapper.toModel(it) }
+      schedules.map { planCreationScheduleHistoryMapper.toModel(it, completedPlan) }
     } else {
       schedules.maxByOrNull { it.version!! }
-        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it)) }
+        ?.let { listOf(planCreationScheduleHistoryMapper.toModel(it, completedPlan)) }
         ?: emptyList()
     }
+
     return PlanCreationSchedulesResponse(models)
   }
 

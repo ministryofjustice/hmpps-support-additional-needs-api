@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleExemptionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
+import java.time.ZoneId
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus as PlanCreationStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.NeedSource as NeedSourceModel
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus as PlanCreationStatusModel
@@ -18,7 +20,28 @@ class PlanCreationScheduleHistoryMapper(
 
   fun toModel(
     entity: PlanCreationScheduleHistoryEntity,
+    planEntity: ElspPlanEntity?,
   ): PlanCreationScheduleResponse = with(entity) {
+    val isCompleted = status == PlanCreationStatusEntity.COMPLETED
+
+    val planCompletedDate = if (isCompleted) {
+      planEntity?.createdAt
+        ?.atZone(ZoneId.systemDefault())
+        ?.toLocalDate()
+    } else {
+      null
+    }
+
+    val planKeyedInBy = if (isCompleted) planEntity?.planCreatedByName else null
+
+    val planCompletedByJobRole = if (isCompleted) planEntity?.planCreatedByJobRole else null
+
+    val planCompletedBy = if (isCompleted) {
+      planEntity?.createdBy?.let { userService.getUserDetails(it).name }
+    } else {
+      null
+    }
+
     PlanCreationScheduleResponse(
       reference = reference,
       deadlineDate = deadlineDate,
@@ -31,10 +54,14 @@ class PlanCreationScheduleHistoryMapper(
       updatedByDisplayName = userService.getUserDetails(updatedBy).name,
       updatedAt = instantMapper.toOffsetDateTime(updatedAt)!!,
       updatedAtPrison = updatedAtPrison,
-      exemptionReason = exemptionReason?.let { PlanCreationScheduleExemptionReason.forValue(exemptionReason) },
+      exemptionReason = exemptionReason?.let { PlanCreationScheduleExemptionReason.forValue(it) },
       exemptionDetail = exemptionDetail,
       needSources = toNeedSources(needSources),
       version = version!!.plus(1),
+      planCompletedDate = planCompletedDate,
+      planKeyedInBy = planKeyedInBy,
+      planCompletedByJobRole = planCompletedByJobRole,
+      planCompletedBy = planCompletedBy,
     )
   }
 
