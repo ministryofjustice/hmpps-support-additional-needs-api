@@ -35,6 +35,10 @@ class PlanCreationScheduleHistoryMapper(
       exemptionDetail = exemptionDetail,
       needSources = toNeedSources(needSources),
       version = version!!.plus(1),
+      planCompletedDate = planCompletedDate,
+      planKeyedInBy = planKeyedInBy,
+      planCompletedByJobRole = planCompletedByJobRole,
+      planCompletedBy = planCompletedBy,
     )
   }
 

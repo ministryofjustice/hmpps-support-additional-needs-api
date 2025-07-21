@@ -12,6 +12,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
+import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource.ALN_SCREENER
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -56,11 +58,41 @@ class PlanCreationScheduleServiceTest {
   @Mock
   private lateinit var pesContractDate: LocalDate
 
+  @Mock
+  private lateinit var elspPlanMapper: ElspPlanMapper
+
+  @Mock
+  private lateinit var elspPlanRepository: ElspPlanRepository
+
   private val prisonNumber = randomValidPrisonNumber()
 
   @BeforeEach
   internal fun setUp() {
     pesContractDate = LocalDate.now()
+    reset(
+      planCreationScheduleHistoryRepository,
+      planCreationScheduleRepository,
+      planCreationScheduleHistoryMapper,
+      educationSupportPlanRepository,
+      educationService,
+      needService,
+      eventPublisher,
+      elspPlanMapper,
+      elspPlanRepository,
+    )
+
+    service = PlanCreationScheduleService(
+      planCreationScheduleHistoryRepository,
+      planCreationScheduleRepository,
+      planCreationScheduleHistoryMapper,
+      educationSupportPlanRepository,
+      educationService,
+      needService,
+      eventPublisher,
+      elspPlanMapper,
+      LocalDate.parse("2024-10-01"),
+      elspPlanRepository,
+    )
   }
 
   @Test
@@ -119,7 +151,9 @@ class PlanCreationScheduleServiceTest {
       educationService,
       needService,
       eventPublisher,
+      elspPlanMapper,
       pesContractDate,
+      elspPlanRepository,
     )
 
     whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
@@ -223,7 +257,9 @@ class PlanCreationScheduleServiceTest {
     educationService,
     needService,
     eventPublisher,
+    elspPlanMapper,
     LocalDate.parse("2024-10-01"),
+    elspPlanRepository,
   )
 
   @Test

@@ -11,7 +11,7 @@ import java.time.LocalDate
 
 class GetELSPPlanTest : IntegrationTestBase() {
   companion object {
-    private const val URI_TEMPLATE = "/profile/{prisonNumber}/education-support-plan"
+    const val URI_TEMPLATE = "/profile/{prisonNumber}/education-support-plan"
   }
 
   @Test
