@@ -63,4 +63,5 @@ enum class Domain {
   CONDITION,
   CHALLENGE,
   STRENGTH,
+  SUPPORT_STRATEGY,
 }

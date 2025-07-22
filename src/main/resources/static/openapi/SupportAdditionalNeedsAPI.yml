@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.7.1'
+  version: '0.7.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -460,6 +460,7 @@ paths:
               - CONDITION
               - CHALLENGE
               - STRENGTH
+              - SUPPORT_STRATEGY
         - name: includeInactive
           in: query
           description: Include inactive reference data. Defaults to false
