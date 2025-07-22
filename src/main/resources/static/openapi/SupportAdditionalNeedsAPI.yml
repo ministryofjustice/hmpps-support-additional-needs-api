@@ -524,9 +524,6 @@ paths:
       description: |
         Adds one or more Support Strategies to the specified prisoner's list of Support Strategies.
 
-        A prisoner cannot have multiple or duplicate Support Strategies of the same type recorded. A 409 response is returned if
-        the request contains any Support Strategies that the prisoner already has.
-
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
