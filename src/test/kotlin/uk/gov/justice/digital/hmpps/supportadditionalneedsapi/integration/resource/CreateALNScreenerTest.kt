@@ -39,6 +39,8 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(alnScreenerEntity).isNotNull
     assertThat(alnScreenerEntity!!.needsIdentified).isTrue()
     assertThat(alnScreenerEntity.screeningDate).isEqualTo(LocalDate.parse("2020-01-01"))
+    assertThat(alnScreenerEntity.hasStrengths).isTrue()
+    assertThat(alnScreenerEntity.hasChallenges).isTrue()
 
     val savedChallenges = alnScreenerEntity.challenges
     assertThat(savedChallenges.size).isEqualTo(2)
@@ -92,6 +94,8 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     val alnScreenerEntity = alnScreenerRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     assertThat(alnScreenerEntity).isNotNull
     assertThat(alnScreenerEntity!!.needsIdentified).isFalse()
+    assertThat(alnScreenerEntity.hasStrengths).isFalse()
+    assertThat(alnScreenerEntity.hasChallenges).isFalse()
     assertThat(alnScreenerEntity.screeningDate).isEqualTo(LocalDate.parse("2020-01-01"))
 
     val savedChallenges = alnScreenerEntity.challenges

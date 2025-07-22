@@ -25,6 +25,12 @@ data class ALNScreenerEntity(
   @Column
   var updatedAtPrison: String,
 
+  @Column(name = "hasChallenges", nullable = false)
+  var hasChallenges: Boolean = false,
+
+  @Column(name = "hasStrengths", nullable = false)
+  var hasStrengths: Boolean = false,
+
   @OneToMany(mappedBy = "alnScreenerId", fetch = FetchType.EAGER)
   val challenges: MutableList<ChallengeEntity> = mutableListOf(),
 

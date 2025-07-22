@@ -21,10 +21,13 @@ class ALNScreenerService(
           createdAtPrison = prisonId,
           updatedAtPrison = prisonId,
           screeningDate = screenerDate,
+          hasChallenges = challenges.isNotEmpty(),
+          hasStrengths = strengths.isNotEmpty(),
         ),
       )
       challengeService.createAlnChallenges(prisonNumber, challenges, prisonId, alnScreener.id)
       strengthService.createAlnStrengths(prisonNumber, strengths, prisonId, alnScreener.id)
+      alnScreenerRepository.saveAndFlush(alnScreener)
     }
   }
 }
