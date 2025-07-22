@@ -1,3 +1,4 @@
+
 openapi: 3.0.1
 info:
   title: Education Status API
@@ -26,6 +27,9 @@ paths:
               properties:
                 status:
                   type: string
+                  enum:
+                    - EDUCATION_STARTED
+                    - ALL_EDUCATION_STOPPED
                   example: EDUCATION_STARTED
                 detailUrl:
                   type: string
