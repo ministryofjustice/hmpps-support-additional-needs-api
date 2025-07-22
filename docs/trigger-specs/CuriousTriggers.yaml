@@ -1,0 +1,137 @@
+openapi: 3.0.1
+info:
+  title: Education Status API
+  description: Notify that a person has had a change in status to their in-prison Education.
+  version: 1.0.0
+paths:
+  /v1/persons/{hmppsId}/education/status:
+    post:
+      summary: Notify education status change
+      description: Notify that a person has had a change in status to their in-prison Education.
+      operationId: updateEducationStatus
+      parameters:
+        - name: hmppsId
+          in: path
+          required: true
+          description: A HMPPS person identifier
+          schema:
+            type: string
+            example: A1234AA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: EDUCATION_STARTED
+                detailUrl:
+                  type: string
+                  format: uri
+                  example: https://example.com/sequation-virtual-campus2-api/learnerEducation/A1234AB
+                requestId:
+                  type: string
+                  format: uuid
+                  description: Supplier reference to allow the client to record that they have processed this request.
+                  example: 0650ba37-a977-4fbe-9000-4715aaecadba
+      responses:
+        '201':
+          description: Status update successfully received. No response body.
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+        '404':
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal Server Error
+
+  /v1/persons/{hmppsId}/education/aln-assessment:
+    post:
+      summary: Notify ALN assessment update
+      description: Notify that a person has received an Additional Learning Needs (ALN) assessment update.
+      operationId: updateAlnAssessment
+      parameters:
+        - name: hmppsId
+          in: path
+          required: true
+          description: A HMPPS person identifier
+          schema:
+            type: string
+            example: A1234AA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: ALN_ASSESSED
+                detailUrl:
+                  type: string
+                  format: uri
+                  example: https://example.com/sequation-virtual-campus2-api/learnerAssessments/v2/A1234AB
+                requestId:
+                  type: string
+                  format: uuid
+                  description: Supplier reference to allow the client to record that they have processed this request.
+                  example: 0650ba37-a977-4fbe-9000-4715aaecadba
+      responses:
+        '201':
+          description: ALN assessment update successfully received. No response body.
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Bad Request
+        '404':
+          description: Person not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Not Found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal Server Error
