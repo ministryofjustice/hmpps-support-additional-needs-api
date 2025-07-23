@@ -9,11 +9,11 @@ interface InvalidUserRequest {
 }
 
 data class InvalidInputException(override val name: String, override val value: String) :
-  IllegalArgumentException("$name is invalid"),
+  IllegalArgumentException("Domain $name with code $value is invalid"),
   InvalidUserRequest
 
 data class NotActiveException(override val name: String, override val value: String) :
-  IllegalArgumentException("$name is not active"),
+  IllegalArgumentException("Domain $name with code $value is not active"),
   InvalidUserRequest
 
 data class MultipleInvalidException(override val name: String, override val value: String) :
@@ -21,6 +21,8 @@ data class MultipleInvalidException(override val name: String, override val valu
   InvalidUserRequest
 
 class ConditionNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Condition with reference [$reference] not found for prisoner [$prisonNumber]")
+
+class SupportStrategyNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Support Strategy with reference [$reference] not found for prisoner [$prisonNumber]")
 
 class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] not found for prisoner [$prisonNumber]")
 
