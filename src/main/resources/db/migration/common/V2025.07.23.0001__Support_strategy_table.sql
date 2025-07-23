@@ -1,10 +1,23 @@
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'LITERACY_SKILLS_DEFAULT', 'Literacy Skills', 'LITERACY_SKILLS', 'Literacy Skills', 'COGNITION_LEARNING', 'Cognition & Learning', 0, null, true, false, 10);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'NUMERACY_SKILLS_DEFAULT', 'Numeracy Skills', 'NUMERACY_SKILLS', 'Numeracy Skills', 'COGNITION_LEARNING', 'Cognition & Learning', 0, null, true, false, 20);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'ATTENTION_ORGANISING_TIME_DEFAULT', 'Attention, Organising & Time Management', 'ATTENTION_ORGANISING_TIME', 'Attention, Organising & Time Management', 'COGNITION_LEARNING', 'Cognition & Learning', 0, null, true, false, 30);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'LANGUAGE_COMM_SKILLS_DEFAULT', 'Language & Communication skills', 'LANGUAGE_COMM_SKILLS', 'Language & Communication skills', 'COMMUNICATION_INTERACTION', 'Communication & Interaction', 0, null, true, false, 40);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'EMOTIONS_FEELINGS_DEFAULT', 'Emotions & feelings', 'EMOTIONS_FEELINGS', 'Emotions & feelings', 'SOCIAL_EMOTIONAL_MENTAL', 'Social, Emotional & Mental Health', 0, null, true, false, 50);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'PHYSICAL_SKILLS_DEFAULT', 'Physical Skills & coordination', 'PHYSICAL_SKILLS', 'Physical Skills & coordination', 'PHYSICAL_SENSORY', 'Physical & Sensory', 0, null, true, false, 60);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'SENSORY', 'Sensory', 'SENSORY', 'Sensory', 'PHYSICAL_SENSORY', 'Physical & Sensory', 0, null, true, false, 70);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'MEMORY', 'Memory', 'MEMORY', 'Memory', 'MEMORY', 'Memory', 1, null, true, false, 90);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'PROCESSING_SPEED', 'Processing speed', 'PROCESSING_SPEED', 'Processing speed', 'PROCESSING_SPEED', 'Processing speed', 1, null, true, false, 100);
-insert into reference_data (id, domain, code, description, category_code, category_description, area_code, area_description, list_sequence, deactivated_at, default_for_category, screener_option, category_list_sequence) values (gen_random_uuid(), 'SUPPORT_STRATEGY', 'GENERAL', 'General need', 'GENERAL_NEED', 'General need', 'GENERAL_NEED', 'General need', 1, null, true, false, 110);
+create table support_strategy
+(
+    id                uuid                 not null
+        primary key,
+    reference         uuid                 not null,
+    prison_number     varchar(10)          not null,
+    support_strategy_type_id uuid          not null
+        constraint fk_support_strategy_type
+            references reference_data,
+    active            boolean default true not null,
+    created_at_prison varchar(3)           not null,
+    updated_at_prison varchar(3),
+    created_by        varchar(50),
+    created_at        timestamp,
+    updated_by        varchar(50),
+    updated_at        timestamp,
+    detail            text
+);
+
+
+create index support_strategy_prison_number_idx
+    on support_strategy (prison_number);
+

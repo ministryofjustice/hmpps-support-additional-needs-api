@@ -3,103 +3,85 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateConditionRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.util.*
 
-class UpdateConditionsTest : IntegrationTestBase() {
+class UpdateSupportStrategiesTest : IntegrationTestBase() {
   companion object {
-    private const val URI_TEMPLATE = "/profile/{prisonNumber}/conditions/{reference}"
+    private const val URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies/{reference}"
   }
 
   @Test
-  fun `update a condition for a given prisoner`() {
+  fun `update a support strategy for a given prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
-      ?: throw IllegalStateException("Reference data not found")
-    val dyslexia = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "DYSLEXIA"))
-      ?: throw IllegalStateException("Reference data not found")
-    val mentalHealth = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "MENTAL_HEALTH"))
+    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
       ?: throw IllegalStateException("Reference data not found")
 
-    val conditions = conditionRepository.saveAll(
+    val strategies = supportStrategyRepository.saveAll(
       listOf(
-        ConditionEntity(
+        SupportStrategyEntity(
           prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = adhd,
+          supportStrategyType = processingSpeed,
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
-        ),
-        ConditionEntity(
-          prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = dyslexia,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-        ConditionEntity(
-          prisonNumber = prisonNumber,
-          source = Source.CONFIRMED_DIAGNOSIS,
-          conditionType = mentalHealth,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
+          detail = "Needs quiet space to focus",
+          active = true,
         ),
       ),
     )
 
-    val condition = conditions.find { it.conditionType.code == "ADHD" } ?: throw IllegalStateException("condition not found")
-    val updateConditionRequest = UpdateConditionRequest(active = false, prisonId = "FKL")
+    val strategy = strategies.first()
+    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(active = false, prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
-      .uri(URI_TEMPLATE, prisonNumber, condition.reference)
+      .uri(URI_TEMPLATE, prisonNumber, strategy.reference)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(updateConditionRequest)
+      .bodyValue(updateSupportStrategyRequest)
       .exchange()
       .expectStatus()
       .isOk
-      .returnResult(ConditionResponse::class.java)
+      .returnResult(SupportStrategyResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
 
-    val updatedCondition =
-      conditionRepository.findAllByPrisonNumber(prisonNumber).find { it.conditionType.code == "ADHD" }
-        ?: throw IllegalStateException("condition not found")
+    val updatedStrategy =
+      supportStrategyRepository.findAllByPrisonNumber(prisonNumber).find { it.supportStrategyType.code == "PROCESSING_SPEED" }
+        ?: throw IllegalStateException("support strategy not found")
 
-    assertThat(updatedCondition.active).isEqualTo(false)
-    assertThat(updatedCondition.updatedAtPrison).isEqualTo("FKL")
+    assertThat(updatedStrategy.active).isEqualTo(false)
+    assertThat(updatedStrategy.updatedAtPrison).isEqualTo("FKL")
   }
 
   @Test
-  fun `attempt to update a condition where a condition doesnt exist`() {
+  fun `attempt to update a support strategy that does not exist`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateConditionRequest = UpdateConditionRequest(active = false, prisonId = "FKL")
-
+    val updateRequest = UpdateSupportStrategyRequest(active = false, prisonId = "FKL")
     val ref = UUID.randomUUID().toString()
+
     // When
     val response = webTestClient.put()
       .uri(URI_TEMPLATE, prisonNumber, ref)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(updateConditionRequest)
+      .bodyValue(updateRequest)
       .exchange()
       .expectStatus()
       .isNotFound
@@ -109,6 +91,6 @@ class UpdateConditionsTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
-      .hasUserMessage("Condition with reference [$ref] not found for prisoner [$prisonNumber]")
+      .hasUserMessage("Support Strategy with reference [$ref] not found for prisoner [$prisonNumber]")
   }
 }

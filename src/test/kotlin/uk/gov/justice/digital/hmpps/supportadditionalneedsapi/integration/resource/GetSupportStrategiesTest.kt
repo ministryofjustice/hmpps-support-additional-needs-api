@@ -2,55 +2,55 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 
-class GetConditionsTest : IntegrationTestBase() {
+class GetSupportStrategiesTest : IntegrationTestBase() {
   companion object {
-    private const val URI_TEMPLATE = "/profile/{prisonNumber}/conditions"
+    private const val URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies"
   }
 
   @Test
-  fun `Get list of conditions for a given prisoner`() {
+  fun `Get list of support strategies for a given prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
-      ?: throw IllegalStateException("Reference data not found")
-    val dyslexia = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "DYSLEXIA"))
-      ?: throw IllegalStateException("Reference data not found")
-    val mentalHealth = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "MENTAL_HEALTH"))
-      ?: throw IllegalStateException("Reference data not found")
+    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
+      ?: throw IllegalStateException("Reference data not found for PROCESSING_SPEED")
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "SENSORY"))
+      ?: throw IllegalStateException("Reference data not found for SENSORY")
+    val general = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "GENERAL"))
+      ?: throw IllegalStateException("Reference data not found for GENERAL")
 
-    conditionRepository.saveAll(
+    supportStrategyRepository.saveAll(
       listOf(
-        ConditionEntity(
+        SupportStrategyEntity(
           prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = adhd,
+          supportStrategyType = processingSpeed,
+          detail = "Needs quiet space to focus",
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
+          active = true,
         ),
-        ConditionEntity(
+        SupportStrategyEntity(
           prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = dyslexia,
+          supportStrategyType = sensory,
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
+          active = true,
         ),
-        ConditionEntity(
+        SupportStrategyEntity(
           prisonNumber = prisonNumber,
-          source = Source.CONFIRMED_DIAGNOSIS,
-          conditionType = mentalHealth,
+          supportStrategyType = general,
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
+          active = true,
         ),
       ),
     )
@@ -62,25 +62,25 @@ class GetConditionsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .returnResult(ConditionListResponse::class.java)
+      .returnResult(SupportStrategyListResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.conditions).hasSize(3)
+    assertThat(actual!!.supportStrategies).hasSize(3)
 
-    val conditionCodes = actual.conditions.map { it.conditionType.code }
-    assertThat(conditionCodes).containsExactlyInAnyOrder("ADHD", "DYSLEXIA", "MENTAL_HEALTH")
+    val strategyCodes = actual.supportStrategies.map { it.supportStrategyType.code }
+    assertThat(strategyCodes).containsExactlyInAnyOrder("PROCESSING_SPEED", "GENERAL", "SENSORY")
   }
 
   @Test
-  fun `Return empty list when no conditions exist for prisoner`() {
+  fun `Return empty list when no support strategies exist for prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    // No conditions are created or saved for this prison number
+    // No support strategies created for this prisoner
 
     // When
     val response = webTestClient.get()
@@ -89,11 +89,11 @@ class GetConditionsTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isOk
-      .returnResult(ConditionListResponse::class.java)
+      .returnResult(SupportStrategyListResponse::class.java)
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
-    assertThat(actual!!.conditions).isEmpty()
+    assertThat(actual!!.supportStrategies).isEmpty()
   }
 }

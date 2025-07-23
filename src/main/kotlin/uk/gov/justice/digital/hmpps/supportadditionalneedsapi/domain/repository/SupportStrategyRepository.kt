@@ -2,13 +2,13 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import java.util.UUID
 
 @Repository
-interface ConditionRepository : JpaRepository<ConditionEntity, UUID> {
+interface SupportStrategyRepository : JpaRepository<SupportStrategyEntity, UUID> {
 
-  fun findAllByPrisonNumber(prisonNumber: String): List<ConditionEntity>
+  fun findAllByPrisonNumber(prisonNumber: String): List<SupportStrategyEntity>
 
-  fun getConditionEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): ConditionEntity?
+  fun getSupportStrategyEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): SupportStrategyEntity?
 }

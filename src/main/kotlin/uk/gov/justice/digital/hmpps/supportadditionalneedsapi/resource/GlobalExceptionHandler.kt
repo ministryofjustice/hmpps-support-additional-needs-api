@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
 private val log = KotlinLogging.logger {}
@@ -160,6 +161,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       ConditionNotFoundException::class,
       ChallengeNotFoundException::class,
       StrengthNotFoundException::class,
+      SupportStrategyNotFoundException::class,
       PlanNotFoundException::class,
       PlanCreationScheduleNotFoundException::class,
     ],
