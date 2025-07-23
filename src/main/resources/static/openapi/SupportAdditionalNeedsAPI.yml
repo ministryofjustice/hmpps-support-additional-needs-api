@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.7.2'
+  version: '0.8.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -108,9 +108,6 @@ paths:
       description: |
         Adds one or more Conditions to the specified prisoner's list of Conditions.
         
-        A prisoner cannot have multiple or duplicate Conditions of the same type recorded. A 409 response is returned if
-        the request contains any Conditions that the prisoner already has.
-        
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
@@ -123,9 +120,6 @@ paths:
           $ref: '#/components/responses/400Error'
         '409':
           $ref: '#/components/responses/409Error'
-          description: |
-            A 409 response is returned if the request contains any Conditions that are already recorded for
-            the specified prisoner.
       operationId: post-conditions
       requestBody:
         $ref: '#/components/requestBodies/CreateConditionList'
@@ -183,10 +177,7 @@ paths:
       summary: Adds one or more challenges.
       description: |
         Adds one or more Challenges to the specified prisoner's list of Challenges.
-        
-        A prisoner cannot have multiple or duplicate Challenges of the same type recorded. A 409 response is returned if
-        the request contains any Challenges that the prisoner already has.
-                
+                  
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
@@ -199,9 +190,6 @@ paths:
           $ref: '#/components/responses/400Error'
         '409':
           $ref: '#/components/responses/409Error'
-          description: |
-            A 409 response is returned if the request contains any Conditions that are already recorded for
-            the specified prisoner.
       operationId: post-challenges
       requestBody:
         $ref: '#/components/requestBodies/CreateChallengeList'
@@ -260,9 +248,6 @@ paths:
       summary: Adds one or more strengths.
       description: |
         Adds one or more Strengths to the specified prisoner's list of Strengths.
-
-        A prisoner cannot have multiple or duplicate Strengths of the same type recorded. A 409 response is returned if
-        the request contains any Strengths that the prisoner already has.
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
@@ -503,6 +488,7 @@ paths:
               - CONDITION
               - CHALLENGE
               - STRENGTH
+              - SUPPORT_STRATEGY
         - name: includeInactive
           in: query
           description: Include inactive reference data. Defaults to false
@@ -514,6 +500,79 @@ paths:
           $ref: '#/components/responses/ReferenceDataResponse'
         '404':
           $ref: '#/components/responses/404Error'
+
+  '/profile/{prisonNumber}/support-strategies':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Adds one or more support strategies.
+      description: |
+        Adds one or more Support Strategies to the specified prisoner's list of Support Strategies.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      responses:
+        '201':
+          $ref: '#/components/responses/SupportStrategyList'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+      operationId: post-support-strategies
+      requestBody:
+        $ref: '#/components/requestBodies/CreateSupportStrategyList'
+
+    get:
+      summary: Retrieves the list of support strategies.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      responses:
+        '200':
+          $ref: '#/components/responses/SupportStrategyList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-support-strategies
+
+  '/profile/{prisonNumber}/support-strategies/{supportStrategyReference}':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: supportStrategyReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific support strategy to update
+    put:
+      summary: Updates a single support strategy by UUID.
+      description: |
+        Updates a specific support strategy associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      operationId: update-support-strategy
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateSupportStrategy'
+      responses:
+        '200':
+          $ref: '#/components/responses/SupportStrategy'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          description: Support Strategy not found
+
+
 components:
   securitySchemes:
     bearerAuth:
@@ -579,6 +638,20 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ALNScreenerRequest'
+    CreateSupportStrategyList:
+      description: Request body to create support strategies for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CreateSupportStrategiesRequest'
+
+    UpdateSupportStrategy:
+      description: Request body to update a support strategy for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UpdateSupportStrategyRequest'
+
 
   #
   # Schema and Enum Definitions
@@ -869,7 +942,6 @@ components:
             $ref: '#/components/schemas/StrengthResponse'
       required:
         - strengths
-
     CreateConditionsRequest:
       title: ConditionListRequest
       description: A request to create a list of conditions for a person.
@@ -1647,6 +1719,74 @@ components:
       required:
         - hasCurrentEhcp
         - individualSupport
+    CreateSupportStrategiesRequest:
+      title: SupportStrategiesListRequest
+      type: object
+      properties:
+        supportStrategies:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportStrategyRequest'
+      required:
+        - supportStrategies
+
+    UpdateSupportStrategyRequest:
+      title: UpdateSupportStrategyRequest
+      type: object
+      properties:
+        active:
+          type: boolean
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - active
+        - prisonId
+
+    SupportStrategyRequest:
+      title: SupportStrategyRequest
+      type: object
+      properties:
+        supportStrategyTypeCode:
+          type: string
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+        detail:
+          type: string
+          description: Optional further explanation or description of this strategy
+      required:
+        - supportStrategyTypeCode
+        - prisonId
+
+    SupportStrategyResponse:
+      title: SupportStrategyResponse
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      properties:
+        reference:
+          type: string
+          format: uuid
+        detail:
+          type: string
+        supportStrategyType:
+          $ref: '#/components/schemas/ReferenceData'
+        active:
+          type: boolean
+      required:
+        - reference
+        - supportStrategyType
+        - active
+
+    SupportStrategyListResponse:
+      title: SupportStrategyListResponse
+      type: object
+      properties:
+        supportStrategies:
+          type: array
+          items:
+            $ref: '#/components/schemas/SupportStrategyResponse'
+      required:
+        - supportStrategies
+
 
   #
   # Response Body Definitions
@@ -1830,6 +1970,38 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/StrengthResponse'
+    SupportStrategy:
+      description: Response body containing a single support strategy.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SupportStrategyResponse'
+    SupportStrategyList:
+      description: Response body containing the list of support strategies.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SupportStrategyListResponse'
 
     GetReviewSchedules:
       description: Response body containing the a list of review schedules.
