@@ -21,6 +21,7 @@ fun aValidHmppsDomainEventsSqsMessage(
       EventType.PRISONER_RECEIVED_INTO_PRISON -> aValidPrisonerReceivedAdditionalInformation(prisonNumber)
       EventType.PRISONER_RELEASED_FROM_PRISON -> aValidPrisonerReleasedAdditionalInformation(prisonNumber)
       EventType.PRISONER_MERGED -> aValidPrisonerMergedAdditionalInformation(prisonNumber, removedNomsNumber)
+      EventType.EDUCATION_STATUS_UPDATE -> TODO()
     },
 ): SqsMessage = SqsMessage(
   Type = "Notification",

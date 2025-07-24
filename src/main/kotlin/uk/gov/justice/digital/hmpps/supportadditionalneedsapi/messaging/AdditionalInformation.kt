@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
+import java.net.URL
+import java.time.OffsetDateTime
+import java.util.*
+
 /**
  * Classes modelling the different structures of Additional Information data for different HMPPS Domain Events.
  *
@@ -89,5 +93,28 @@ sealed interface AdditionalInformation {
     enum class Reason {
       MERGE,
     }
+  }
+
+  /**
+   * Additional Information for EducationStatusUpdate (prison.education.updated) HMPPS Domain Event
+   */
+  data class EducationStatusUpdateAdditionalInformation(
+    val nomsNumber: String,
+    val details: String,
+    val description: String,
+    val detailUrl: URL,
+    val occurredAt: OffsetDateTime,
+    val personReference: PersonReference,
+    val curiousExternalReference: UUID,
+  ) : AdditionalInformation {
+
+    data class PersonReference(
+      val identifiers: List<Identifier>,
+    )
+
+    data class Identifier(
+      val type: String,
+      val value: String,
+    )
   }
 }

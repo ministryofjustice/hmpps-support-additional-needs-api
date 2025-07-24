@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation.Reason.ADMISSION
@@ -28,7 +29,15 @@ class ScheduleService(
       is PrisonerReceivedAdditionalInformation -> processReceived(additionalInformation)
       is PrisonerReleasedAdditionalInformation -> processReleased(additionalInformation)
       is PrisonerMergedAdditionalInformation -> processMerged(additionalInformation)
+      is EducationStatusUpdateAdditionalInformation -> processEducationStatusUpdate(additionalInformation)
     }
+  }
+
+  private fun processEducationStatusUpdate(info: EducationStatusUpdateAdditionalInformation) {
+    log.info(
+      "processing education status update event: {${info.description}} for ${info.nomsNumber} \n " +
+        "Detail URL: ${info.detailUrl}",
+    )
   }
 
   private fun processReceived(info: PrisonerReceivedAdditionalInformation) {
