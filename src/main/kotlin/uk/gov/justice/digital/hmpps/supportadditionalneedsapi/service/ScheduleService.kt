@@ -5,8 +5,6 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation.Reason.ADMISSION
@@ -24,23 +22,7 @@ class ScheduleService(
 ) {
 
   @Transactional
-  fun updateSchedules(additionalInformation: AdditionalInformation) {
-    when (additionalInformation) {
-      is PrisonerReceivedAdditionalInformation -> processReceived(additionalInformation)
-      is PrisonerReleasedAdditionalInformation -> processReleased(additionalInformation)
-      is PrisonerMergedAdditionalInformation -> processMerged(additionalInformation)
-      is EducationStatusUpdateAdditionalInformation -> processEducationStatusUpdate(additionalInformation)
-    }
-  }
-
-  private fun processEducationStatusUpdate(info: EducationStatusUpdateAdditionalInformation) {
-    log.info(
-      "processing education status update event: {${info.description}} for ${info.nomsNumber} \n " +
-        "Detail URL: ${info.detailUrl}",
-    )
-  }
-
-  private fun processReceived(info: PrisonerReceivedAdditionalInformation) {
+  fun processReceived(info: PrisonerReceivedAdditionalInformation) {
     when (info.reason) {
       TRANSFERRED -> processTransfer(info)
       ADMISSION,
@@ -55,7 +37,8 @@ class ScheduleService(
    * Can be released or released with a movement code of DEC (deceased)
    * In both cases look up the active schedule and mark it as EXEMPT
    */
-  private fun processReleased(info: PrisonerReleasedAdditionalInformation) {
+  @Transactional
+  fun processReleased(info: PrisonerReleasedAdditionalInformation) {
     if (info.releaseTriggeredByPrisonerDeath) {
       planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_DEATH)
       reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_DEATH)
@@ -70,7 +53,8 @@ class ScheduleService(
    * been removed and the other is a new nomis number - need to exempt the removed nomis number and
    * process the new one as if it was a new admission,
    */
-  private fun processMerged(info: PrisonerMergedAdditionalInformation) {
+  @Transactional
+  fun processMerged(info: PrisonerMergedAdditionalInformation) {
     // exempt any schedules for the removed person:
     planCreationScheduleService.exemptSchedule(info.removedNomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_MERGE)
     reviewScheduleService.exemptSchedule(info.removedNomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_MERGE)

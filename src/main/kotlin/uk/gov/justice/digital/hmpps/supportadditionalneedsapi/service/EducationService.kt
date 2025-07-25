@@ -1,10 +1,15 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import java.util.*
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class EducationService(private val educationRepository: EducationRepository) {
@@ -29,6 +34,15 @@ class EducationService(private val educationRepository: EducationRepository) {
         prisonNumber = prisonNumber,
         curiousReference = curiousReference,
       ),
+    )
+  }
+
+  @Transactional
+  fun processEducationStatusUpdate(inboundEvent: InboundEvent, info: EducationStatusUpdateAdditionalInformation) {
+    log.info(
+      "processing education status update event: {${inboundEvent.description}} for ${inboundEvent.prisonNumber()} \n " +
+        "Detail URL: ${inboundEvent.detailUrl}" +
+        ", reference: ${info.curiousExternalReference}",
     )
   }
 }

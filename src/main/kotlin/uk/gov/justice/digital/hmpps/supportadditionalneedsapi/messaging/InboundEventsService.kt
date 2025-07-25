@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.Addition
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
 
 private val log = KotlinLogging.logger {}
@@ -20,6 +21,7 @@ private val log = KotlinLogging.logger {}
 class InboundEventsService(
   private val mapper: ObjectMapper,
   private val scheduleService: ScheduleService,
+  private val educationService: EducationService,
 ) {
 
   private val eventTypeToClassMap = mapOf(
@@ -47,8 +49,17 @@ class InboundEventsService(
 
     log.info("Received inbound event ${inboundEvent.eventType} with additional information: $info")
 
-    scheduleService.updateSchedules(info)
+    handleEvent(inboundEvent, info)
 
     log.info("Processed inbound event ${inboundEvent.eventType} with additional information: $info")
+  }
+
+  fun handleEvent(inboundEvent: InboundEvent, additionalInformation: AdditionalInformation) {
+    when (additionalInformation) {
+      is PrisonerReceivedAdditionalInformation -> scheduleService.processReceived(additionalInformation)
+      is PrisonerReleasedAdditionalInformation -> scheduleService.processReleased(additionalInformation)
+      is PrisonerMergedAdditionalInformation -> scheduleService.processMerged(additionalInformation)
+      is EducationStatusUpdateAdditionalInformation -> educationService.processEducationStatusUpdate(inboundEvent, additionalInformation)
+    }
   }
 }
