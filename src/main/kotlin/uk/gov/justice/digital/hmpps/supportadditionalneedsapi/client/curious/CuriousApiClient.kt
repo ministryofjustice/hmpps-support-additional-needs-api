@@ -38,4 +38,25 @@ class CuriousApiClient(
   } catch (e: Exception) {
     throw CuriousApiException("Error retrieving prisoner LDD data by prisonNumber $prisonNumber", e)
   }
+
+  /**
+   * Returns a prisoner's education information
+   *
+   * @throws CuriousPrisonerRecordNotFoundException
+   * @throws CuriousApiException
+   */
+  fun getEducation(prisonNumber: String): EducationDTO = try {
+    curiousApiWebClient.get()
+      .uri("/learnerEducation/{prisonNumber}", prisonNumber)
+      .headers {
+        it.contentType = MediaType.APPLICATION_JSON
+      }
+      .retrieve()
+      .bodyToMono(EducationDTO::class.java)
+      .block()!!
+  } catch (e: WebClientResponseException.NotFound) {
+    throw CuriousPrisonerRecordNotFoundException(prisonNumber)
+  } catch (e: Exception) {
+    throw CuriousApiException("Error retrieving prisoner education data by prisonNumber $prisonNumber", e)
+  }
 }
