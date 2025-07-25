@@ -2,14 +2,12 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
 import com.fasterxml.jackson.databind.JsonNode
 import java.net.URL
-import java.time.Instant
 
 data class InboundEvent(
   val eventType: EventType,
   val personReference: PersonReference,
   val additionalInformation: JsonNode,
-  val occurredAt: Instant,
-  val publishedAt: Instant,
+  val occurredAt: String,
   val description: String,
   val detailUrl: URL?,
   val version: String,
