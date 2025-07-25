@@ -11,7 +11,6 @@ data class EducationDTO(
   val numberOfElements: Int? = null,
   val pageable: PageableDTO? = null,
   val size: Int? = null,
-  val sort: SortDTO? = null,
   val totalElements: Long? = null,
   val totalPages: Int? = null,
 )
@@ -67,12 +66,5 @@ data class PageableDTO(
   val pageNumber: Int? = null,
   val pageSize: Int? = null,
   val paged: Boolean? = null,
-  val sort: SortDTO? = null,
   val unpaged: Boolean? = null,
-)
-
-data class SortDTO(
-  val empty: Boolean? = null,
-  val sorted: Boolean? = null,
-  val unsorted: Boolean? = null,
 )
