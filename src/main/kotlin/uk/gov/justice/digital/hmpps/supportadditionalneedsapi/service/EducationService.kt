@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
@@ -12,7 +13,10 @@ import java.util.*
 private val log = KotlinLogging.logger {}
 
 @Service
-class EducationService(private val educationRepository: EducationRepository) {
+class EducationService(
+  private val educationRepository: EducationRepository,
+  private val curiousApiClient: CuriousApiClient,
+) {
 
   /**
    * Establish whether this person is currently in eduction.
@@ -44,5 +48,8 @@ class EducationService(private val educationRepository: EducationRepository) {
         "Detail URL: ${inboundEvent.detailUrl}" +
         ", reference: ${info.curiousExternalReference}",
     )
+    log.info("retrieving education info for ${inboundEvent.prisonNumber()}")
+    val education = curiousApiClient.getEducation(prisonNumber = inboundEvent.prisonNumber())
+    log.info("retrieved education info for ${inboundEvent.prisonNumber()} : $education")
   }
 }

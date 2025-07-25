@@ -1,0 +1,78 @@
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious
+
+import java.time.LocalDate
+
+data class EducationDTO(
+  val content: List<CourseDTO?>? = null,
+  val empty: Boolean? = null,
+  val first: Boolean? = null,
+  val last: Boolean? = null,
+  val number: Int? = null,
+  val numberOfElements: Int? = null,
+  val pageable: PageableDTO? = null,
+  val size: Int? = null,
+  val sort: SortDTO? = null,
+  val totalElements: Long? = null,
+  val totalPages: Int? = null,
+)
+
+data class CourseDTO(
+  val a2LevelIndicator: Boolean? = null,
+  val accessHEIndicator: Boolean? = null,
+  val actualGLH: Int? = null,
+  val aimSequenceNumber: Int? = null,
+  val alevelIndicator: Boolean? = null,
+  val asLevelIndicator: Boolean? = null,
+  val attendedGLH: Int? = null,
+  val completionStatus: String? = null,
+  val courseCode: String? = null,
+  val courseName: String? = null,
+  val deliveryLocationPostCode: String? = null,
+  val deliveryMethodType: String? = null,
+  val employmentOutcome: String? = null,
+  val establishmentId: String? = null,
+  val establishmentName: String? = null,
+  val functionalSkillsIndicator: Boolean? = null,
+  val fundingAdjustmentPriorLearning: Int? = null,
+  val fundingModel: String? = null,
+  val fundingType: String? = null,
+  val gceIndicator: Boolean? = null,
+  val gcsIndicator: Boolean? = null,
+  val isAccredited: Boolean? = null,
+  val keySkillsIndicator: Boolean? = null,
+  val learnersAimType: String? = null,
+  val learningActualEndDate: LocalDate? = null,
+  val learningPlannedEndDate: LocalDate? = null,
+  val learningStartDate: LocalDate? = null,
+  val lrsGLH: Int? = null,
+  val miNotionalNVQLevelV2: String? = null,
+  val occupationalIndicator: Boolean? = null,
+  val outcome: String? = null,
+  val outcomeGrade: String? = null,
+  val prisonWithdrawalReason: String? = null,
+  val prn: String? = null,
+  val qcfCertificateIndicator: Boolean? = null,
+  val qcfDiplomaIndicator: Boolean? = null,
+  val qcfIndicator: Boolean? = null,
+  val sectorSubjectAreaTier1: String? = null,
+  val sectorSubjectAreaTier2: String? = null,
+  val subcontractedPartnershipUKPRN: Int? = null,
+  val unitType: String? = null,
+  val withdrawalReasonAgreed: Boolean? = null,
+  val withdrawalReasons: String? = null,
+)
+
+data class PageableDTO(
+  val offset: Int? = null,
+  val pageNumber: Int? = null,
+  val pageSize: Int? = null,
+  val paged: Boolean? = null,
+  val sort: SortDTO? = null,
+  val unpaged: Boolean? = null,
+)
+
+data class SortDTO(
+  val empty: Boolean? = null,
+  val sorted: Boolean? = null,
+  val unsorted: Boolean? = null,
+)
