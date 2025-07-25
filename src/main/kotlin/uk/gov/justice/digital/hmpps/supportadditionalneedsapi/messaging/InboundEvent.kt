@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
 import com.fasterxml.jackson.databind.JsonNode
+import java.net.URL
 import java.time.Instant
 
 data class InboundEvent(
@@ -10,6 +11,7 @@ data class InboundEvent(
   val occurredAt: Instant,
   val publishedAt: Instant,
   val description: String,
+  val detailUrl: URL?,
   val version: String,
 ) {
   fun prisonNumber(): String = personReference.identifiers.first { it.type == "NOMS" }.value
