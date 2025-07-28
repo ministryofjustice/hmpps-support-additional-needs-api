@@ -45,8 +45,8 @@ class ALNScreenerService(
         "Detail URL: ${inboundEvent.detailUrl}" +
         ", reference: ${info.curiousExternalReference}",
     )
-    log.info("retrieving aln assessment info for ${inboundEvent.prisonNumber()}")
-    val alnAssessment = curiousApiClient.getALNAssessment(prisonNumber = inboundEvent.prisonNumber())
-    log.info("retrieved aln assessment info for ${inboundEvent.prisonNumber()} : $alnAssessment")
+    log.info("retrieving aln assessments for ${inboundEvent.prisonNumber()}")
+    val alnAssessments = curiousApiClient.getALNAssessment(prisonNumber = inboundEvent.prisonNumber()).alnAssessments
+    log.info("retrieved aln assessments for ${inboundEvent.prisonNumber()} : $alnAssessments")
   }
 }

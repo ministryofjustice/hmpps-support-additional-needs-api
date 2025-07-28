@@ -2,7 +2,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious
 
 data class ALNAssessmentDTO(
   val v2: V2?,
-)
+) {
+  val alnAssessments: List<ALNAssessment>?
+    get() = v2?.assessments?.aln
+}
 
 data class V2(
   val assessments: Assessments?,
