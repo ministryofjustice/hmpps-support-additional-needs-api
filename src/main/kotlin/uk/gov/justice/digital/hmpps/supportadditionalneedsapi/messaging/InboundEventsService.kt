@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
 
@@ -22,6 +24,7 @@ class InboundEventsService(
   private val mapper: ObjectMapper,
   private val scheduleService: ScheduleService,
   private val educationService: EducationService,
+  private val alnScreenerService: ALNScreenerService,
 ) {
 
   private val eventTypeToClassMap = mapOf(
@@ -29,6 +32,7 @@ class InboundEventsService(
     EventType.PRISONER_RELEASED_FROM_PRISON to PrisonerReleasedAdditionalInformation::class.java,
     EventType.PRISONER_MERGED to PrisonerMergedAdditionalInformation::class.java,
     EventType.EDUCATION_STATUS_UPDATE to EducationStatusUpdateAdditionalInformation::class.java,
+    EventType.EDUCATION_ALN_ASSESSMENT_UPDATE to EducationALNAssessmentUpdateAdditionalInformation::class.java,
   )
 
   fun process(inboundEvent: InboundEvent) {
@@ -60,6 +64,7 @@ class InboundEventsService(
       is PrisonerReleasedAdditionalInformation -> scheduleService.processReleased(additionalInformation)
       is PrisonerMergedAdditionalInformation -> scheduleService.processMerged(additionalInformation)
       is EducationStatusUpdateAdditionalInformation -> educationService.processEducationStatusUpdate(inboundEvent, additionalInformation)
+      is EducationALNAssessmentUpdateAdditionalInformation -> alnScreenerService.processALNAssessmentUpdate(inboundEvent, additionalInformation)
     }
   }
 }
