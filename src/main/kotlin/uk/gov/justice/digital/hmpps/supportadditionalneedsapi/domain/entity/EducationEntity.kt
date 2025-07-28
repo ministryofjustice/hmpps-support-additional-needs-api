@@ -5,6 +5,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.Table
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 /**
@@ -27,6 +29,9 @@ data class EducationEntity(
    * Nullable because although we might get this from a message
    * we may also manually update the record by calling the api directly
    */
+
+  @Column(nullable = false)
+  val latestStartDate: LocalDate,
 
   @Column(nullable = false)
   val curiousReference: UUID? = null,
