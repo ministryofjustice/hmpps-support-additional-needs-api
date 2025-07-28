@@ -1195,11 +1195,11 @@ components:
           $ref: '#/components/schemas/Source'
         conditionType:
           $ref: '#/components/schemas/ReferenceData'
-        conditionDetail:
+        conditionName:
           type: string
           description: more granular information about the condition
           example: (for Mental Health) Social Anxiety
-        detail:
+        conditionDetails:
           type: string
           description: additional detail about the condition
         active:
@@ -1335,11 +1335,11 @@ components:
         conditionTypeCode:
           type: string
           description: the reference data type code of the condition
-        conditionDetail:
+        conditionName:
           type: string
           description: more granular information about the condition
           example: (for Mental Health) Social Anxiety
-        detail:
+        conditionDetails:
           type: string
           description: additional detail about the condition
         prisonId:
