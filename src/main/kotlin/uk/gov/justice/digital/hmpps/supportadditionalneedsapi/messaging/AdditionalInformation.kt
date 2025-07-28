@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
+import java.util.*
+
 /**
  * Classes modelling the different structures of Additional Information data for different HMPPS Domain Events.
  *
@@ -90,4 +92,11 @@ sealed interface AdditionalInformation {
       MERGE,
     }
   }
+
+  /**
+   * Additional Information for EducationStatusUpdate (prison.education.updated) HMPPS Domain Event
+   */
+  data class EducationStatusUpdateAdditionalInformation(
+    val curiousExternalReference: UUID,
+  ) : AdditionalInformation
 }
