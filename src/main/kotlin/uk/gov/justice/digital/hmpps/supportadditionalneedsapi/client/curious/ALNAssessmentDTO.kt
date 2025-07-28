@@ -1,13 +1,16 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class ALNAssessmentDTO(
-  val v2: V2?,
+  @JsonProperty("v2")
+  val data: ALNData?,
 ) {
   val alnAssessments: List<ALNAssessment>?
-    get() = v2?.assessments?.aln
+    get() = data?.assessments?.aln
 }
 
-data class V2(
+data class ALNData(
   val assessments: Assessments?,
   val prn: String?,
 )
