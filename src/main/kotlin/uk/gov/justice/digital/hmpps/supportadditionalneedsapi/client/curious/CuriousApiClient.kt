@@ -59,4 +59,25 @@ class CuriousApiClient(
   } catch (e: Exception) {
     throw CuriousApiException("Error retrieving prisoner education data by prisonNumber $prisonNumber", e)
   }
+
+  /**
+   * Returns a prisoner's ALN information
+   *
+   * @throws CuriousPrisonerRecordNotFoundException
+   * @throws CuriousApiException
+   */
+  fun getALNAssessment(prisonNumber: String): ALNAssessmentDTO = try {
+    curiousApiWebClient.get()
+      .uri("/learnerEducation/{prisonNumber}", prisonNumber)
+      .headers {
+        it.contentType = MediaType.APPLICATION_JSON
+      }
+      .retrieve()
+      .bodyToMono(ALNAssessmentDTO::class.java)
+      .block()!!
+  } catch (e: WebClientResponseException.NotFound) {
+    throw CuriousPrisonerRecordNotFoundException(prisonNumber)
+  } catch (e: Exception) {
+    throw CuriousApiException("Error retrieving prisoner ALN Screener data by prisonNumber $prisonNumber", e)
+  }
 }

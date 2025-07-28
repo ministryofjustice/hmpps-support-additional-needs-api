@@ -99,4 +99,11 @@ sealed interface AdditionalInformation {
   data class EducationStatusUpdateAdditionalInformation(
     val curiousExternalReference: UUID,
   ) : AdditionalInformation
+
+  /**
+   * Additional Information for EducationALNAssessmentUpdate (prison.education-aln-assessment.updated) HMPPS Domain Event
+   */
+  data class EducationALNAssessmentUpdateAdditionalInformation(
+    val curiousExternalReference: UUID,
+  ) : AdditionalInformation
 }
