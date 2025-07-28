@@ -45,7 +45,7 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(adhdCondition.conditionType.key.code).isEqualTo("ADHD")
     assertThat(adhdCondition.source).isEqualTo(EntitySource.SELF_DECLARED)
     assertThat(adhdCondition.createdAtPrison).isEqualTo("BXI")
-    assertThat(adhdCondition.detail).isEqualTo("Bob struggles to sit still for longer than one hour")
+    assertThat(adhdCondition.conditionDetails).isEqualTo("Bob struggles to sit still for longer than one hour")
 
     val dyslexiaCondition = savedConditions.find { it.conditionType.key.code == "DYSLEXIA" }
     assertThat(dyslexiaCondition!!.prisonNumber).isEqualTo(prisonNumber)
@@ -58,7 +58,7 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(mentalHealthCondition.conditionType.key.code).isEqualTo("MENTAL_HEALTH")
     assertThat(mentalHealthCondition.source).isEqualTo(EntitySource.CONFIRMED_DIAGNOSIS)
     assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
-    assertThat(mentalHealthCondition.conditionDetail).isEqualTo("Social anxiety")
+    assertThat(mentalHealthCondition.conditionName).isEqualTo("Social anxiety")
   }
 
   private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(
