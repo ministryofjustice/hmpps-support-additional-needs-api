@@ -67,7 +67,7 @@ class CreateConditionTest : IntegrationTestBase() {
         source = Source.SELF_DECLARED,
         prisonId = "BXI",
         conditionTypeCode = "ADHD",
-        detail = "Bob struggles to sit still for longer than one hour",
+        conditionDetails = "Bob struggles to sit still for longer than one hour",
       ),
       ConditionRequest(
         source = Source.SELF_DECLARED,
@@ -78,7 +78,7 @@ class CreateConditionTest : IntegrationTestBase() {
         source = Source.CONFIRMED_DIAGNOSIS,
         prisonId = "BXI",
         conditionTypeCode = "MENTAL_HEALTH",
-        conditionDetail = "Social anxiety",
+        conditionName = "Social anxiety",
       ),
     ),
   )
