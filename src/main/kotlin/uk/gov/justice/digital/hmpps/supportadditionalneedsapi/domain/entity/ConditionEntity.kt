@@ -25,13 +25,11 @@ data class ConditionEntity(
   @JoinColumn(name = "condition_type_id", referencedColumnName = "id")
   val conditionType: ReferenceDataEntity,
 
-  // TODO - change this to condition_name
   @Column
-  val conditionDetail: String? = null,
+  val conditionName: String? = null,
 
-  // TODO - change this to condition_details
   @Column
-  val detail: String? = null,
+  val conditionDetails: String? = null,
 
   @Column(nullable = false)
   var active: Boolean = true,
