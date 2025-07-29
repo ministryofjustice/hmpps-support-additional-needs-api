@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
+import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource as IdentificationSourceEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
@@ -15,6 +16,7 @@ class StrengthMapper(
 
   fun toModel(
     entity: StrengthEntity,
+    screenerDate: LocalDate? = null,
   ): StrengthResponse = with(entity) {
     StrengthResponse(
       fromALNScreener = fromALNScreener,
@@ -32,6 +34,7 @@ class StrengthMapper(
       howIdentified = toModel(howIdentified),
       howIdentifiedOther = howIdentifiedOther,
       active = active,
+      alnScreenerDate = if (fromALNScreener) screenerDate else null,
     )
   }
 

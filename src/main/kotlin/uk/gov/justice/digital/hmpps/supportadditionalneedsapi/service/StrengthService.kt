@@ -31,14 +31,15 @@ class StrengthService(
     val nonAlnStrengths = strengthRepository
       .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
-    val alnStrengths = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      ?.strengths
+    val alnScreener = alnScreenerRepository
+      .findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
+
+    val alnStrengths = alnScreener?.strengths
       .orEmpty()
 
     val allStrengths = nonAlnStrengths + alnStrengths
 
-    val models = allStrengths.map(strengthMapper::toModel)
+    val models = allStrengths.map { strengthMapper.toModel(it, alnScreener?.screeningDate) }
     return StrengthListResponse(models)
   }
 
