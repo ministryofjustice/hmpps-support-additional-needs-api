@@ -264,6 +264,21 @@ paths:
       operationId: post-strengths
       requestBody:
         $ref: '#/components/requestBodies/CreateStrengthList'
+    get:
+      summary: Retrieves the list of strengths.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Strength
+      responses:
+        '200':
+          $ref: '#/components/responses/StrengthList'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-strengths
 
   '/profile/{prisonNumber}/aln-screener':
     parameters:
@@ -291,22 +306,6 @@ paths:
       operationId: post-aln-screener
       requestBody:
         $ref: '#/components/requestBodies/CreateALNScreenerRequest'
-
-    get:
-      summary: Retrieves the list of strengths.
-      description: |
-        **Role Requirements:**
-        Access to this endpoint requires one of the following roles:
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
-          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
-      tags:
-        - Strength
-      responses:
-        '200':
-          $ref: '#/components/responses/StrengthList'
-        '400':
-          $ref: '#/components/responses/400Error'
-      operationId: get-strengths
 
   '/profile/{prisonNumber}/strengths/{strengthReference}':
     parameters:
@@ -1230,6 +1229,11 @@ components:
           type: boolean
           description: |
             Whether or not this challenge is from the ALN screener
+        alnScreenerDate:
+          type: string
+          format: date
+          description: The date that the screener was recorded that has this challenge
+          example: '2023-11-19'
         symptoms:
           type: string
           description: Optional details about the symptoms of this challenge
@@ -1297,6 +1301,11 @@ components:
           type: boolean
           description: |
             Whether or not this strength is from the ALN screener
+        alnScreenerDate:
+          type: string
+          format: date
+          description: The date that the screener was recorded that has this strength
+          example: '2023-11-19'
         symptoms:
           type: string
           description: Optional details about the symptoms of this strength
