@@ -31,14 +31,16 @@ class ChallengeService(
     val nonAlnChallenges = challengeRepository
       .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
-    val alnChallenges = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    val alnScreener = alnScreenerRepository
+      .findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
+
+    val alnChallenges = alnScreener
       ?.challenges
       .orEmpty()
 
     val allChallenges = nonAlnChallenges + alnChallenges
 
-    val models = allChallenges.map(challengeMapper::toModel)
+    val models = allChallenges.map { challengeMapper.toModel(it, alnScreener?.screeningDate) }
     return ChallengeListResponse(models)
   }
 
@@ -70,7 +72,12 @@ class ChallengeService(
   }
 
   @Transactional
-  fun createAlnChallenges(prisonNumber: String, alnChallenges: List<ALNChallenge>, prisonId: String, alnScreenerId: UUID) {
+  fun createAlnChallenges(
+    prisonNumber: String,
+    alnChallenges: List<ALNChallenge>,
+    prisonId: String,
+    alnScreenerId: UUID,
+  ) {
     if (alnChallenges.isNotEmpty()) {
       val challengeTypeEntities = resolveChallengeTypes(alnChallenges)
 

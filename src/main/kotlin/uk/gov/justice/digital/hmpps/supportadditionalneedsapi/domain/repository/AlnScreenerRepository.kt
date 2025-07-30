@@ -7,5 +7,5 @@ import java.util.UUID
 
 @Repository
 interface AlnScreenerRepository : JpaRepository<ALNScreenerEntity, UUID> {
-  fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): ALNScreenerEntity?
+  fun findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber: String): ALNScreenerEntity?
 }

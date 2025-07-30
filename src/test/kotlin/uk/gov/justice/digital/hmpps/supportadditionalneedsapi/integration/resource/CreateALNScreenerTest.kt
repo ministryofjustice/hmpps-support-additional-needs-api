@@ -35,7 +35,7 @@ class CreateALNScreenerTest : IntegrationTestBase() {
 
     // Then
 
-    val alnScreenerEntity = alnScreenerRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    val alnScreenerEntity = alnScreenerRepository.findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
     assertThat(alnScreenerEntity).isNotNull
     assertThat(alnScreenerEntity!!.needsIdentified).isTrue()
     assertThat(alnScreenerEntity.screeningDate).isEqualTo(LocalDate.parse("2020-01-01"))
@@ -91,7 +91,7 @@ class CreateALNScreenerTest : IntegrationTestBase() {
       .isCreated
 
     // Then
-    val alnScreenerEntity = alnScreenerRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    val alnScreenerEntity = alnScreenerRepository.findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
     assertThat(alnScreenerEntity).isNotNull
     assertThat(alnScreenerEntity!!.needsIdentified).isFalse()
     assertThat(alnScreenerEntity.hasStrengths).isFalse()

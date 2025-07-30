@@ -150,7 +150,7 @@ class GetStrengthsTest : IntegrationTestBase() {
     )
     // screener2 - has no strengths needs to be a small delay or they will both have the same timestamp
     Thread.sleep(100)
-    alnScreenerRepository.saveAndFlush(ALNScreenerEntity(prisonNumber = prisonNumber, createdAtPrison = "BXI", updatedAtPrison = "BXI", screeningDate = LocalDate.parse("2020-01-01")))
+    alnScreenerRepository.saveAndFlush(ALNScreenerEntity(prisonNumber = prisonNumber, createdAtPrison = "BXI", updatedAtPrison = "BXI", screeningDate = LocalDate.parse("2022-01-01")))
 
     // When
     val response = webTestClient.get()
