@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
 
 private val log = KotlinLogging.logger {}
+private const val YES = "YES"
 
 @Service
 class ALNScreenerService(
@@ -18,6 +19,7 @@ class ALNScreenerService(
   private val strengthService: StrengthService,
   private val alnScreenerRepository: AlnScreenerRepository,
   private val curiousApiClient: CuriousApiClient,
+  private val needService: NeedService,
 ) {
   @Transactional
   fun createScreener(prisonNumber: String, request: ALNScreenerRequest) {
@@ -39,14 +41,46 @@ class ALNScreenerService(
   }
 
   @Transactional
-  fun processALNAssessmentUpdate(inboundEvent: InboundEvent, info: EducationALNAssessmentUpdateAdditionalInformation) {
+  fun processALNAssessmentUpdate(
+    inboundEvent: InboundEvent,
+    info: EducationALNAssessmentUpdateAdditionalInformation,
+  ) {
+    val prisonNumber = inboundEvent.prisonNumber()
+
     log.info(
-      "processing aln assessment update event: {${inboundEvent.description}} for ${inboundEvent.prisonNumber()} \n " +
-        "Detail URL: ${inboundEvent.detailUrl}" +
-        ", reference: ${info.curiousExternalReference}",
+      "Processing ALN assessment update event: ${inboundEvent.description} for $prisonNumber\n" +
+        "Detail URL: ${inboundEvent.detailUrl}, reference: ${info.curiousExternalReference}",
     )
-    log.info("retrieving aln assessments for ${inboundEvent.prisonNumber()}")
-    val alnAssessments = curiousApiClient.getALNAssessment(prisonNumber = inboundEvent.prisonNumber()).alnAssessments
-    log.info("retrieved aln assessments for ${inboundEvent.prisonNumber()} : $alnAssessments")
+
+    log.info("Retrieving ALN assessments for $prisonNumber")
+    val alnAssessments = curiousApiClient.getALNAssessment(prisonNumber).alnAssessments.orEmpty()
+
+    val latestAssessment = alnAssessments
+      .filter { it.assessmentDate != null }
+      .maxByOrNull { it.assessmentDate!! }
+
+    if (latestAssessment == null) {
+      log.warn("No valid ALN assessments found for $prisonNumber — skipping need recording.")
+      return
+    }
+
+    val hasNeed = latestAssessment.assessmentOutcome.equals(YES, ignoreCase = true)
+    log.info("Identified ALN need for $prisonNumber: hasNeed = $hasNeed")
+
+    needService.recordAlnScreenerNeed(
+      prisonNumber = prisonNumber,
+      hasNeed = hasNeed,
+      curiousReference = info.curiousExternalReference,
+      screenerDate = latestAssessment.assessmentDate!!,
+    )
+
+    // TODO may also use this to process LDD need since the same endpoint gives both sets of information.
+
+    // TODO Now update the plan creation schedule or the plan review schedule
+    // if there is a schedule and now there is no need - EXEMPT due to NO_NEED
+    // if there is no schedule AND the person is in EDUCATION create a new plan creation schedule OR
+    // review schedule
+
+    log.info("Processed ALN assessment for $prisonNumber: $latestAssessment")
   }
 }

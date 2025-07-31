@@ -5,6 +5,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.Table
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -21,6 +22,9 @@ data class AlnAssessmentEntity(
 
   @Column(nullable = false)
   val hasNeed: Boolean = false,
+
+  @Column(nullable = false)
+  var screeningDate: LocalDate,
 
   /**
    * This is the message reference we will receive when curious send us this information.

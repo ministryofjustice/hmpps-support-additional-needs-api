@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import java.time.LocalDate
 import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
@@ -49,7 +50,7 @@ class NeedServiceTest {
     val prisonNumber = randomValidPrisonNumber()
     val hasNeed = true
 
-    needService.recordAlnScreenerNeed(prisonNumber, hasNeed, curiousRef)
+    needService.recordAlnScreenerNeed(prisonNumber, hasNeed, curiousRef, LocalDate.now())
 
     verify(alnAssessmentRepository).save(
       any<AlnAssessmentEntity>(),
@@ -73,7 +74,7 @@ class NeedServiceTest {
   fun `hasALNScreenerNeed returns true if latest ALN assessment has need`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true, curiousReference = curiousRef))
+      .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true, curiousReference = curiousRef, screeningDate = LocalDate.now()))
 
     assertTrue(needService.hasALNScreenerNeed(prisonNumber))
   }

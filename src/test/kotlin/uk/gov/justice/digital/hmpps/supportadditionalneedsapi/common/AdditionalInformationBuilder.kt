@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common
 
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation.Reason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import java.util.*
 
 fun aValidPrisonerReceivedAdditionalInformation(
   prisonNumber: String = randomValidPrisonNumber(),
@@ -50,4 +52,8 @@ fun aValidPrisonerMergedAdditionalInformation(
   nomsNumber = prisonNumber,
   reason = reason,
   removedNomsNumber = removedNomsNumber,
+)
+
+fun aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference: UUID): EducationALNAssessmentUpdateAdditionalInformation = EducationALNAssessmentUpdateAdditionalInformation(
+  curiousExternalReference = curiousReference,
 )
