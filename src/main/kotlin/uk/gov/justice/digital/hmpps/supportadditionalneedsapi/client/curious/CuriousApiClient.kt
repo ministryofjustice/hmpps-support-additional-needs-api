@@ -68,7 +68,7 @@ class CuriousApiClient(
    */
   fun getALNAssessment(prisonNumber: String): ALNAssessmentDTO = try {
     curiousApiWebClient.get()
-      .uri("/learnerEducation/{prisonNumber}", prisonNumber)
+      .uri("/learnerAssessments/v2/{prisonNumber}", prisonNumber)
       .headers {
         it.contentType = MediaType.APPLICATION_JSON
       }

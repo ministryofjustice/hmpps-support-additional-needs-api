@@ -60,7 +60,7 @@ class TestDataController(
     with(request) {
       educationService.recordEducationRecord(prisonNumber, inEducation, curiousRef)
       if (alnNeed) {
-        needService.recordAlnScreenerNeed(prisonNumber, true, curiousRef)
+        needService.recordAlnScreenerNeed(prisonNumber, true, curiousRef, LocalDate.now())
       }
       if (lddNeed) {
         needService.recordLddScreenerNeed(prisonNumber, true, curiousRef)

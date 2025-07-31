@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
+import java.time.LocalDate
 import java.util.*
 private val log = KotlinLogging.logger {}
 
@@ -27,12 +28,13 @@ class NeedService(
    *
    */
   @Transactional
-  fun recordAlnScreenerNeed(prisonNumber: String, hasNeed: Boolean, curiousReference: UUID) {
+  fun recordAlnScreenerNeed(prisonNumber: String, hasNeed: Boolean, curiousReference: UUID, screenerDate: LocalDate) {
     alnAssessmentRepository.save(
       AlnAssessmentEntity(
         hasNeed = hasNeed,
         prisonNumber = prisonNumber,
         curiousReference = curiousReference,
+        screeningDate = screenerDate,
       ),
     )
   }

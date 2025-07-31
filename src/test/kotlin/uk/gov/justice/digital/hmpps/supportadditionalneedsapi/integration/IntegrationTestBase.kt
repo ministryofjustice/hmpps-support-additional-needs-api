@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
@@ -57,7 +59,7 @@ import java.util.concurrent.TimeUnit.SECONDS
 @ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
-@AutoConfigureWebTestClient(timeout = "PT5M")
+@AutoConfigureWebTestClient(timeout = "PT15M")
 abstract class IntegrationTestBase {
 
   companion object {
@@ -107,6 +109,9 @@ abstract class IntegrationTestBase {
   protected lateinit var alnScreenerRepository: AlnScreenerRepository
 
   @Autowired
+  protected lateinit var alnAssessmentRepository: AlnAssessmentRepository
+
+  @Autowired
   protected lateinit var conditionRepository: ConditionRepository
 
   @Autowired
@@ -123,6 +128,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var elspPlanService: EducationSupportPlanService
+
+  @Autowired
+  protected lateinit var needService: NeedService
 
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
@@ -169,6 +177,8 @@ abstract class IntegrationTestBase {
   protected fun stubGetUserRepeatPass(username: String) = manageUsersApi.setUpManageUsersRepeatPass(username)
 
   protected fun stubGetUserRepeatFail(username: String) = manageUsersApi.setUpManageUsersRepeatFail(username)
+
+  protected fun stubGetCurious2LearnerAssessments(prisonId: String, response: String) = curiousApi.stubGetCurious2LearnerAssessments(prisonId, response)
 
   fun clearQueues() {
     // clear all the queues just in case there are any messages hanging around

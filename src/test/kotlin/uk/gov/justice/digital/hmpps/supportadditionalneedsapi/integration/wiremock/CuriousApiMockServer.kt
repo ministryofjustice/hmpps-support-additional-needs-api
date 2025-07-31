@@ -7,11 +7,14 @@ import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder.responseDefinition
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import mu.KotlinLogging
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
+
+private val log = KotlinLogging.logger {}
 
 class CuriousApiExtension :
   BeforeAllCallback,
@@ -63,6 +66,19 @@ class CuriousApiMockServer : WireMockServer(WIREMOCK_PORT) {
           responseDefinition()
             .withStatus(404)
             .withHeader("Content-Type", "application/json"),
+        ),
+    )
+  }
+
+  fun stubGetCurious2LearnerAssessments(prisonNumber: String, response: String) {
+    log.debug("setting up learner assessments stub for $prisonNumber")
+    stubFor(
+      get(urlPathMatching("/learnerAssessments/v2/$prisonNumber"))
+        .willReturn(
+          responseDefinition()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response),
         ),
     )
   }
