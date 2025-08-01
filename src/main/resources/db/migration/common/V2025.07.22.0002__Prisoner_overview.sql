@@ -43,8 +43,6 @@ SELECT
     -- Latest scheduled review deadline
     rsched.deadline_date AS review_deadline_date,
 
-    COALESCE(rsched.deadline_date, pcs.deadline_date) AS deadline_date,
-
     -- has need flag
     (
         COALESCE(aln.has_need, false)
