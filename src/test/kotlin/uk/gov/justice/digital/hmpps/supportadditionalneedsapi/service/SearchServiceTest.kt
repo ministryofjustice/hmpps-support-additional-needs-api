@@ -13,17 +13,25 @@ import org.mockito.kotlin.given
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PrisonerOverviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SentenceTypeMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Person
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
 class SearchServiceTest {
   @Mock
   private lateinit var prisonerSearchApiService: PrisonerSearchApiService
+
+  @Mock
+  private lateinit var prisonerOverviewRepository: PrisonerOverviewRepository
+
+  @Mock
+  private lateinit var workingDayService: WorkingDayService
 
   @InjectMocks
   private lateinit var service: SearchService
