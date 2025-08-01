@@ -1,3 +1,5 @@
+DROP VIEW prisoner_overview;
+
 CREATE OR REPLACE VIEW prisoner_overview AS
 WITH all_prisoners AS (
     SELECT prison_number FROM aln_assessment
