@@ -28,7 +28,7 @@ class SearchService(private val prisonerSearchApiService: PrisonerSearchApiServi
         sentenceType = SentenceTypeMapper.fromPrisonerSearchApiToModel(it.legalStatus),
         inEducation = false,
         hasAdditionalNeed = false,
-        planStatus = PlanStatus.NO_PLAN
+        planStatus = PlanStatus.NO_PLAN,
       )
     }
   }
