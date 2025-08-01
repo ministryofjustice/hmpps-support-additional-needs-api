@@ -1,3 +1,5 @@
+DROP VIEW prisoner_overview;
+
 CREATE OR REPLACE VIEW prisoner_overview AS
 WITH all_prisoners AS (
     SELECT prison_number FROM aln_assessment
@@ -15,6 +17,8 @@ WITH all_prisoners AS (
     SELECT prison_number FROM plan_creation_schedule
     UNION
     SELECT prison_number FROM review_schedule
+    UNION
+    SELECT prison_number FROM elsp_plan
 )
 SELECT
     ap.prison_number,
@@ -43,7 +47,11 @@ SELECT
     -- Latest scheduled review deadline
     rsched.deadline_date AS review_deadline_date,
 
+    -- Combined deadline (review > plan creation > null)
     COALESCE(rsched.deadline_date, pcs.deadline_date) AS deadline_date,
+
+    -- Has a plan in elsp_plan
+    (plan.exists IS NOT NULL) AS has_plan,
 
     -- has need flag
     (
@@ -62,7 +70,7 @@ FROM all_prisoners ap
     WHERE prison_number = ap.prison_number
     ORDER BY created_at DESC
         LIMIT 1
-    ) aln ON true
+) aln ON true
 
 -- Latest LDD assessment
     LEFT JOIN LATERAL (
@@ -117,4 +125,12 @@ FROM all_prisoners ap
     WHERE prison_number = ap.prison_number AND status = 'SCHEDULED'
     ORDER BY deadline_date DESC
     LIMIT 1
-    ) rsched ON true;
+    ) rsched ON true
+
+-- Existence of a plan
+    LEFT JOIN LATERAL (
+    SELECT 1 AS exists
+    FROM elsp_plan
+    WHERE prison_number = ap.prison_number
+    LIMIT 1
+    ) plan ON true;
