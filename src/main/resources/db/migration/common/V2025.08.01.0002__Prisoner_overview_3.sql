@@ -1,5 +1,3 @@
-DROP VIEW prisoner_overview;
-
 CREATE OR REPLACE VIEW prisoner_overview AS
 WITH all_prisoners AS (
     SELECT prison_number FROM aln_assessment
@@ -24,22 +22,22 @@ SELECT
     ap.prison_number,
 
     -- Latest ALN assessment
-    aln.has_need AS has_aln_need,
+    COALESCE(aln.has_need, false) AS has_aln_need,
 
     -- Latest LDD assessment
-    ldd.has_need AS has_ldd_need,
+    COALESCE(ldd.has_need, false) AS has_ldd_need,
 
     -- Latest education record
-    edu.in_education AS in_education,
+    COALESCE(edu.in_education, false) AS in_education,
 
     -- Any active condition
-    (cond.exists IS NOT NULL) AS has_condition,
+    COALESCE(cond.exists IS NOT NULL, false) AS has_condition,
 
     -- Any active non-screener challenge
-    (chal.exists IS NOT NULL) AS has_non_screener_challenge,
+    COALESCE(chal.exists IS NOT NULL, false) AS has_non_screener_challenge,
 
     -- Any active non-screener strength
-    (str.exists IS NOT NULL) AS has_non_screener_strength,
+    COALESCE(str.exists IS NOT NULL, false) AS has_non_screener_strength,
 
     -- Plan creation deadline
     pcs.deadline_date AS plan_creation_deadline_date,
@@ -51,10 +49,10 @@ SELECT
     COALESCE(rsched.deadline_date, pcs.deadline_date) AS deadline_date,
 
     -- Has a plan in elsp_plan
-    (plan.exists IS NOT NULL) AS has_plan,
+    COALESCE(plan.exists IS NOT NULL, false) AS has_plan,
 
     -- Plan declined if status is EXEMPT_PRISONER_NOT_COMPLY
-    (pcs.status = 'EXEMPT_PRISONER_NOT_COMPLY') AS plan_declined,
+    COALESCE(pcs.status = 'EXEMPT_PRISONER_NOT_COMPLY', false) AS plan_declined,
 
     -- has need flag
     (
@@ -72,11 +70,11 @@ FROM all_prisoners ap
     FROM aln_assessment
     WHERE prison_number = ap.prison_number
     ORDER BY created_at DESC
-        LIMIT 1
-) aln ON true
+    LIMIT 1
+    ) aln ON true
 
 -- Latest LDD assessment
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT has_need
     FROM ldd_assessment
     WHERE prison_number = ap.prison_number
@@ -85,7 +83,7 @@ FROM all_prisoners ap
     ) ldd ON true
 
 -- Latest education record
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT in_education
     FROM education
     WHERE prison_number = ap.prison_number
@@ -94,7 +92,7 @@ FROM all_prisoners ap
     ) edu ON true
 
 -- Any active condition
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT 1 AS exists
     FROM condition
     WHERE prison_number = ap.prison_number AND active = true
@@ -102,7 +100,7 @@ FROM all_prisoners ap
     ) cond ON true
 
 -- Any active non-screener challenge
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT 1 AS exists
     FROM challenge
     WHERE prison_number = ap.prison_number AND active = true AND aln_screener_id IS NULL
@@ -110,19 +108,19 @@ FROM all_prisoners ap
     ) chal ON true
 
 -- Any active non-screener strength
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT 1 AS exists
     FROM strength
     WHERE prison_number = ap.prison_number AND active = true AND aln_screener_id IS NULL
     LIMIT 1
     ) str ON true
 
--- Plan creation deadline
-    LEFT JOIN plan_creation_schedule pcs
-    ON pcs.prison_number = ap.prison_number
+-- Plan creation deadline (and status)
+         LEFT JOIN plan_creation_schedule pcs
+                   ON pcs.prison_number = ap.prison_number
 
 -- Latest scheduled review deadline
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT deadline_date
     FROM review_schedule
     WHERE prison_number = ap.prison_number AND status = 'SCHEDULED'
@@ -131,7 +129,7 @@ FROM all_prisoners ap
     ) rsched ON true
 
 -- Existence of a plan
-    LEFT JOIN LATERAL (
+         LEFT JOIN LATERAL (
     SELECT 1 AS exists
     FROM elsp_plan
     WHERE prison_number = ap.prison_number
