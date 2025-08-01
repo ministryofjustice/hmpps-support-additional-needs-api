@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.8.0'
+  version: '0.9.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -717,6 +717,20 @@ components:
         - UNKNOWN
         - OTHER
 
+    PlanStatus:
+      type: string
+      description: An enumeration of plan status.
+      enum:
+        - PLAN_OVERDUE
+        - PLAN_DUE
+        - REVIEW_OVERDUE
+        - REVIEW_DUE
+        - ACTIVE_PLAN
+        - NEEDS_PLAN
+        - INACTIVE_PLAN
+        - PLAN_DECLINED
+        - NO_PLAN
+
     SearchByPrisonResponse:
       title: SearchByPrisonResponse
       description: Response body containing a Search by prison paginated results response.
@@ -851,45 +865,25 @@ components:
         sentenceType:
           $ref: '#/components/schemas/SentenceType'
           description: The prisoner's sentence type.
-        additionalNeeds:
-          $ref: '#/components/schemas/AdditionalNeedsSummary'
-          description: |
-            Optional object containing summary data held in this service about the person.  
-            The object is only populated if the person has Additional Needs data in this service.  
-            If the person does not yet have any data recorded in this service this field will be null.
+        hasAdditionalNeed:
+          type: boolean
+          description: Returns true if this person has any ALN needs, LDD needs, SAN condition or SAN Challenge.
+        inEducation:
+          type: boolean
+          description: Returns true if this person is currently in education.
+        planStatus:
+          $ref: '#/components/schemas/PlanStatus'
+          description: The status of the persons plan.
+
       required:
         - forename
         - surname
         - prisonNumber
         - dateOfBirth
         - sentenceType
-
-    AdditionalNeedsSummary:
-      title: AdditionalNeedsSummary
-      description: A summary of a person's Challenges, Strengths, Conditions or Support Recommendations recorded in the service.
-      type: object
-      properties:
-        hasConditions:
-          type: boolean
-          description: Whether this person has any Conditions recorded in the service.
-          example: true
-        hasChallenges:
-          type: boolean
-          description: Whether this person has any Challenges recorded in the service.
-          example: true
-        hasStrengths:
-          type: boolean
-          description: Whether this person has any Strengths recorded in the service.
-          example: true
-        hasSupportRecommendations:
-          type: boolean
-          description: Whether this person has any Support Recommendations recorded in the service.
-          example: true
-      required:
-        - hasChallenges
-        - hasConditions
-        - hasStrengths
-        - hasSupportRecommendations
+        - hasAdditionalNeed
+        - inEducation
+        - planStatus
 
     ReviewSchedulesResponse:
       title: ReviewSchedulesResponse

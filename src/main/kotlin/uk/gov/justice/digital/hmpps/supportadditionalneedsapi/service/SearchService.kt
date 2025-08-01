@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SentenceTypeMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Person
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
 
@@ -25,7 +26,9 @@ class SearchService(private val prisonerSearchApiService: PrisonerSearchApiServi
         releaseDate = it.releaseDate,
         cellLocation = it.cellLocation,
         sentenceType = SentenceTypeMapper.fromPrisonerSearchApiToModel(it.legalStatus),
-        additionalNeeds = null, // TODO - map from the Additional Needs data retrieved for each prisoner
+        inEducation = false,
+        hasAdditionalNeed = false,
+        planStatus = PlanStatus.NO_PLAN,
       )
     }
   }

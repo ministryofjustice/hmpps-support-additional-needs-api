@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SentenceTypeMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Person
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
 import java.time.LocalDate
@@ -237,7 +238,9 @@ class SearchServiceTest {
     releaseDate = releaseDate,
     cellLocation = cellLocation,
     sentenceType = SentenceTypeMapper.fromPrisonerSearchApiToModel(legalStatus),
-    additionalNeeds = null,
+    hasAdditionalNeed = false,
+    inEducation = false,
+    planStatus = PlanStatus.NO_PLAN,
   )
 
   companion object {

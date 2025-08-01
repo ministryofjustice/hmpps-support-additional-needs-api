@@ -11,7 +11,6 @@ fun aValidPerson(
   sentenceType: SentenceType = SentenceType.SENTENCED,
   cellLocation: String? = "A1-1-001",
   releaseDate: LocalDate? = LocalDate.parse("2050-01-01"),
-  additionalNeeds: AdditionalNeedsSummary? = null,
 ): Person = Person(
   forename = forename,
   surname = surname,
@@ -20,5 +19,7 @@ fun aValidPerson(
   sentenceType = sentenceType,
   cellLocation = cellLocation,
   releaseDate = releaseDate,
-  additionalNeeds = additionalNeeds,
+  hasAdditionalNeed = true,
+  inEducation = true,
+  planStatus = PlanStatus.NO_PLAN,
 )
