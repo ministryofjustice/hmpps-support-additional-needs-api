@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
+import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import jakarta.persistence.Column
 import org.hibernate.annotations.Immutable
 import java.time.LocalDate
 
@@ -49,5 +49,5 @@ data class PrisonerOverview(
   val planDeclined: Boolean? = null,
 
   @Column(name = "has_need")
-  val hasNeed: Boolean? = null
+  val hasNeed: Boolean? = null,
 )
