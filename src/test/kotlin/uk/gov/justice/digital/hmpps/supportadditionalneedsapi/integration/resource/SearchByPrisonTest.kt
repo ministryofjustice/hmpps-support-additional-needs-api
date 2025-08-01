@@ -28,6 +28,7 @@ class SearchByPrisonTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetPrisonersInPrisonFromPrisonerSearchApi(PRISON_ID, PRISONERS_IN_PRISON)
+    stubForBankHoliday()
 
     // When
     val response = webTestClient.get()
@@ -73,6 +74,7 @@ class SearchByPrisonTest : IntegrationTestBase() {
         ]
       }
     """.trimIndent()
+    stubForBankHoliday()
     stubGetPrisonersInPrisonFromPrisonerSearchApi(PRISON_ID, apiResponse)
 
     // When

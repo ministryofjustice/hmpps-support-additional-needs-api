@@ -37,6 +37,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.LocalStackContainer.setLocalStackProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.container.PostgresContainer
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.BankHolidaysApiExtension
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.BankHolidaysApiExtension.Companion.bankHolidaysApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.CuriousApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.CuriousApiExtension.Companion.curiousApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.HmppsAuthApiExtension
@@ -56,7 +58,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
-@ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class)
+@ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class, BankHolidaysApiExtension::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient(timeout = "PT15M")
@@ -179,6 +181,8 @@ abstract class IntegrationTestBase {
   protected fun stubGetUserRepeatFail(username: String) = manageUsersApi.setUpManageUsersRepeatFail(username)
 
   protected fun stubGetCurious2LearnerAssessments(prisonId: String, response: String) = curiousApi.stubGetCurious2LearnerAssessments(prisonId, response)
+
+  protected fun stubForBankHoliday() = bankHolidaysApi.stubBankHolidays()
 
   fun clearQueues() {
     // clear all the queues just in case there are any messages hanging around

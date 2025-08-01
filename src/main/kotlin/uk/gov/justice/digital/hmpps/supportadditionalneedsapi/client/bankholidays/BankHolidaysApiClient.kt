@@ -18,9 +18,13 @@ class BankHolidaysApiClient(
 ) {
 
   @Cacheable(BANK_HOLIDAYS)
-  fun getBankHolidays(): BankHolidays = bankHolidaysApiWebClient.get()
-    .uri("/bank-holidays.json")
-    .retrieve()
-    .bodyToMono(BankHolidays::class.java)
-    .block()!!
+  fun getBankHolidays(): BankHolidays = try {
+    bankHolidaysApiWebClient.get()
+      .uri("/bank-holidays.json")
+      .retrieve()
+      .bodyToMono(BankHolidays::class.java)
+      .block()!!
+  } catch (e: Exception) {
+    throw Exception("Error retrieving bank holiday info ${e.cause}", e)
+  }
 }
