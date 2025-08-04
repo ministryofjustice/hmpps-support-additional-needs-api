@@ -17,15 +17,22 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
@@ -88,6 +95,9 @@ abstract class IntegrationTestBase {
     Awaitility.setDefaultPollInterval(500, MILLISECONDS)
     Awaitility.setDefaultTimeout(5, SECONDS)
   }
+
+  @Autowired
+  private lateinit var educationRepository: EducationRepository
 
   @Autowired
   protected lateinit var webTestClient: WebTestClient
@@ -205,11 +215,12 @@ abstract class IntegrationTestBase {
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
+    deadlineDate: LocalDate? = LocalDate.now().minusMonths(1),
   ) {
     val planCreationScheduleEntity =
       PlanCreationScheduleEntity(
         prisonNumber = prisonNumber,
-        deadlineDate = LocalDate.now().minusMonths(1),
+        deadlineDate = deadlineDate,
         status = status,
         exemptionReason = null,
         createdAtPrison = "BXI",
@@ -223,16 +234,42 @@ abstract class IntegrationTestBase {
     prisonNumber: String,
     reference: UUID = UUID.randomUUID(),
     status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
+    deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
   ) {
     val reviewScheduleEntity =
       ReviewScheduleEntity(
         prisonNumber = prisonNumber,
-        deadlineDate = LocalDate.now().minusMonths(1),
+        deadlineDate = deadlineDate,
         status = status,
         exemptionReason = null,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
       )
     reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
+  }
+
+  fun prisonerHasNeed(prisonNumber: String) {
+    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    val condition = ConditionEntity(
+      prisonNumber = prisonNumber,
+      source = Source.SELF_DECLARED,
+      conditionType = adhd,
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+    )
+
+    conditionRepository.save(condition)
+  }
+
+  fun prisonerInEducation(prisonNumber: String) {
+    val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
+    educationRepository.save(educationEntity)
+  }
+  fun anElSPExists(prisonNumber: String) {
+    val elsp = ElspPlanEntity(prisonNumber = prisonNumber, individualSupport = "support", createdAtPrison = "BXI", updatedAtPrison = "BXI")
+
+    elspPlanRepository.save(elsp)
   }
 }

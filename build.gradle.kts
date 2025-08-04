@@ -62,6 +62,7 @@ dependencies {
 
   // Test fixtures dependencies
   testFixturesImplementation("org.assertj:assertj-core")
+  testImplementation(kotlin("test"))
 }
 
 kotlin {
