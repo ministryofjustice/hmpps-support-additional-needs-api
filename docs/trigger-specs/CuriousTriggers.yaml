@@ -29,7 +29,7 @@ paths:
                   type: string
                   enum:
                     - EDUCATION_STARTED
-                    - ALL_EDUCATION_STOPPED
+                    - EDUCATION_STOPPED
                   example: EDUCATION_STARTED
                 detailUrl:
                   type: string
