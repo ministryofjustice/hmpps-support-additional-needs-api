@@ -24,6 +24,7 @@ generic-service:
     SERVICE_BASE_URL: https://support-for-additional-needs-api-dev.hmpps.service.justice.gov.uk
     BANK_HOLIDAYS_API_URL: https://www.gov.uk
     ENABLE_TEST_ENDPOINTS: true
+    PES_CONTRACT_DATE: "2025-08-01"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
