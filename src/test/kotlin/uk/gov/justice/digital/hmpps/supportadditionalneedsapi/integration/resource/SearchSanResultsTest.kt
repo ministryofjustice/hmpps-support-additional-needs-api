@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.Integr
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchByPrisonResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.customPlanStatusOrder
 import java.time.LocalDate
 
 class SearchSanResultsTest : IntegrationTestBase() {
@@ -124,5 +125,10 @@ class SearchSanResultsTest : IntegrationTestBase() {
 
     val prisoner9PlanStatus = body.people.first { it.prisonNumber == PRISONER_9.prisonerNumber }.planStatus
     assertEquals(PlanStatus.NO_PLAN, prisoner9PlanStatus)
+
+    val expectedOrder = body.people.sortedBy { customPlanStatusOrder[it.planStatus] }.map { it.prisonNumber }
+    val actualOrder = body.people.map { it.prisonNumber }
+
+    assertEquals(expectedOrder, actualOrder, "Results are not ordered by custom planStatus order")
   }
 }

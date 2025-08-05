@@ -5,9 +5,6 @@ info.app:
 spring:
   application:
     name: hmpps-support-additional-needs-api
-  codec:
-    max-in-memory-size: 10MB
-
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
@@ -72,6 +69,9 @@ spring:
     password: ${spring.datasource.password}
     validateMigrationNaming: true
     locations: classpath:/db/migration/common,classpath:/db/migration/prod,classpath:/db/postgres/common,classpath:/db/postgres/prod
+  http:
+    codecs:
+      max-in-memory-size: 10MB
 
 server:
   port: 8080

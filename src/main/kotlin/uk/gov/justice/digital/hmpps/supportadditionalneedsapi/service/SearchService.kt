@@ -125,13 +125,26 @@ private fun List<Person>.filterByCriteria(searchCriteria: SearchCriteria): List<
     )
 }
 
+val customPlanStatusOrder = listOf(
+  PlanStatus.NEEDS_PLAN,
+  PlanStatus.PLAN_DUE,
+  PlanStatus.REVIEW_DUE,
+  PlanStatus.ACTIVE_PLAN,
+  PlanStatus.PLAN_OVERDUE,
+  PlanStatus.REVIEW_OVERDUE,
+  PlanStatus.INACTIVE_PLAN,
+  PlanStatus.PLAN_DECLINED,
+  PlanStatus.NO_PLAN,
+).withIndex().associate { it.value to it.index }
+
 private fun List<Person>.sortBy(searchCriteria: SearchCriteria): List<Person> {
   val comparator: Comparator<Person> = when (searchCriteria.sortBy) {
-    SearchSortField.PRISONER_NAME -> compareBy(nullsLast()) { it.surname }
-    SearchSortField.PRISON_NUMBER -> compareBy(nullsLast()) { it.prisonNumber }
+    SearchSortField.PRISONER_NAME -> compareBy { it.surname }
+    SearchSortField.PRISON_NUMBER -> compareBy { it.prisonNumber }
     SearchSortField.RELEASE_DATE -> compareBy(nullsLast()) { it.releaseDate }
     SearchSortField.CELL_LOCATION -> compareBy(nullsLast()) { it.cellLocation }
     SearchSortField.DEADLINE_DATE -> compareBy(nullsLast()) { it.deadlineDate }
+    SearchSortField.PLAN_STATUS -> compareBy { person -> customPlanStatusOrder[person.planStatus] }
   }
 
   return when (searchCriteria.sortDirection) {
