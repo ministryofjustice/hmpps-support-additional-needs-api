@@ -32,7 +32,7 @@ class StrengthService(
       .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
     val alnScreener = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
+      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
 
     val alnStrengths = alnScreener?.strengths
       .orEmpty()
