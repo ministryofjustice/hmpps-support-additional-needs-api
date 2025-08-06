@@ -672,6 +672,13 @@ components:
         - DEADLINE_DATE
         - PLAN_STATUS
 
+    ELSPAnswers:
+      type: string
+      enum:
+        - YES
+        - NO
+        - DO_NOT_KNOW
+
     SearchSortDirection:
       type: string
       enum:
@@ -988,9 +995,13 @@ components:
           $ref: '#/components/schemas/PrisonId'
           description: The prisonId that the person is a resident at at the time of creating their plan.
         hasCurrentEhcp:
+          deprecated: true
           type: boolean
           description: Whether there is a current Education Health Care Plan in place for the person.
           example: true
+        hasCurrentEhcpAnswer:
+          $ref: '#/components/schemas/ELSPAnswers'
+          description: Whether there is a current Education Health Care Plan in place for the person.
         reviewDate:
           type: string
           format: date
@@ -1019,6 +1030,9 @@ components:
           description: Optional details of any specific teaching skills or knowledge that are required.
           example: British Sign Language.
           maxLength: 4096
+        examAccessArrangementsAnswer:
+          $ref: '#/components/schemas/ELSPAnswers'
+          description: The answer to the exam access arrangements question - if yes then there should also be examAccessArrangements text.
         examAccessArrangements:
           type: string
           description: Optional details of any exam access arrangements that need to be made.
@@ -1039,6 +1053,11 @@ components:
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
           maxLength: 4096
+        individualSupportHours:
+          type: integer
+          minimum: 0
+          description: Recommended number of additional support hours per week to meet the individual's educational needs.
+          example: 4
       required:
         - prisonId
         - hasCurrentEhcp
