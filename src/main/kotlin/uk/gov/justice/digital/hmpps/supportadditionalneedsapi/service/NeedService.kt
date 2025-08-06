@@ -61,9 +61,9 @@ class NeedService(
    * has a need. Only consider the most recent ALN screener.
    * If there is no ALN screener return false
    */
-  fun hasALNScreenerNeed(prisonNumber: String): Boolean = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed ?: false
+  fun hasALNScreenerNeed(prisonNumber: String): Boolean? = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed
 
-  fun hasLDDNeed(prisonNumber: String): Boolean = lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed ?: false
+  fun hasLDDNeed(prisonNumber: String): Boolean? = lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed
 
   /**
    * Was a challenge or condition created in the SAN database and is it active - these can either be
@@ -77,9 +77,16 @@ class NeedService(
       conditions.any { it.active }
   }
 
-  fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber, includingALN = false) ||
-    hasALNScreenerNeed(prisonNumber) ||
-    hasLDDNeed(prisonNumber)
+  /**
+   * Has need is only true if the person either has a non ALN SAN need OR
+   * has completed an ALN screener and was identified as having a need
+   * or has not completed an ALN Screener and the LDD Need is true.
+   */
+  fun hasNeed(prisonNumber: String): Boolean {
+    val alnNeed = hasALNScreenerNeed(prisonNumber)
+    return hasActiveSANNeed(prisonNumber, includingALN = false) ||
+      (alnNeed ?: hasLDDNeed(prisonNumber)) == true
+  }
 
   fun getNeedSources(prisonNumber: String): Set<NeedSource> {
     log.debug("Getting need sources for $prisonNumber")
@@ -87,8 +94,14 @@ class NeedService(
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
     return buildSet {
-      if (hasALNScreenerNeed(prisonNumber)) add(NeedSource.ALN_SCREENER)
-      if (hasLDDNeed(prisonNumber)) add(NeedSource.LDD_SCREENER)
+      val alnNeed = hasALNScreenerNeed(prisonNumber)
+      if (alnNeed == true) {
+        add(NeedSource.ALN_SCREENER)
+      } else {
+        if (hasLDDNeed(prisonNumber) == true) {
+          add(NeedSource.LDD_SCREENER)
+        }
+      }
 
       if (challenges.any { it.active && !it.fromALNScreener }) {
         add(NeedSource.CHALLENGE_NOT_ALN_SCREENER)

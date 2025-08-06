@@ -17,10 +17,10 @@ data class PrisonerOverviewEntity(
   val prisonNumber: String,
 
   @Column(name = "has_aln_need")
-  val hasAlnNeed: Boolean = false,
+  val hasAlnNeed: Boolean?,
 
   @Column(name = "has_ldd_need")
-  val hasLddNeed: Boolean = false,
+  val hasLddNeed: Boolean?,
 
   @Column(name = "in_education")
   val inEducation: Boolean = false,

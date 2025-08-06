@@ -74,8 +74,6 @@ class ALNScreenerService(
       screenerDate = latestAssessment.assessmentDate!!,
     )
 
-    // TODO may also use this to process LDD need since the same endpoint gives both sets of information.
-
     // TODO Now update the plan creation schedule or the plan review schedule
     // if there is a schedule and now there is no need - EXEMPT due to NO_NEED
     // if there is no schedule AND the person is in EDUCATION create a new plan creation schedule OR

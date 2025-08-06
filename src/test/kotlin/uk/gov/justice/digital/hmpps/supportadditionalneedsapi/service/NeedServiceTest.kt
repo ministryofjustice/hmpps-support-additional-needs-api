@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
@@ -74,9 +76,16 @@ class NeedServiceTest {
   fun `hasALNScreenerNeed returns true if latest ALN assessment has need`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true, curiousReference = curiousRef, screeningDate = LocalDate.now()))
+      .thenReturn(
+        AlnAssessmentEntity(
+          prisonNumber = prisonNumber,
+          hasNeed = true,
+          curiousReference = curiousRef,
+          screeningDate = LocalDate.now(),
+        ),
+      )
 
-    assertTrue(needService.hasALNScreenerNeed(prisonNumber))
+    assertTrue(needService.hasALNScreenerNeed(prisonNumber) == true)
   }
 
   @Test
@@ -85,7 +94,7 @@ class NeedServiceTest {
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertFalse(needService.hasALNScreenerNeed(prisonNumber))
+    assertNull(needService.hasALNScreenerNeed(prisonNumber))
   }
 
   @Test
@@ -94,7 +103,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
 
-    assertTrue(needService.hasLDDNeed(prisonNumber))
+    assertTrue(needService.hasLDDNeed(prisonNumber) == true)
   }
 
   @Test
@@ -103,7 +112,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertFalse(needService.hasLDDNeed(prisonNumber))
+    assertNull(needService.hasLDDNeed(prisonNumber))
   }
 
   @Test
@@ -171,7 +180,161 @@ class NeedServiceTest {
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
-  private fun getChallengeEntity(prisonNumber: String, active: Boolean = true, alnScreener: Boolean = true): ChallengeEntity = ChallengeEntity(
+  @Test
+  fun `hasNeed returns true if ALN assessment has need and ignores LDD`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns true
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(
+        AlnAssessmentEntity(
+          prisonNumber = prisonNumber,
+          hasNeed = true,
+          curiousReference = curiousRef,
+          screeningDate = LocalDate.now(),
+        ),
+      )
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasNeed returns false if ALN assessment exists but has no need and ignores LDD`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns true
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(
+        AlnAssessmentEntity(
+          prisonNumber = prisonNumber,
+          hasNeed = false,
+          curiousReference = curiousRef,
+          screeningDate = LocalDate.now(),
+        ),
+      )
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertFalse(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasNeed returns true if ALN assessment is null has has LDD with need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns null
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+
+    // LDD returns true,
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `getNeedSources returns ALN_SCREENER when ALN has need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(AlnAssessmentEntity(prisonNumber, true, LocalDate.now(), curiousRef))
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.contains(NeedSource.ALN_SCREENER))
+    assertFalse(result.contains(NeedSource.LDD_SCREENER))
+  }
+
+  @Test
+  fun `getNeedSources returns LDD_SCREENER when ALN is null and LDD has need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber, true))
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.contains(NeedSource.LDD_SCREENER))
+    assertFalse(result.contains(NeedSource.ALN_SCREENER))
+  }
+
+  @Test
+  fun `getNeedSources returns CHALLENGE_NOT_ALN_SCREENER when active non-screener challenge exists`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
+      .thenReturn(listOf(getChallengeEntity(prisonNumber, active = true, alnScreener = false)))
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.contains(NeedSource.CHALLENGE_NOT_ALN_SCREENER))
+  }
+
+  @Test
+  fun `getNeedSources returns CONDITION_CONFIRMED_DIAGNOSIS when active confirmed diagnosis condition exists`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
+      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.CONFIRMED_DIAGNOSIS)))
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.contains(NeedSource.CONDITION_CONFIRMED_DIAGNOSIS))
+  }
+
+  @Test
+  fun `getNeedSources returns CONDITION_SELF_DECLARED when active self-declared condition exists`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
+      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.SELF_DECLARED)))
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.contains(NeedSource.CONDITION_SELF_DECLARED))
+  }
+
+  @Test
+  fun `getNeedSources returns empty set when no sources are present`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    val result = needService.getNeedSources(prisonNumber)
+    assertTrue(result.isEmpty())
+  }
+
+  private fun getChallengeEntity(
+    prisonNumber: String,
+    active: Boolean = true,
+    alnScreener: Boolean = true,
+  ): ChallengeEntity = ChallengeEntity(
     prisonNumber = prisonNumber,
     challengeType = getChallengeType(),
     createdAtPrison = "BXI",
