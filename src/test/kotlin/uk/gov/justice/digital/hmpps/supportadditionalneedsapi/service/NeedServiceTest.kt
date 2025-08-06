@@ -172,6 +172,55 @@ class NeedServiceTest {
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
+  @Test
+  fun `hasNeed returns true if ALN assessment has need and ignores LDD`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns true → should short-circuit and ignore LDD
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true, curiousReference = curiousRef, screeningDate = LocalDate.now()))
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasNeed returns false if ALN assessment exists but has no need and ignores LDD`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns true
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = false, curiousReference = curiousRef, screeningDate = LocalDate.now()))
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertFalse(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasNeed returns true if ALN assessment is null has has LDD with need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    // ALN returns true → should short-circuit and ignore LDD
+    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+
+    // LDD returns false, but it should not be checked or affect outcome
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
+
+    // No active SAN needs
+    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
   private fun getChallengeEntity(prisonNumber: String, active: Boolean = true, alnScreener: Boolean = true): ChallengeEntity = ChallengeEntity(
     prisonNumber = prisonNumber,
     challengeType = getChallengeType(),
