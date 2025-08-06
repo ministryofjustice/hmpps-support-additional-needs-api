@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -76,7 +77,7 @@ class NeedServiceTest {
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(AlnAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true, curiousReference = curiousRef, screeningDate = LocalDate.now()))
 
-    assertTrue(needService.hasALNScreenerNeed(prisonNumber))
+    assertTrue(needService.hasALNScreenerNeed(prisonNumber) == true)
   }
 
   @Test
@@ -85,7 +86,7 @@ class NeedServiceTest {
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertFalse(needService.hasALNScreenerNeed(prisonNumber))
+    assertNull(needService.hasALNScreenerNeed(prisonNumber))
   }
 
   @Test
@@ -94,7 +95,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
 
-    assertTrue(needService.hasLDDNeed(prisonNumber))
+    assertTrue(needService.hasLDDNeed(prisonNumber) == true)
   }
 
   @Test
@@ -103,7 +104,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertFalse(needService.hasLDDNeed(prisonNumber))
+    assertNull(needService.hasLDDNeed(prisonNumber))
   }
 
   @Test
