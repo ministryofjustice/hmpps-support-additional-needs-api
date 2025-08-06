@@ -5,17 +5,12 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.annotation.CreatedBy
-import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
-import java.time.LocalDate
 import java.util.*
 
 @Entity
@@ -45,8 +40,7 @@ data class TimelineEntity(
   @Column(updatable = false)
   var createdAt: Instant? = null,
 
-  )
-
+)
 
 enum class EventType {
   CONDITION_ADDED,
@@ -57,5 +51,5 @@ enum class EventType {
   CURIOUS_EDUCATION_TRIGGER,
   ELSP_CREATED,
   ELSP_UPDATED,
-  ALN_ASSESSMENT_ADDED
+  ALN_ASSESSMENT_ADDED,
 }
