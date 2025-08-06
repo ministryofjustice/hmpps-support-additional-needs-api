@@ -32,7 +32,7 @@ class ChallengeService(
       .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
     val alnScreener = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByScreeningDateDesc(prisonNumber)
+      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
 
     val alnChallenges = alnScreener
       ?.challenges
