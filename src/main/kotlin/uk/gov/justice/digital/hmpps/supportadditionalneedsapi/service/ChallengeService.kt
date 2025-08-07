@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateChallengeRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
 
 @Service
@@ -45,6 +47,11 @@ class ChallengeService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = EventType.CHALLENGE_ADDED,
+    additionalInfoPrefix = "ChallengeType:",
+    additionalInfoField = "challengeTypeCode",
+  )
   fun createChallenges(prisonNumber: String, request: CreateChallengesRequest): ChallengeListResponse {
     val challengeTypeEntities = resolveChallengeTypes(request)
 
@@ -72,6 +79,11 @@ class ChallengeService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = EventType.ALN_CHALLENGE_ADDED,
+    additionalInfoPrefix = "ChallengeType:",
+    additionalInfoField = "challengeTypeCode",
+  )
   fun createAlnChallenges(
     prisonNumber: String,
     alnChallenges: List<ALNChallenge>,

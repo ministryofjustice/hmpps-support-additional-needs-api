@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Str
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
 
 @Service
@@ -44,6 +46,11 @@ class StrengthService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = EventType.STRENGTH_ADDED,
+    additionalInfoPrefix = "StrengthType:",
+    additionalInfoField = "strengthTypeCode",
+  )
   fun createStrengths(prisonNumber: String, request: CreateStrengthsRequest): StrengthListResponse {
     val strengthTypeEntities = resolveStrengthTypes(request)
 
@@ -71,6 +78,11 @@ class StrengthService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = EventType.ALN_STRENGTH_ADDED,
+    additionalInfoPrefix = "StrengthType:",
+    additionalInfoField = "strengthTypeCode",
+  )
   fun createAlnStrengths(prisonNumber: String, alnStrengths: List<ALNStrength>, prisonId: String, alnScreenerId: UUID) {
     if (alnStrengths.isNotEmpty()) {
       val strengthTypeEntities = resolveStrengthTypes(alnStrengths)

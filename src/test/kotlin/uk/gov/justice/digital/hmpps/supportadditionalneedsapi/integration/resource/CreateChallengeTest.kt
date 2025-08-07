@@ -55,6 +55,11 @@ class CreateChallengeTest : IntegrationTestBase() {
     assertThat(processingSpeedChallenge.fromALNScreener).isFalse()
     assertThat(processingSpeedChallenge.createdAtPrison).isEqualTo("BXI")
     assertThat(processingSpeedChallenge.reference).isNotNull()
+
+    // check the timeline entries:
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].additionalInfo).isEqualTo("ChallengeType:MEMORY")
+    assertThat(timelineEntries[1].additionalInfo).isEqualTo("ChallengeType:SPEED_OF_CALCULATION")
   }
 
   private fun createChallengesList(prisonNumber: String): CreateChallengesRequest = CreateChallengesRequest(
