@@ -52,7 +52,7 @@ class TimelineAspect(
 
   private fun resolvePrisonCode(argMap: Map<String, Any?>, fallbackItem: Any): String = argMap["prisonId"] as? String
     ?: extractField(fallbackItem, "prisonId")
-    ?: "UNK"
+    ?: "N/A"
 
   private fun resolveAdditionalInfo(item: Any, timelineEvent: TimelineEvent): String = extractField(item, timelineEvent.additionalInfoField)
     ?.let { "${timelineEvent.additionalInfoPrefix}$it" }
