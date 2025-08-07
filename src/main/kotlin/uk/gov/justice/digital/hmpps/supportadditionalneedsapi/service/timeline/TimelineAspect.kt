@@ -20,29 +20,22 @@ class TimelineAspect(
   @AfterReturning("@annotation(timelineEvent)", returning = "result")
   fun recordTimelineEvents(joinPoint: JoinPoint, timelineEvent: TimelineEvent, result: Any?) {
     val methodSignature = joinPoint.signature as MethodSignature
-    val method = methodSignature.method
-    val paramNames = method.parameters.map { it.name }
+    val paramNames = methodSignature.method.parameters.map { it.name }
     val args = joinPoint.args
     val argMap = paramNames.zip(args).toMap()
 
-    val prisonNumber = argMap[timelineEvent.prisonNumberParam] as? String
+    val prisonNumber = resolvePrisonNumber(argMap, timelineEvent)
       ?: throw IllegalArgumentException("Missing prisonNumber")
 
-    val itemList = findItemList(argMap)
-      ?: throw IllegalArgumentException("Could not extract list of items")
+    val itemList = resolveItemList(argMap)
+      ?: throw IllegalArgumentException("Could not extract timeline-relevant item(s)")
 
     if (itemList.isEmpty()) return
 
-    // Try to extract prisonId from the method args (if present)
-    val prisonCode = argMap["prisonId"] as? String
-      ?: extractField(itemList.first(), "prisonId")
-      ?: "UNK"
+    val prisonCode = resolvePrisonCode(argMap, itemList.first())
 
-    val timelineEntries = itemList.map { item ->
-      val additionalInfo = extractField(item, timelineEvent.additionalInfoField)
-        ?.let { "${timelineEvent.additionalInfoPrefix}$it" }
-        ?: "UNKNOWN_TYPE"
-
+    val entries = itemList.map { item ->
+      val additionalInfo = resolveAdditionalInfo(item, timelineEvent)
       TimelineEntity(
         id = UUID.randomUUID(),
         prisonNumber = prisonNumber,
@@ -52,29 +45,46 @@ class TimelineAspect(
       )
     }
 
-    timelineRepository.saveAll(timelineEntries)
+    timelineRepository.saveAll(entries)
   }
 
-  private fun findItemList(argMap: Map<String, Any?>): List<Any>? {
-    // Look for a raw list argument directly
+  private fun resolvePrisonNumber(argMap: Map<String, Any?>, timelineEvent: TimelineEvent): String? = argMap[timelineEvent.prisonNumberParam] as? String
+
+  private fun resolvePrisonCode(argMap: Map<String, Any?>, fallbackItem: Any): String = argMap["prisonId"] as? String
+    ?: extractField(fallbackItem, "prisonId")
+    ?: "UNK"
+
+  private fun resolveAdditionalInfo(item: Any, timelineEvent: TimelineEvent): String = extractField(item, timelineEvent.additionalInfoField)
+    ?.let { "${timelineEvent.additionalInfoPrefix}$it" }
+    ?: "UNKNOWN_TYPE"
+
+  private fun resolveItemList(argMap: Map<String, Any?>): List<Any>? {
+    // Case 1: a raw list (e.g. List<ChallengeRequest>)
     val rawList = argMap.values.firstOrNull { it is List<*> } as? List<*>
     if (rawList != null && rawList.all { it != null }) {
       return rawList.filterNotNull()
     }
 
-    // Otherwise, try to extract from a property on a request object
-    val requestObject = argMap.values.firstOrNull { it != null && it !is String }
-    return requestObject?.let { extractRequestItems(it) }
+    // Case 2: wrapped request object with (e.g. CreateChallengesRequest)
+    val wrapper = argMap.values.firstOrNull { it != null && it !is String }
+    val listFromWrapper = wrapper?.let { extractListProperty(it) }
+    if (!listFromWrapper.isNullOrEmpty()) return listFromWrapper
+
+    // Case 3: a single object (e.g. EducationALNAssessmentUpdateAdditionalInformation)
+    val single = argMap.values.firstOrNull { it != null && it !is String }
+    if (single != null) return listOf(single)
+
+    return null
   }
 
-  private fun extractRequestItems(request: Any): List<Any>? {
-    val property = request::class.memberProperties.firstOrNull {
+  private fun extractListProperty(obj: Any): List<Any>? {
+    val listProperty = obj::class.memberProperties.firstOrNull {
       it.returnType.toString().contains("List")
     } ?: return null
 
-    property.isAccessible = true
+    listProperty.isAccessible = true
     @Suppress("UNCHECKED_CAST")
-    return property.getter.call(request) as? List<Any>
+    return listProperty.getter.call(obj) as? List<Any>
   }
 
   private fun extractField(instance: Any, fieldName: String): String? = try {
@@ -83,7 +93,7 @@ class TimelineAspect(
     }
     property?.let {
       it.isAccessible = true
-      it.getter.call(instance) as? String
+      it.getter.call(instance)?.toString()
     }
   } catch (e: Exception) {
     null
