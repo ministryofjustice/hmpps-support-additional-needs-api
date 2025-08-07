@@ -59,6 +59,12 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(mentalHealthCondition.source).isEqualTo(EntitySource.CONFIRMED_DIAGNOSIS)
     assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
     assertThat(mentalHealthCondition.conditionName).isEqualTo("Social anxiety")
+
+    // check the timeline entries:
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].additionalInfo).isEqualTo("ConditionType:ADHD")
+    assertThat(timelineEntries[1].additionalInfo).isEqualTo("ConditionType:DYSLEXIA")
+    assertThat(timelineEntries[2].additionalInfo).isEqualTo("ConditionType:MENTAL_HEALTH")
   }
 
   private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(

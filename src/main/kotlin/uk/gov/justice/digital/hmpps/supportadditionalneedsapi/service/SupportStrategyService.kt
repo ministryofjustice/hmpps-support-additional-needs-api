@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
@@ -15,6 +16,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Sup
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateSupportStrategyRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
 
 @Service
@@ -30,6 +32,11 @@ class SupportStrategyService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = EventType.SUPPORT_STRATEGY_ADDED,
+    additionalInfoPrefix = "SupportStrategyType:",
+    additionalInfoField = "strategyTypeCode",
+  )
   fun createSupportStrategies(prisonNumber: String, request: CreateSupportStrategiesRequest): SupportStrategyListResponse {
     val typeEntities = resolveSupportStrategyTypes(request)
 

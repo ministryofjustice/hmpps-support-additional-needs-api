@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
@@ -69,6 +70,16 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(spacialAwarenessChallenge.strengthType.key.code).isEqualTo("SPATIAL_AWARENESS")
     assertThat(spacialAwarenessChallenge.fromALNScreener).isTrue()
     assertThat(spacialAwarenessChallenge.createdAtPrison).isEqualTo("BXI")
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].event).isEqualTo(EventType.ALN_CHALLENGE_ADDED)
+    assertThat(timelineEntries[0].additionalInfo).isEqualTo("ChallengeType:MEMORY")
+    assertThat(timelineEntries[1].event).isEqualTo(EventType.ALN_CHALLENGE_ADDED)
+    assertThat(timelineEntries[1].additionalInfo).isEqualTo("ChallengeType:SPEED_OF_CALCULATION")
+    assertThat(timelineEntries[2].event).isEqualTo(EventType.ALN_STRENGTH_ADDED)
+    assertThat(timelineEntries[2].additionalInfo).isEqualTo("StrengthType:PEOPLE_PERSON")
+    assertThat(timelineEntries[3].event).isEqualTo(EventType.ALN_STRENGTH_ADDED)
+    assertThat(timelineEntries[3].additionalInfo).isEqualTo("StrengthType:SPATIAL_AWARENESS")
   }
 
   @Test
