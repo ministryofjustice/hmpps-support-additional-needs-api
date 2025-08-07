@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.9.3'
+  version: '0.10.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1055,7 +1055,6 @@ components:
           maxLength: 4096
         individualSupportHours:
           type: integer
-          minimum: 0
           description: Recommended number of additional support hours per week to meet the individual's educational needs.
           example: 4
       required:
@@ -1710,9 +1709,13 @@ components:
       description: A person's Education Support Plan
       properties:
         hasCurrentEhcp:
+          deprecated: true
           type: boolean
           description: Whether there is a current Education Health Care Plan in place for the person.
           example: true
+        hasCurrentEhcpAnswer:
+          $ref: '#/components/schemas/ELSPAnswers'
+          description: Whether there is a current Education Health Care Plan in place for the person.
         planCreatedBy:
           description: Optional details of who created the Education Support Plan. If not present the plan was created by the createdBy/createdByDisplayName fields.
           $ref: '#/components/schemas/PlanContributor'
@@ -1729,6 +1732,9 @@ components:
           type: string
           description: Optional details of any specific teaching skills or knowledge that are required.
           example: British Sign Language.
+        examAccessArrangementsAnswer:
+          $ref: '#/components/schemas/ELSPAnswers'
+          description: The answer to the exam access arrangements question - if yes then there should also be examAccessArrangements text.
         examAccessArrangements:
           type: string
           description: Optional details of any exam access arrangements that need to be made.
@@ -1745,6 +1751,10 @@ components:
           type: string
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
+        individualSupportHours:
+          type: integer
+          description: Recommended number of additional support hours per week to meet the individual's educational needs.
+          example: 4
       required:
         - hasCurrentEhcp
         - individualSupport
