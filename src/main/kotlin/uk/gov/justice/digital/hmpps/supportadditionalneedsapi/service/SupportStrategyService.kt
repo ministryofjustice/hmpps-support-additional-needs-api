@@ -44,8 +44,8 @@ class SupportStrategyService(
       supportStrategyMapper.toEntity(prisonNumber, supportStrategyType, requestItem)
     }
 
-    val savedsupportStrategies = supportStrategyRepository.saveAllAndFlush(supportStrategyEntities)
-    return SupportStrategyListResponse(savedsupportStrategies.map { supportStrategyMapper.toModel(it) })
+    val savedSupportStrategies = supportStrategyRepository.saveAllAndFlush(supportStrategyEntities)
+    return SupportStrategyListResponse(savedSupportStrategies.map { supportStrategyMapper.toModel(it) })
   }
 
   private fun resolveSupportStrategyTypes(request: CreateSupportStrategiesRequest): List<Pair<ReferenceDataEntity, SupportStrategyRequest>> = request.supportStrategies.map { supportStrategiesRequest ->
