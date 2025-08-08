@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
@@ -45,7 +46,7 @@ class EducationService(
 
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.CURIOUS_EDUCATION_TRIGGER,
+    eventType = CURIOUS_EDUCATION_TRIGGER,
     additionalInfoPrefix = "curiousReference:",
     additionalInfoField = "curiousExternalReference",
   )

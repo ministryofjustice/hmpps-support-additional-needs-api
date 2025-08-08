@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Doma
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
@@ -48,7 +49,7 @@ class ChallengeService(
 
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.CHALLENGE_ADDED,
+    eventType = CHALLENGE_ADDED,
     additionalInfoPrefix = "ChallengeType:",
     additionalInfoField = "challengeTypeCode",
   )
@@ -80,7 +81,7 @@ class ChallengeService(
 
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.ALN_CHALLENGE_ADDED,
+    eventType = ALN_CHALLENGE_ADDED,
     additionalInfoPrefix = "ChallengeType:",
     additionalInfoField = "challengeTypeCode",
   )

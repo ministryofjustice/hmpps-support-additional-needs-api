@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Doma
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CONDITION_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -33,7 +34,7 @@ class ConditionService(
 
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.CONDITION_ADDED,
+    eventType = CONDITION_ADDED,
     additionalInfoPrefix = "ConditionType:",
     additionalInfoField = "conditionTypeCode",
   )

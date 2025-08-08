@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
@@ -25,7 +26,7 @@ class ALNScreenerService(
 ) {
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.ALN_SCREENER_ADDED,
+    eventType = ALN_SCREENER_ADDED,
     additionalInfoPrefix = "screenerDate:",
     additionalInfoField = "screenerDate",
   )
@@ -49,7 +50,7 @@ class ALNScreenerService(
 
   @Transactional
   @TimelineEvent(
-    eventType = TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER,
+    eventType = CURIOUS_ASSESSMENT_TRIGGER,
     additionalInfoPrefix = "curiousReference:",
     additionalInfoField = "curiousExternalReference",
   )
