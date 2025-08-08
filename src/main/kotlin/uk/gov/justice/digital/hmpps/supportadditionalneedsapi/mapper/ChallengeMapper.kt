@@ -33,7 +33,7 @@ class ChallengeMapper(
       symptoms = symptoms,
       howIdentified = toModel(howIdentified),
       howIdentifiedOther = howIdentifiedOther,
-      alnScreenerDate = screenerDate,
+      alnScreenerDate = if (fromALNScreener) screenerDate else null,
       active = active,
     )
   }
