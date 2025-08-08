@@ -8,9 +8,11 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNScreenerMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 
 private val log = KotlinLogging.logger {}
@@ -23,6 +25,7 @@ class ALNScreenerService(
   private val alnScreenerRepository: AlnScreenerRepository,
   private val curiousApiClient: CuriousApiClient,
   private val needService: NeedService,
+  private val alnScreenerMapper: ALNScreenerMapper,
 ) {
   @Transactional
   @TimelineEvent(
@@ -46,6 +49,12 @@ class ALNScreenerService(
       strengthService.createAlnStrengths(prisonNumber, strengths, prisonId, alnScreener.id)
       alnScreenerRepository.saveAndFlush(alnScreener)
     }
+  }
+
+  fun getScreeners(prisonNumber: String): ALNScreeners {
+    val screeners = alnScreenerRepository.findAllByPrisonNumber(prisonNumber)
+      .sortedByDescending { it.screeningDate }
+    return ALNScreeners(screeners.map { alnScreenerMapper.toModel(it) })
   }
 
   @Transactional

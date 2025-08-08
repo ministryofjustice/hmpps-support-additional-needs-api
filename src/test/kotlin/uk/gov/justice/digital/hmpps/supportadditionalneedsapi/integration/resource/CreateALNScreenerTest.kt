@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.Integr
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
 import java.time.LocalDate
 
@@ -114,6 +115,51 @@ class CreateALNScreenerTest : IntegrationTestBase() {
 
     val savedStrengths = alnScreenerEntity.strengths
     assertThat(savedStrengths.size).isEqualTo(0)
+  }
+
+  @Test
+  fun `Get all ALN screeners for a prisoner`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val challengesList = createChallengesList()
+    val strengthsList = createStrengthsList()
+    val screenerDate = LocalDate.parse("2020-01-01")
+    val alnScreener = ALNScreenerRequest(
+      prisonId = "BXI",
+      strengths = strengthsList,
+      challenges = challengesList,
+      screenerDate = screenerDate,
+    )
+
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(alnScreener)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody(ALNScreeners::class.java)
+      .returnResult()
+      .responseBody!!
+
+    // Then
+    val screener = response.screeners.first()
+    assertThat(screener.screenerDate).isEqualTo(screenerDate)
+    assertThat(screener.createdAtPrison).isEqualTo("BXI")
+    assertThat(screener.challenges.map { it.challengeType.code }).containsExactlyInAnyOrder("MEMORY", "SPEED_OF_CALCULATION")
+    assertThat(screener.strengths.map { it.strengthType.code }).containsExactlyInAnyOrder("PEOPLE_PERSON", "SPATIAL_AWARENESS")
+    assertThat(screener.createdBy).isEqualTo("testuser")
+    assertThat(screener.createdByDisplayName).isEqualTo("Test User") // This depends on what `stubGetDisplayName` returns
   }
 
   private fun createChallengesList(): List<ALNChallenge> = listOf(
