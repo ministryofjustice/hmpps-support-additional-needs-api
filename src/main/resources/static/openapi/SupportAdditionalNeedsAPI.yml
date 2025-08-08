@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.9.3'
+  version: '0.10.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -306,6 +306,26 @@ paths:
       operationId: post-aln-screener
       requestBody:
         $ref: '#/components/requestBodies/CreateALNScreenerRequest'
+    get:
+      summary: Retrieve the ALN screener information for a person.
+      description: |
+        Endpoint to retrieve the Additional Learning Needs (ALN) screener information 
+        for a person in custody, based on their prison number. Returns the date the 
+        screener was completed along with any associated challenge and strength codes.
+        Note that a person may have more than one screener. 
+        
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - ALN Screener
+      responses:
+        '200':
+          $ref: '#/components/responses/ALNScreenersResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+      operationId: get-aln-screener
 
   '/profile/{prisonNumber}/strengths/{strengthReference}':
     parameters:
@@ -1075,6 +1095,19 @@ components:
       required:
         - referenceDataList
 
+    ALNScreeners:
+      title: ALNScreeners
+      description: A list of ALN screeners for a given person.
+      type: object
+      properties:
+        screeners:
+          type: array
+          description: A List containing zero or more ALNScreener.
+          items:
+            $ref: '#/components/schemas/ALNScreenerResponse'
+      required:
+        - screeners
+
     ReferenceData:
       type: object
       description: A reference item belonging to a particular domain
@@ -1107,6 +1140,40 @@ components:
           description: whether or not this ref data is active
       required:
         - code
+
+    ALNScreenerResponse:
+      title: ALNScreenerResponse
+      type: object
+      description: Details about the ALN screener
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this ALN screener
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        screenerDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing the date the screener was carried out.
+          example: '2023-11-19'
+        challenges:
+          type: array
+          description: A List containing zero or more challenges.
+          items:
+            $ref: '#/components/schemas/ChallengeResponse'
+        strengths:
+          type: array
+          description: A List containing zero or more strengths.
+          items:
+            $ref: '#/components/schemas/StrengthResponse'
+      required:
+        - reference
+        - screenerDate
+        - challenges
+        - strengths
 
     ReviewScheduleResponse:
       title: ReviewScheduleResponse
@@ -1914,7 +1981,7 @@ components:
             $ref: '#/components/schemas/ChallengeListResponse'
 
     StrengthList:
-      description: Response body containing the a list of strenghts.
+      description: Response body containing the a list of strengths.
       headers:
         Access-Control-Allow-Origin:
           schema:
@@ -2080,6 +2147,22 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/EducationSupportPlanResponse'
+    ALNScreenersResponse:
+      description: Response body ALN screener results.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ALNScreeners'
 
 
   #
