@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Doma
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_STRENGTH_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.STRENGTH_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository

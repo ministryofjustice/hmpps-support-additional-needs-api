@@ -6,8 +6,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_CHALLENGE_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CHALLENGE_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
