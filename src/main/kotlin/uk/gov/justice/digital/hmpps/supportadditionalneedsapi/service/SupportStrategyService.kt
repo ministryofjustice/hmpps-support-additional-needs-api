@@ -3,9 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.SUPPORT_STRATEGY_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.SupportStrategyRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -33,7 +33,7 @@ class SupportStrategyService(
 
   @Transactional
   @TimelineEvent(
-    eventType = EventType.SUPPORT_STRATEGY_ADDED,
+    eventType = SUPPORT_STRATEGY_ADDED,
     additionalInfoPrefix = "SupportStrategyType:",
     additionalInfoField = "strategyTypeCode",
   )
@@ -44,8 +44,8 @@ class SupportStrategyService(
       supportStrategyMapper.toEntity(prisonNumber, supportStrategyType, requestItem)
     }
 
-    val savedsupportStrategies = supportStrategyRepository.saveAllAndFlush(supportStrategyEntities)
-    return SupportStrategyListResponse(savedsupportStrategies.map { supportStrategyMapper.toModel(it) })
+    val savedSupportStrategies = supportStrategyRepository.saveAllAndFlush(supportStrategyEntities)
+    return SupportStrategyListResponse(savedSupportStrategies.map { supportStrategyMapper.toModel(it) })
   }
 
   private fun resolveSupportStrategyTypes(request: CreateSupportStrategiesRequest): List<Pair<ReferenceDataEntity, SupportStrategyRequest>> = request.supportStrategies.map { supportStrategiesRequest ->

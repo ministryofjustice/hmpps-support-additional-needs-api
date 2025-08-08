@@ -5,10 +5,13 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 
 private val log = KotlinLogging.logger {}
 private const val YES = "YES"
@@ -22,6 +25,11 @@ class ALNScreenerService(
   private val needService: NeedService,
 ) {
   @Transactional
+  @TimelineEvent(
+    eventType = ALN_SCREENER_ADDED,
+    additionalInfoPrefix = "screenerDate:",
+    additionalInfoField = "screenerDate",
+  )
   fun createScreener(prisonNumber: String, request: ALNScreenerRequest) {
     with(request) {
       val alnScreener = alnScreenerRepository.saveAndFlush(
@@ -41,12 +49,16 @@ class ALNScreenerService(
   }
 
   @Transactional
+  @TimelineEvent(
+    eventType = CURIOUS_ASSESSMENT_TRIGGER,
+    additionalInfoPrefix = "curiousReference:",
+    additionalInfoField = "curiousExternalReference",
+  )
   fun processALNAssessmentUpdate(
-    inboundEvent: InboundEvent,
+    prisonNumber: String,
     info: EducationALNAssessmentUpdateAdditionalInformation,
+    inboundEvent: InboundEvent,
   ) {
-    val prisonNumber = inboundEvent.prisonNumber()
-
     log.info(
       "Processing ALN assessment update event: ${inboundEvent.description} for $prisonNumber\n" +
         "Detail URL: ${inboundEvent.detailUrl}, reference: ${info.curiousExternalReference}",

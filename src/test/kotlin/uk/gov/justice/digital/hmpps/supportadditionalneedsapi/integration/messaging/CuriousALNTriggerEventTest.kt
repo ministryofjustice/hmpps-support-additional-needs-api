@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
@@ -49,6 +50,10 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
 
     Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isTrue()
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    Assertions.assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER)
+    Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
   @Test
@@ -82,6 +87,10 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
 
     Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isFalse()
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    Assertions.assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER)
+    Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
   fun createTestALNAssessment(prisonNumber: String, hasNeed: Boolean = true): String = """{

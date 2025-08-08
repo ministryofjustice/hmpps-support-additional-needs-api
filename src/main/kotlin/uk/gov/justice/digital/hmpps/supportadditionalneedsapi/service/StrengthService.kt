@@ -3,10 +3,11 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_STRENGTH_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.STRENGTH_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
@@ -47,7 +48,7 @@ class StrengthService(
 
   @Transactional
   @TimelineEvent(
-    eventType = EventType.STRENGTH_ADDED,
+    eventType = STRENGTH_ADDED,
     additionalInfoPrefix = "StrengthType:",
     additionalInfoField = "strengthTypeCode",
   )
@@ -79,7 +80,7 @@ class StrengthService(
 
   @Transactional
   @TimelineEvent(
-    eventType = EventType.ALN_STRENGTH_ADDED,
+    eventType = ALN_STRENGTH_ADDED,
     additionalInfoPrefix = "StrengthType:",
     additionalInfoField = "strengthTypeCode",
   )

@@ -64,7 +64,7 @@ class InboundEventsService(
       is PrisonerReleasedAdditionalInformation -> scheduleService.processReleased(additionalInformation)
       is PrisonerMergedAdditionalInformation -> scheduleService.processMerged(additionalInformation)
       is EducationStatusUpdateAdditionalInformation -> educationService.processEducationStatusUpdate(inboundEvent, additionalInformation)
-      is EducationALNAssessmentUpdateAdditionalInformation -> alnScreenerService.processALNAssessmentUpdate(inboundEvent, additionalInformation)
+      is EducationALNAssessmentUpdateAdditionalInformation -> alnScreenerService.processALNAssessmentUpdate(inboundEvent.prisonNumber(), additionalInformation, inboundEvent)
     }
   }
 }

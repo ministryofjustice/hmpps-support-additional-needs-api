@@ -4,9 +4,10 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_CHALLENGE_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CHALLENGE_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
@@ -48,7 +49,7 @@ class ChallengeService(
 
   @Transactional
   @TimelineEvent(
-    eventType = EventType.CHALLENGE_ADDED,
+    eventType = CHALLENGE_ADDED,
     additionalInfoPrefix = "ChallengeType:",
     additionalInfoField = "challengeTypeCode",
   )
@@ -80,7 +81,7 @@ class ChallengeService(
 
   @Transactional
   @TimelineEvent(
-    eventType = EventType.ALN_CHALLENGE_ADDED,
+    eventType = ALN_CHALLENGE_ADDED,
     additionalInfoPrefix = "ChallengeType:",
     additionalInfoField = "challengeTypeCode",
   )

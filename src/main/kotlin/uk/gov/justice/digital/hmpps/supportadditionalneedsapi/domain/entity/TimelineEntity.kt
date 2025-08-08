@@ -25,7 +25,7 @@ data class TimelineEntity(
   val prisonNumber: String,
 
   @Enumerated(EnumType.STRING)
-  var event: EventType,
+  var event: TimelineEventType,
 
   var additionalInfo: String? = null,
 
@@ -42,16 +42,15 @@ data class TimelineEntity(
 
 )
 
-enum class EventType {
+enum class TimelineEventType {
   CONDITION_ADDED,
   CHALLENGE_ADDED,
   ALN_CHALLENGE_ADDED,
   ALN_STRENGTH_ADDED,
+  ALN_SCREENER_ADDED,
   STRENGTH_ADDED,
   SUPPORT_STRATEGY_ADDED,
   CURIOUS_ASSESSMENT_TRIGGER,
   CURIOUS_EDUCATION_TRIGGER,
   ELSP_CREATED,
-  ELSP_UPDATED,
-  ALN_ASSESSMENT_ADDED,
 }
