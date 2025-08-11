@@ -33,6 +33,9 @@ data class PlanCreationScheduleHistoryEntity(
   @Column(name = "deadline_date")
   val deadlineDate: LocalDate?,
 
+  @Column(name = "earliest_start_date")
+  val earliestStartDate: LocalDate?,
+
   @Column
   @Enumerated(value = EnumType.STRING)
   val status: PlanCreationScheduleStatus,

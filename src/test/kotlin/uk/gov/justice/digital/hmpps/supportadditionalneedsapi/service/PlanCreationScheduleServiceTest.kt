@@ -168,6 +168,7 @@ class PlanCreationScheduleServiceTest {
       updatedAtPrison = "N/A",
       version = 1,
       needSources = setOf(ALN_SCREENER),
+      earliestStartDate = null,
     ).apply {
       createdAt = Instant.now()
       updatedAt = Instant.now()
@@ -227,6 +228,7 @@ class PlanCreationScheduleServiceTest {
     deadlineDate = LocalDate.now(),
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
+    earliestStartDate = null,
   )
 
   @Test

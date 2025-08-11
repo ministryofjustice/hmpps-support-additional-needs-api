@@ -230,6 +230,7 @@ abstract class IntegrationTestBase {
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
         needSources = setOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED),
+        earliestStartDate = null,
       )
     planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
   }
