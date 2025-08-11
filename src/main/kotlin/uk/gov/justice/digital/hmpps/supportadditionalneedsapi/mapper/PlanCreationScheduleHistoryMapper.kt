@@ -45,6 +45,7 @@ class PlanCreationScheduleHistoryMapper(
     PlanCreationScheduleResponse(
       reference = reference,
       deadlineDate = deadlineDate,
+      earliestStartDate = earliestStartDate,
       status = toPlanCreationStatus(status),
       createdBy = createdBy,
       createdByDisplayName = userService.getUserDetails(createdBy).name,

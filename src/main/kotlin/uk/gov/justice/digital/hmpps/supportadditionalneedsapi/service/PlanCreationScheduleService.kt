@@ -40,6 +40,9 @@ class PlanCreationScheduleService(
    */
   @Transactional
   fun attemptToCreate(prisonNumber: String, prisonId: String = "N/A") {
+    // TODO need to get this from the education start date
+    val educationStartDate = LocalDate.now()
+
     log.debug("Attempting to create a new plan creation schedule for prisoner $prisonNumber")
     if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
@@ -52,10 +55,11 @@ class PlanCreationScheduleService(
       val planCreationSchedule = PlanCreationScheduleEntity(
         prisonNumber = prisonNumber,
         status = PlanCreationScheduleStatus.SCHEDULED,
-        deadlineDate = getDeadlineDate(),
+        deadlineDate = getDeadlineDate(educationStartDate),
         createdAtPrison = prisonId,
         updatedAtPrison = prisonId,
         needSources = needService.getNeedSources(prisonNumber),
+        earliestStartDate = educationStartDate,
       )
       log.debug("saving plan creation schedule for prisoner $prisonNumber")
       planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
@@ -76,6 +80,8 @@ class PlanCreationScheduleService(
   @Transactional
   fun attemptToUpdate(prisonNumber: String, prisonId: String = "N/A") {
     log.debug("Attempting to update a plan creation schedule for prisoner $prisonNumber")
+    // TODO need to get this from the education start date
+    val educationStartDate = LocalDate.now()
 
     if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
 
@@ -97,12 +103,13 @@ class PlanCreationScheduleService(
           PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
           prisonId,
           null,
+          null,
           prisonNumber,
         )
       }
 
       inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION -> {
-        val deadlineDate = getDeadlineDate()
+        val deadlineDate = getDeadlineDate(educationStartDate)
         log.debug(
           "Prisoner {} is back in education, setting deadline date to {}, setting status to SCHEDULED",
           prisonNumber,
@@ -113,6 +120,7 @@ class PlanCreationScheduleService(
           PlanCreationScheduleStatus.SCHEDULED,
           prisonId,
           deadlineDate,
+          educationStartDate,
           prisonNumber,
         )
       }
@@ -124,16 +132,18 @@ class PlanCreationScheduleService(
           PlanCreationScheduleStatus.EXEMPT_NO_NEED,
           prisonId,
           null,
+          null,
           prisonNumber,
         )
       }
 
       hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED -> {
-        log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SHEDULED")
+        log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SCHEDULED")
         updatePlan(
           planCreationSchedule,
           PlanCreationScheduleStatus.SCHEDULED,
           prisonId,
+          null,
           null,
           prisonNumber,
         )
@@ -146,11 +156,13 @@ class PlanCreationScheduleService(
     newStatus: PlanCreationScheduleStatus,
     prisonId: String,
     deadlineDate: LocalDate?,
+    earliestStartDate: LocalDate?,
     prisonNumber: String,
   ) {
     schedule.status = newStatus
     schedule.updatedAtPrison = prisonId
     schedule.deadlineDate = deadlineDate
+    schedule.earliestStartDate = earliestStartDate
     planCreationScheduleRepository.saveAndFlush(schedule)
     eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
   }
@@ -224,10 +236,11 @@ class PlanCreationScheduleService(
       }
   }
 
-  fun getDeadlineDate(): LocalDate {
-    val todayPlusFive = LocalDate.now().plus(5, ChronoUnit.DAYS)
+  fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
+    // TODO needs to be 5 working days - using the working days service
+    val startDatePlusFive = educationStartDate.plus(5, ChronoUnit.DAYS)
     val pesPlusFive = pesContractDate.plus(5, ChronoUnit.DAYS)
-    return maxOf(todayPlusFive, pesPlusFive)
+    return maxOf(startDatePlusFive, pesPlusFive)
   }
 
   fun completeSchedule(prisonNumber: String, prisonId: String) {

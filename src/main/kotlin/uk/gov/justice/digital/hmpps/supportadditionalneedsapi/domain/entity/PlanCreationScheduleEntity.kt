@@ -36,6 +36,9 @@ data class PlanCreationScheduleEntity(
   @Column
   var deadlineDate: LocalDate?,
 
+  @Column(name = "earliest_start_date")
+  var earliestStartDate: LocalDate?,
+
   @Column
   @Enumerated(value = EnumType.STRING)
   var status: PlanCreationScheduleStatus,

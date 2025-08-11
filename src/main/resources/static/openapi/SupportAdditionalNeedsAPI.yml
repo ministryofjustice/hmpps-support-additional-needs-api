@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.10.0'
+  version: '0.10.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1196,7 +1196,14 @@ components:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the Review is due.
+            An ISO-8601 date representing date that the Review is due. This date can be null.
+            For example the person was in education and had a cataract which meant they had a visual support need. 
+            The ELSP was created for the person. At some point in the future the cataract was removed and 
+            so the plan was updated removing this need education ends for this person. 
+            Then the person is enrolled in education once again. After enrolling a new need is identified (say) 
+            ADHD then the plan will have a review schedule generated but because the person had already started 
+            education the deadline date will be blank and therefore the review is optional and not subject to 
+            the KPI requirements.
           example: '2023-11-19'
         reviewCompletedDate:
           type: string
@@ -1242,7 +1249,6 @@ components:
           description: the version number of this schedule (the highest number is the most recent version of this review schedule)
       required:
         - reference
-        - deadlineDate
         - status
 
     ConditionResponse:
@@ -1647,11 +1653,21 @@ components:
           format: uuid
           description: The unique reference of this plan creation schedule
           example: c88a6c48-97e2-4c04-93b5-98619966447b
+        earliestStartDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing earliest date that the plan can be created. 
+            If this date is null then there is no restriction. eg when a person has a need identified 
+            after they are enrolled in education.
+          example: '2023-11-19'
         deadlineDate:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the plan creation is due.
+            An ISO-8601 date representing date that the plan creation is due. 
+            If this date is null then there is no dead line date. eg when a person has a need identified 
+            after they are enrolled in education.
           example: '2023-11-19'
         planCompletedDate:
           type: string
