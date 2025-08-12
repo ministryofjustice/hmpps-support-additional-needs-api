@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.10.1'
+  version: '0.10.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1059,11 +1059,17 @@ components:
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
           maxLength: 4096
+        individualSupportHours:
+          type: integer
+          description: Recommended number of additional support hours per week to meet the individual's educational needs.
+          example: 4
+          default: 0
       required:
         - prisonId
         - hasCurrentEhcp
         - reviewDate
         - individualSupport
+        - individualSupportHours
 
     PlanContributor:
       title: PlanContributor
@@ -1809,9 +1815,15 @@ components:
           type: string
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
+        individualSupportHours:
+          type: integer
+          description: Recommended number of additional support hours per week to meet the individual's educational needs.
+          example: 4
+          default: 0
       required:
         - hasCurrentEhcp
         - individualSupport
+        - individualSupportHours
     CreateSupportStrategiesRequest:
       title: SupportStrategiesListRequest
       type: object
