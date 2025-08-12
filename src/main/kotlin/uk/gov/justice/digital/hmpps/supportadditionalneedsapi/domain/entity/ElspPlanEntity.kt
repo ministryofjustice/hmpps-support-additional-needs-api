@@ -43,6 +43,9 @@ data class ElspPlanEntity(
   @Column(nullable = false)
   val individualSupport: String,
 
+  @Column(nullable = false)
+  val individualSupportHours: Int = 0,
+
   @Column(updatable = false)
   val createdAtPrison: String,
 

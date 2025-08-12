@@ -55,8 +55,10 @@ class EducationService(
         "Detail URL: ${inboundEvent.detailUrl}" +
         ", reference: ${info.curiousExternalReference}",
     )
-    log.info("retrieving education info for ${inboundEvent.prisonNumber()}")
+    log.info("retrieving current education info for ${inboundEvent.prisonNumber()}")
     val education = curiousApiClient.getEducation(prisonNumber = inboundEvent.prisonNumber())
-    log.info("retrieved education info for ${inboundEvent.prisonNumber()} : $education")
+    log.info("retrieved current education info for ${inboundEvent.prisonNumber()} : $education")
+    // TODO save the new education record if it has changed.
+    // then create / update schedules as appropriate
   }
 }
