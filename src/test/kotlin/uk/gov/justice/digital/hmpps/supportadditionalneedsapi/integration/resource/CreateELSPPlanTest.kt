@@ -70,6 +70,34 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.ELSP_CREATED)
   }
 
+  @Test
+  fun `Test endpoint still works with no support hours`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val planRequest = createPlanRequestNoSupportHours()
+    aValidPlanCreationScheduleExists(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planRequest)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(EducationSupportPlanResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val planFromService = elspPlanService.getPlan(prisonNumber)
+
+    assertThat(planFromService).isNotNull()
+  }
+
   private fun createPlanRequest(): CreateEducationSupportPlanRequest = CreateEducationSupportPlanRequest(
     prisonId = "BXI",
     hasCurrentEhcp = false,
@@ -79,6 +107,20 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
     individualSupportHours = 99,
+    detail = "detail",
+    reviewDate = LocalDate.now(),
+    planCreatedBy = PlanContributor("Fred Johns", "manager"),
+    otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
+  )
+
+  private fun createPlanRequestNoSupportHours(): CreateEducationSupportPlanRequest = CreateEducationSupportPlanRequest(
+    prisonId = "BXI",
+    hasCurrentEhcp = false,
+    lnspSupport = "lnspSupport",
+    teachingAdjustments = "teachingAdjustments",
+    specificTeachingSkills = "specificTeachingSkills",
+    examAccessArrangements = "examAccessArrangements",
+    individualSupport = "individualSupport",
     detail = "detail",
     reviewDate = LocalDate.now(),
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
