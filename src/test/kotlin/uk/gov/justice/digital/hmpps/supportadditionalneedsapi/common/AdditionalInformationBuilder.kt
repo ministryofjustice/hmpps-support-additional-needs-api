@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common
 
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation.Reason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
@@ -55,5 +56,9 @@ fun aValidPrisonerMergedAdditionalInformation(
 )
 
 fun aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference: UUID): EducationALNAssessmentUpdateAdditionalInformation = EducationALNAssessmentUpdateAdditionalInformation(
+  curiousExternalReference = curiousReference,
+)
+
+fun aValidEducationStatusUpdateAdditionalInformation(curiousReference: UUID): EducationStatusUpdateAdditionalInformation = EducationStatusUpdateAdditionalInformation(
   curiousExternalReference = curiousReference,
 )
