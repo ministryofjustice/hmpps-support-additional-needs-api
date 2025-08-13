@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
@@ -98,7 +99,7 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  private lateinit var educationRepository: EducationRepository
+  lateinit var educationRepository: EducationRepository
 
   @Autowired
   protected lateinit var webTestClient: WebTestClient
@@ -141,6 +142,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var timelineRepository: TimelineRepository
+
+  @Autowired
+  protected lateinit var educationEnrolmentRepository: EducationEnrolmentRepository
 
   @Autowired
   protected lateinit var elspPlanService: EducationSupportPlanService
@@ -195,6 +199,10 @@ abstract class IntegrationTestBase {
   protected fun stubGetUserRepeatFail(username: String) = manageUsersApi.setUpManageUsersRepeatFail(username)
 
   protected fun stubGetCurious2LearnerAssessments(prisonId: String, response: String) = curiousApi.stubGetCurious2LearnerAssessments(prisonId, response)
+
+  protected fun stubGetCurious2InEducation(prisonId: String, response: String) = curiousApi.stubGetCurious2Education(prisonId, response)
+
+  protected fun stubGetCurious2OutEducation(prisonId: String, response: String) = curiousApi.stubGetCurious2Education(prisonId, response)
 
   protected fun stubForBankHoliday() = bankHolidaysApi.stubBankHolidays()
 

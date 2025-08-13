@@ -82,4 +82,16 @@ class CuriousApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
+  fun stubGetCurious2Education(prisonNumber: String, response: String) {
+    log.debug("setting up Education stub for $prisonNumber")
+    stubFor(
+      get(urlPathMatching("/learnerQualifications/v2/$prisonNumber"))
+        .willReturn(
+          responseDefinition()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(response),
+        ),
+    )
+  }
 }
