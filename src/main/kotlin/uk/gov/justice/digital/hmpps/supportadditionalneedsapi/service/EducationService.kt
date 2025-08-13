@@ -2,12 +2,15 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
+import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Education
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_EDUCATION_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
@@ -24,7 +27,11 @@ class EducationService(
   private val educationRepository: EducationRepository,
   private val curiousApiClient: CuriousApiClient,
   private val educationEnrolmentRepository: EducationEnrolmentRepository,
+  private val needService: NeedService,
+  private val reviewScheduleService: ReviewScheduleService,
+  @Lazy private val planCreationScheduleService: PlanCreationScheduleService,
 ) {
+
   /**
    * Establish whether this person is currently in eduction.
    * This is managed by curious, but we will process messages from curious maintaining a cache
@@ -54,18 +61,22 @@ class EducationService(
     additionalInfoPrefix = "curiousReference:",
     additionalInfoField = "curiousExternalReference",
   )
-  fun processEducationStatusUpdate(prisonNumber: String, info: EducationStatusUpdateAdditionalInformation, inboundEvent: InboundEvent) {
+  fun processEducationStatusUpdate(
+    prisonNumber: String,
+    info: EducationStatusUpdateAdditionalInformation,
+    inboundEvent: InboundEvent,
+  ) {
     log.info(
       "processing education status update event: {${inboundEvent.description}} for ${inboundEvent.prisonNumber()} \n " +
         "Detail URL: ${inboundEvent.detailUrl}" +
         ", reference: ${info.curiousExternalReference}",
     )
-    log.info("retrieving current education info for ${inboundEvent.prisonNumber()}")
-    val educationDto = curiousApiClient.getEducation(prisonNumber = inboundEvent.prisonNumber())
-    log.info("retrieved current education info for ${inboundEvent.prisonNumber()} : $educationDto")
+    log.info("retrieving current education info for $prisonNumber")
+    val educationDto = curiousApiClient.getEducation(prisonNumber = prisonNumber)
+    log.info("retrieved current education info for $prisonNumber : $educationDto")
 
     // save the education record if it has changed.
-    recordOverallEducationStatus(educationDto, prisonNumber, info)
+    val inEducation = recordOverallEducationStatus(educationDto, prisonNumber, info)
     // Record the education enrolment if any have changed
     val enrolmentDiff = updateSanEnrolments(
       educationDto = educationDto,
@@ -74,24 +85,18 @@ class EducationService(
     )
     log.info("Enrolment diff for $prisonNumber: $enrolmentDiff")
 
-    // TODO create / update schedules as appropriate
-    // if the person has a need:
-    //
-    // if the person is now in education and does not have a plan:
-    // create a plan schedule if it does not exist
-    // -- if the funding type is not PES then the deadline date shall be null
-    // if the person already has a schedule that is exempt then change it to
-    // SCHEDULED with a start date == the education start date (remember this
-    // can be future dated)
-    //
-    // if the person is now in education and already has a plan:
-    // create a review schedule
-    //
-    // if the person is no longer in education and has a creation schedule:
-    // exempt the schedule due to not being in education
-    //
-    // * there are probably a few other combinations I've not thought up yet.
-    //
+    if (enrolmentDiff.anyChanges) {
+      if (!inEducation) {
+        // exempt any schedules
+        // this will exempt schedules if they exist AND sent messages to MN.
+        planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+        reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+      }
+      if (needService.hasNeed(prisonNumber)) {
+        // TODO create/update schedules
+        log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")
+      }
+    }
   }
 
   // This sets the overall education status for the person
@@ -138,7 +143,8 @@ class EducationService(
 
     // get the SAN open education list and create a list of keys
     val openInDb = educationEnrolmentRepository.findAllByPrisonNumberAndEndDateIsNull(prisonNumber)
-    val openByKey = openInDb.associateBy { EnrolmentKey(it.establishmentId, it.qualificationCode, it.learningStartDate) }
+    val openByKey =
+      openInDb.associateBy { EnrolmentKey(it.establishmentId, it.qualificationCode, it.learningStartDate) }
     val openKeysInDb = openByKey.keys
 
     // work out which ones have no ended
