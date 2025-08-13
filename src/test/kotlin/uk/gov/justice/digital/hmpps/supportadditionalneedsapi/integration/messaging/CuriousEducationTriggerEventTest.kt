@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
@@ -38,6 +40,40 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Then
     endEducationAndValidate(prisonNumber)
     // TODO also check that the schedules have been updated correctly
+  }
+
+  @Test
+  fun `should process Curious Education domain event and mark the person as out of education and Exempt the planCreationSchedule`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aValidPlanCreationScheduleExists(prisonNumber)
+    // has no need
+
+    putInEducationAndValidate(prisonNumber)
+    endEducationAndValidate(prisonNumber)
+
+    // Then
+    // the plan creationSchedule should be marked as exempt
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+  }
+
+  @Test
+  fun `should process Curious Education domain event and mark the person as out of education and Exempt the reviewSchedule`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aValidReviewScheduleExists(prisonNumber)
+    // has no need
+
+    putInEducationAndValidate(prisonNumber)
+    endEducationAndValidate(prisonNumber)
+
+    // Then
+    // the reviewSchedule should be marked as exempt
+    val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewSchedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
   }
 
   private fun putInEducationAndValidate(prisonNumber: String) {
