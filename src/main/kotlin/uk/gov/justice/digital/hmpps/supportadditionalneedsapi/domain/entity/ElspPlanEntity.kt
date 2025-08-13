@@ -38,13 +38,13 @@ data class ElspPlanEntity(
   val lnspSupport: String? = null,
 
   @Column
+  val lnspSupportHours: Int? = null,
+
+  @Column
   val detail: String? = null,
 
   @Column(nullable = false)
   val individualSupport: String,
-
-  @Column(nullable = false)
-  val individualSupportHours: Int = 0,
 
   @Column(updatable = false)
   val createdAtPrison: String,

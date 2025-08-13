@@ -52,8 +52,8 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     assertThat(planFromService.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
     assertThat(planFromService.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
     assertThat(planFromService.lnspSupport).isEqualTo(planRequest.lnspSupport)
+    assertThat(planFromService.lnspSupportHours).isEqualTo(planRequest.lnspSupportHours)
     assertThat(planFromService.individualSupport).isEqualTo(planRequest.individualSupport)
-    assertThat(planFromService.individualSupportHours).isEqualTo(planRequest.individualSupportHours)
     assertThat(planFromService.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
     assertThat(planFromService.detail).isEqualTo(planRequest.detail)
     assertThat(planFromService.otherContributors?.get(0)?.name).isEqualTo(planRequest.otherContributors?.get(0)?.name)
@@ -71,12 +71,15 @@ class CreateELSPPlanTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Test endpoint still works with no support hours`() {
+  fun `Create an ELSP plan given no LNSP support and support hours`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
-    val planRequest = createPlanRequestNoSupportHours()
+    val planRequest = createPlanRequest().copy(
+      lnspSupport = null,
+      lnspSupportHours = null,
+    )
     aValidPlanCreationScheduleExists(prisonNumber)
 
     // When
@@ -96,17 +99,64 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     val planFromService = elspPlanService.getPlan(prisonNumber)
 
     assertThat(planFromService).isNotNull()
+    assertThat(planFromService.createdByDisplayName).isEqualTo("Test User")
+    assertThat(planFromService.planCreatedBy?.name).isEqualTo(planRequest.planCreatedBy?.name)
+    assertThat(planFromService.planCreatedBy?.jobRole).isEqualTo(planRequest.planCreatedBy?.jobRole)
+    assertThat(planFromService.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
+    assertThat(planFromService.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
+    assertThat(planFromService.lnspSupport).isNull()
+    assertThat(planFromService.lnspSupportHours).isNull()
+    assertThat(planFromService.individualSupport).isEqualTo(planRequest.individualSupport)
+    assertThat(planFromService.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
+    assertThat(planFromService.detail).isEqualTo(planRequest.detail)
+    assertThat(planFromService.otherContributors?.get(0)?.name).isEqualTo(planRequest.otherContributors?.get(0)?.name)
+    assertThat(planFromService.otherContributors?.get(0)?.jobRole).isEqualTo(planRequest.otherContributors?.get(0)?.jobRole)
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.COMPLETED)
+
+    val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    assertThat(reviewSchedule!!.status).isEqualTo(ReviewScheduleStatusEntity.SCHEDULED)
+    assertThat(reviewSchedule.deadlineDate).isEqualTo(planRequest.reviewDate)
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.ELSP_CREATED)
+  }
+
+  @Test
+  fun `Fail when request has LNSP support, but no support hours`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val planRequest = createPlanRequestNoSupportHours()
+    aValidPlanCreationScheduleExists(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planRequest)
+      .exchange()
+      .expectStatus()
+      .isBadRequest
+      .returnResult(ErrorResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .hasUserMessage("LNSP Support Hours must be specified if LNSP is populated")
   }
 
   private fun createPlanRequest(): CreateEducationSupportPlanRequest = CreateEducationSupportPlanRequest(
     prisonId = "BXI",
     hasCurrentEhcp = false,
     lnspSupport = "lnspSupport",
+    lnspSupportHours = 99,
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
-    individualSupportHours = 99,
     detail = "detail",
     reviewDate = LocalDate.now(),
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
