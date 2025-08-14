@@ -172,6 +172,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     prisonId = "BXI",
     hasCurrentEhcp = false,
     lnspSupport = "lnspSupport",
+    lnspSupportHours = 10,
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",

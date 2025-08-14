@@ -48,7 +48,7 @@ class GetELSPPlanTest : IntegrationTestBase() {
     assertThat(actual.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
     assertThat(actual.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
     assertThat(actual.lnspSupport).isEqualTo(planRequest.lnspSupport)
-    assertThat(actual.individualSupportHours).isEqualTo(planRequest.individualSupportHours)
+    assertThat(actual.lnspSupportHours).isEqualTo(planRequest.lnspSupportHours)
     assertThat(actual.individualSupport).isEqualTo(planRequest.individualSupport)
     assertThat(actual.detail).isEqualTo(planRequest.detail)
     assertThat(actual.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
@@ -60,10 +60,10 @@ class GetELSPPlanTest : IntegrationTestBase() {
     prisonId = "BXI",
     hasCurrentEhcp = false,
     lnspSupport = "lnspSupport",
+    lnspSupportHours = 99,
     teachingAdjustments = "teachingAdjustments",
     specificTeachingSkills = "specificTeachingSkills",
     examAccessArrangements = "examAccessArrangements",
-    individualSupportHours = 99,
     individualSupport = "individualSupport",
     detail = "detail",
     reviewDate = LocalDate.now(),

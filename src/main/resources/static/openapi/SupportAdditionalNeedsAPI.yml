@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.10.2'
+  version: '0.10.3'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1049,6 +1049,12 @@ components:
           description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
           example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
           maxLength: 4096
+        lnspSupportHours:
+          type: integer
+          description: |
+            Recommended number of additional support hours per week to meet the individual's educational needs.  
+            Mandatory when `lnspSupport` is populated.
+          example: 4
         detail:
           type: string
           description: Optional Additional information about the plan that is not covered in the other questions.
@@ -1059,17 +1065,11 @@ components:
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
           maxLength: 4096
-        individualSupportHours:
-          type: integer
-          description: Recommended number of additional support hours per week to meet the individual's educational needs.
-          example: 4
-          default: 0
       required:
         - prisonId
         - hasCurrentEhcp
         - reviewDate
         - individualSupport
-        - individualSupportHours
 
     PlanContributor:
       title: PlanContributor
@@ -1807,6 +1807,12 @@ components:
           type: string
           description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
           example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
+        lnspSupportHours:
+          type: integer
+          description: |
+            Recommended number of Learning Needs Support Practitioner support hours per week to meet the individual's educational needs.  
+            Will be present when `lnspSupport` is populated.
+          example: 4
         detail:
           type: string
           description: Optional Additional information about the plan that is not covered in the other questions.
@@ -1815,15 +1821,9 @@ components:
           type: string
           description: Details of education support that the person feels they need or would benefit from.
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
-        individualSupportHours:
-          type: integer
-          description: Recommended number of additional support hours per week to meet the individual's educational needs.
-          example: 4
-          default: 0
       required:
         - hasCurrentEhcp
         - individualSupport
-        - individualSupportHours
     CreateSupportStrategiesRequest:
       title: SupportStrategiesListRequest
       type: object

@@ -4,6 +4,7 @@ import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -14,7 +15,9 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.validator.LnspSupportHoursSpecifiedWhenLnspSupportSpecified
 
+@Validated
 @RestController
 @RequestMapping("/profile/{prisonNumber}/education-support-plan")
 class EducationSupportPlanController(private val educationSupportPlanService: EducationSupportPlanService) {
@@ -25,6 +28,7 @@ class EducationSupportPlanController(private val educationSupportPlanService: Ed
   @PreAuthorize(HAS_EDIT_ELSP)
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @LnspSupportHoursSpecifiedWhenLnspSupportSpecified
   @Transactional
   fun createEducationSupportPlan(
     @PathVariable prisonNumber: String,
