@@ -29,7 +29,7 @@ class EducationEnrolmentEntity(
   var plannedEndDate: LocalDate? = null,
 
   @Column
-  var fundingType: String? = null,
+  var fundingType: String,
 
   @Column
   var completionStatus: String? = null,
