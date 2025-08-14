@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventTyp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
+import java.time.LocalDate
 import java.util.*
 
 @Isolated
@@ -81,6 +82,28 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // the reviewSchedule should be marked as exempt
     val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(reviewSchedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+  }
+
+  @Test
+  fun `should process Curious Education domain event and due to already having an ELSP should create a review`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
+    anElSPExists(prisonNumber)
+
+    // Then
+    putInEducationAndValidate(prisonNumber)
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+    Assertions.assertThat(reviewScheduleEntity.deadlineDate).isNotNull()
+    // Being a little bit lazy here as I don't know what the deadline
+    // date will be due to working days but it will be less than 10 days in the future.
+    // TODO make this test more robust once the working days calculator is added to the D/S services
+    Assertions.assertThat(reviewScheduleEntity.deadlineDate)
+      .isAfter(LocalDate.of(2025, 10, 1))
+      .isBefore(LocalDate.of(2025, 10, 11))
   }
 
   private fun putInEducationAndValidate(prisonNumber: String) {
@@ -158,7 +181,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
             "establishmentName": "CARDIFF (HMP)",
             "qualificationCode": "60322457",
             "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-01-01",
+            "learningStartDate": "2025-10-02",
             "learningPlannedEndDate": "2025-01-31",
             "learnerOnRemand": null,
             "isAccredited": true,

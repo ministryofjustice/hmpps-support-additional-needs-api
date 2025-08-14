@@ -99,13 +99,14 @@ class EducationService(
         if (enrolmentDiff.createdCount > 0) {
           // does the person have an ELSP?
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
+          val startDate = enrolmentDiff.firstNewEnrolmentStart
+          val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
           if (plan == null) {
             // create the plan creation schedule
-            val startDate = enrolmentDiff.firstNewEnrolmentStart
-            val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
             planCreationScheduleService.createOrUpdate(prisonNumber, startDate, newEducation!!.fundingType)
           } else {
             // make an update to the review
+            reviewScheduleService.createOrUpdate(prisonNumber, startDate, newEducation!!.fundingType)
           }
         }
         log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")
