@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
@@ -284,5 +285,20 @@ abstract class IntegrationTestBase {
     val elsp = ElspPlanEntity(prisonNumber = prisonNumber, individualSupport = "support", createdAtPrison = "BXI", updatedAtPrison = "BXI")
 
     elspPlanRepository.save(elsp)
+  }
+
+  fun aValidChallengeExists(prisonNumber: String) {
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
+      ?: throw IllegalStateException("Reference data not found")
+    challengeRepository.saveAll(
+      listOf(
+        ChallengeEntity(
+          prisonNumber = prisonNumber,
+          challengeType = sensory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+      ),
+    )
   }
 }

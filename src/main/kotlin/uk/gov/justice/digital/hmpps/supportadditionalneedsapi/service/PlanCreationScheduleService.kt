@@ -98,7 +98,7 @@ class PlanCreationScheduleService(
 
       !inEducation && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
         log.debug("Prisoner $prisonNumber is no longer in education, clearing deadline date, setting status to EXEMPT_NOT_IN_EDUCATION")
-        updatePlan(
+        updateSchedule(
           planCreationSchedule,
           PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
           prisonId,
@@ -115,7 +115,7 @@ class PlanCreationScheduleService(
           prisonNumber,
           deadlineDate,
         )
-        updatePlan(
+        updateSchedule(
           planCreationSchedule,
           PlanCreationScheduleStatus.SCHEDULED,
           prisonId,
@@ -127,7 +127,7 @@ class PlanCreationScheduleService(
 
       !hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
         log.debug("Prisoner $prisonNumber no longer has a need, clearing deadline date, setting status to EXEMPT_NO_NEED ")
-        updatePlan(
+        updateSchedule(
           planCreationSchedule,
           PlanCreationScheduleStatus.EXEMPT_NO_NEED,
           prisonId,
@@ -139,7 +139,7 @@ class PlanCreationScheduleService(
 
       hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED -> {
         log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SCHEDULED")
-        updatePlan(
+        updateSchedule(
           planCreationSchedule,
           PlanCreationScheduleStatus.SCHEDULED,
           prisonId,
@@ -151,10 +151,10 @@ class PlanCreationScheduleService(
     }
   }
 
-  private fun updatePlan(
+  private fun updateSchedule(
     schedule: PlanCreationScheduleEntity,
     newStatus: PlanCreationScheduleStatus,
-    prisonId: String,
+    prisonId: String = "N/A",
     deadlineDate: LocalDate?,
     earliestStartDate: LocalDate?,
     prisonNumber: String,
@@ -165,6 +165,25 @@ class PlanCreationScheduleService(
     schedule.earliestStartDate = earliestStartDate
     planCreationScheduleRepository.saveAndFlush(schedule)
     eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  fun createSchedule(prisonNumber: String, prisonId: String = "N/A", deadlineDate: LocalDate?, earliestStartDate: LocalDate?) {
+    if (educationService.inEducation(prisonNumber) && needService.hasNeed(prisonNumber)) {
+      log.debug("Person [$prisonNumber] was in education and has a need")
+      // Create a new schedule
+      val planCreationSchedule = PlanCreationScheduleEntity(
+        prisonNumber = prisonNumber,
+        status = PlanCreationScheduleStatus.SCHEDULED,
+        deadlineDate = deadlineDate,
+        createdAtPrison = prisonId,
+        updatedAtPrison = prisonId,
+        needSources = needService.getNeedSources(prisonNumber),
+        earliestStartDate = earliestStartDate,
+      )
+      log.debug("saving plan creation schedule for prisoner $prisonNumber")
+      planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
+      eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+    }
   }
 
   fun getSchedules(prisonId: String, includeAllHistory: Boolean): PlanCreationSchedulesResponse {
@@ -252,5 +271,29 @@ class PlanCreationScheduleService(
         planCreationScheduleRepository.save(it)
         eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
       }
+  }
+
+  fun createOrUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
+    val isPES = fundingType.equals("PES", ignoreCase = true)
+    val earliestStart = if (isPES) startDate else null
+    val deadline = if (isPES) getDeadlineDate(startDate) else null
+
+    val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart)
+
+    val alreadyCorrect =
+      existing.status == PlanCreationScheduleStatus.SCHEDULED &&
+        existing.earliestStartDate == earliestStart &&
+        existing.deadlineDate == deadline
+
+    if (alreadyCorrect) return
+
+    updateSchedule(
+      prisonNumber = prisonNumber,
+      deadlineDate = deadline,
+      earliestStartDate = earliestStart,
+      schedule = existing,
+      newStatus = PlanCreationScheduleStatus.SCHEDULED,
+    )
   }
 }

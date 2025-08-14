@@ -26,9 +26,13 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
+
     // Then
     putInEducationAndValidate(prisonNumber)
-    // TODO also check that the schedules have been created correctly
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
 
   @Test
@@ -36,10 +40,13 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
     putInEducationAndValidate(prisonNumber)
     // Then
     endEducationAndValidate(prisonNumber)
-    // TODO also check that the schedules have been updated correctly
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
   }
 
   @Test
@@ -47,8 +54,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    aValidPlanCreationScheduleExists(prisonNumber)
-    // has no need
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
 
     putInEducationAndValidate(prisonNumber)
     endEducationAndValidate(prisonNumber)
