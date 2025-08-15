@@ -60,6 +60,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
@@ -152,6 +153,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var needService: NeedService
+
+  @Autowired
+  protected lateinit var workingDayService: WorkingDayService
 
   @Autowired
   protected lateinit var jwtAuthHelper: JwtAuthorisationHelper
