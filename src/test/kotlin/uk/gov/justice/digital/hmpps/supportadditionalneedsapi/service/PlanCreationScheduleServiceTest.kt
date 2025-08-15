@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMap
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import java.time.Instant
 import java.time.LocalDate
 
@@ -64,6 +66,9 @@ class PlanCreationScheduleServiceTest {
   @Mock
   private lateinit var elspPlanRepository: ElspPlanRepository
 
+  @Mock
+  private lateinit var workingDayService: WorkingDayService
+
   private val prisonNumber = randomValidPrisonNumber()
 
   @BeforeEach
@@ -89,9 +94,18 @@ class PlanCreationScheduleServiceTest {
       educationService,
       needService,
       eventPublisher,
-      LocalDate.parse("2024-10-01"),
+      LocalDate.parse("2025-10-01"),
       elspPlanRepository,
+      workingDayService,
     )
+
+    // set up common working day scenarios:
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.now())).thenReturn(LocalDate.now().plusDays(5))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.of(2025, 10, 1)))
+      .thenReturn(LocalDate.of(2025, 10, 1).plusDays(5))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.now().plusMonths(6))).thenReturn(LocalDate.now().plusMonths(6).plusDays(5))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.of(2024, 10, 1)))
+      .thenReturn(LocalDate.of(2024, 10, 1).plusDays(5))
   }
 
   @Test
@@ -152,6 +166,7 @@ class PlanCreationScheduleServiceTest {
       eventPublisher,
       pesContractDate,
       elspPlanRepository,
+      workingDayService,
     )
 
     whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
@@ -259,6 +274,7 @@ class PlanCreationScheduleServiceTest {
     eventPublisher,
     LocalDate.parse("2024-10-01"),
     elspPlanRepository,
+    workingDayService,
   )
 
   @Test

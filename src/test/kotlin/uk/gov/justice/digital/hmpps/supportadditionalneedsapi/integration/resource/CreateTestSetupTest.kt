@@ -18,6 +18,7 @@ class CreateTestSetupTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
+    stubForBankHoliday()
     val prisonNumber = randomValidPrisonNumber()
     val educationNeedRequest = createEducationNeedRequest()
 

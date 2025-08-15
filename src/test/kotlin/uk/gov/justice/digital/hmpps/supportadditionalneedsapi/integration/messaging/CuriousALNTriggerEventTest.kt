@@ -4,7 +4,9 @@ import org.assertj.core.api.Assertions
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
@@ -18,7 +20,13 @@ import java.time.LocalDate
 import java.util.*
 
 @Isolated
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class CuriousALNTriggerEventTest : IntegrationTestBase() {
+
+  @BeforeAll
+  fun beforeAll() {
+    stubForBankHoliday()
+  }
 
   @Test
   fun `should process Curious ALN domain event and mark the person as having an ALN need`() {
