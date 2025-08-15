@@ -107,12 +107,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isNotNull()
     // this is the date that the education starts from the curious API
-    val educationStartDate = LocalDate.of(2025,10,2)
+    val educationStartDate = LocalDate.of(2025, 10, 2)
     val deadlineDate = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
 
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isEqualTo(deadlineDate)
-
-
   }
 
   private fun putInEducationAndValidate(prisonNumber: String) {
