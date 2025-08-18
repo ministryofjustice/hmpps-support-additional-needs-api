@@ -273,7 +273,7 @@ class PlanCreationScheduleService(
       }
   }
 
-  fun createOrUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
+  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
     val isPES = fundingType.equals("PES", ignoreCase = true)
     val earliestStart = if (isPES) startDate else null
     val deadline = if (isPES) getDeadlineDate(startDate) else null
@@ -295,5 +295,10 @@ class PlanCreationScheduleService(
       schedule = existing,
       newStatus = PlanCreationScheduleStatus.SCHEDULED,
     )
+  }
+
+  fun createOrUpdateDueToNeedChange(prisonNumber: String) {
+    planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = null, earliestStartDate = null)
   }
 }

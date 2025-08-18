@@ -39,7 +39,7 @@ class ReviewScheduleService(
       }
   }
 
-  fun createReviewSchedule(prisonNumber: String, reviewDate: LocalDate, prisonId: String) {
+  fun createReviewSchedule(prisonNumber: String, reviewDate: LocalDate?, prisonId: String) {
     val currentSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     if (currentSchedule != null && currentSchedule.status == ReviewScheduleStatus.SCHEDULED) {
       log.info("Review schedule for prison $prisonNumber is already scheduled")
@@ -56,7 +56,7 @@ class ReviewScheduleService(
     eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
   }
 
-  fun createOrUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
+  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     val proposedDeadline = getDeadlineDate(startDate)
 
@@ -85,5 +85,13 @@ class ReviewScheduleService(
     val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
     val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
+  }
+
+  fun createOrUpdateDueToNeedChange(prisonNumber: String) {
+    reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber) ?: createReviewSchedule(
+      prisonNumber = prisonNumber,
+      reviewDate = null,
+      prisonId = "N/A",
+    )
   }
 }
