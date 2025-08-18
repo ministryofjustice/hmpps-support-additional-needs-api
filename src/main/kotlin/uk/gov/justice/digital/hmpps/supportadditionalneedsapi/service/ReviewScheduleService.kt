@@ -84,7 +84,6 @@ class ReviewScheduleService(
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
     val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
     val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
-    println("startDatePlusFive: $startDatePlusFive pesPlusFive: $pesPlusFive")
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 }
