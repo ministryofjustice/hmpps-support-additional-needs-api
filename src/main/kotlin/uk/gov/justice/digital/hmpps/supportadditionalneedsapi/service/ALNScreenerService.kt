@@ -26,6 +26,7 @@ class ALNScreenerService(
   private val curiousApiClient: CuriousApiClient,
   private val needService: NeedService,
   private val alnScreenerMapper: ALNScreenerMapper,
+  private val scheduleService: ScheduleService,
 ) {
   @Transactional
   @TimelineEvent(
@@ -95,10 +96,7 @@ class ALNScreenerService(
       screenerDate = latestAssessment.assessmentDate!!,
     )
 
-    // TODO Now update the plan creation schedule or the plan review schedule
-    // if there is a schedule and now there is no need - EXEMPT due to NO_NEED
-    // if there is no schedule AND the person is in EDUCATION create a new plan creation schedule OR
-    // review schedule
+    scheduleService.processNeedChange(prisonNumber, hasNeed)
 
     log.info("Processed ALN assessment for $prisonNumber: $latestAssessment")
   }

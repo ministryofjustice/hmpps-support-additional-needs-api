@@ -103,10 +103,10 @@ class EducationService(
           val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
           if (plan == null) {
             // create the plan creation schedule
-            planCreationScheduleService.createOrUpdate(prisonNumber, startDate, newEducation!!.fundingType)
+            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType)
           } else {
             // make an update to the review
-            reviewScheduleService.createOrUpdate(prisonNumber, startDate, newEducation!!.fundingType)
+            reviewScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType)
           }
         }
         log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")

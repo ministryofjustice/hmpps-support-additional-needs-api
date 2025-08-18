@@ -5,6 +5,7 @@ import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerMergedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation.Reason.ADMISSION
@@ -19,6 +20,8 @@ private val log = KotlinLogging.logger {}
 class ScheduleService(
   val planCreationScheduleService: PlanCreationScheduleService,
   val reviewScheduleService: ReviewScheduleService,
+  val educationService: EducationService,
+  val elspPlanRepository: ElspPlanRepository,
 ) {
 
   @Transactional
@@ -66,5 +69,31 @@ class ScheduleService(
     // person has been un-enrolled in education. If this decision changes then we may want
     // to exempt the schedules here but for now only log that we received the message.
     log.info("{${info.reason.name}} event for ${info.nomsNumber} received")
+  }
+
+  fun processNeedChange(prisonNumber: String, hasNeed: Boolean) {
+    log.info { "Processing needs change for $prisonNumber" }
+    // If the person no longer has a need exempt any schedules
+    if (!hasNeed) {
+      log.debug { "Prisoner $prisonNumber doesn't have a need." }
+      planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NO_NEED)
+      reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NO_NEED)
+    } else {
+      log.debug { "Prisoner $prisonNumber had a need." }
+      // if the person is in education
+      if (educationService.inEducation(prisonNumber)) {
+        log.debug { "Prisoner $prisonNumber was in education." }
+        // if the doesn't have a plan or plan creation schedule:
+        // does the person have an ELSP?
+        val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
+        if (plan == null) {
+          log.debug { "$prisonNumber doesn't have a plan - try to create a plan creation schedule." }
+          planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+        } else {
+          log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
+          reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+        }
+      }
+    }
   }
 }
