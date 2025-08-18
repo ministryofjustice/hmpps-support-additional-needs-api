@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ReviewScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 private val log = KotlinLogging.logger {}
 
@@ -22,6 +22,7 @@ class ReviewScheduleService(
   private val reviewScheduleHistoryMapper: ReviewScheduleHistoryMapper,
   private val eventPublisher: EventPublisher,
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
+  private val workingDayService: WorkingDayService,
 ) {
 
   fun getSchedules(prisonId: String): ReviewSchedulesResponse = ReviewSchedulesResponse(
@@ -81,9 +82,8 @@ class ReviewScheduleService(
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
-    // TODO needs to be 5 working days - using the working days service
-    val startDatePlusFive = educationStartDate.plus(5, ChronoUnit.DAYS)
-    val pesPlusFive = pesContractDate.plus(5, ChronoUnit.DAYS)
+    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
+    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 }
