@@ -29,6 +29,7 @@ class ChallengeService(
   private val referenceDataRepository: ReferenceDataRepository,
   private val challengeMapper: ChallengeMapper,
   private val alnScreenerRepository: AlnScreenerRepository,
+  private val scheduleService: ScheduleService,
 ) {
   fun getChallenges(prisonNumber: String): ChallengeListResponse {
     val nonAlnChallenges = challengeRepository
@@ -70,6 +71,9 @@ class ChallengeService(
     }
 
     val savedChallenges = challengeRepository.saveAllAndFlush(challenges)
+
+    // update schedules and send messages
+    scheduleService.processNeedChange(prisonNumber, true)
     return ChallengeListResponse(savedChallenges.map { challengeMapper.toModel(it) })
   }
 
