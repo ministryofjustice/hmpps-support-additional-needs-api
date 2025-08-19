@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -29,6 +30,7 @@ class ReviewScheduleService(
     reviewScheduleHistoryRepository.findAllByPrisonNumber(prisonId).map { reviewScheduleHistoryMapper.toModel(it) },
   )
 
+  @Transactional
   fun exemptSchedule(prisonNumber: String, status: ReviewScheduleStatus) {
     reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
       ?.takeIf { it.status == ReviewScheduleStatus.SCHEDULED }
@@ -87,11 +89,16 @@ class ReviewScheduleService(
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
+  @Transactional
   fun createOrUpdateDueToNeedChange(prisonNumber: String) {
-    reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber) ?: createReviewSchedule(
-      prisonNumber = prisonNumber,
-      reviewDate = null,
-      prisonId = "N/A",
-    )
+    val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    if (existing == null || existing.status != ReviewScheduleStatus.SCHEDULED) {
+      createReviewSchedule(
+        prisonNumber = prisonNumber,
+        reviewDate = null,
+        prisonId = "N/A",
+      )
+    }
+    // if they already have a schedule with the status SCHEDULED then do nothing.
   }
 }

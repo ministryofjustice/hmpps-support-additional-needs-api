@@ -233,6 +233,7 @@ class PlanCreationScheduleService(
     )
   }
 
+  @Transactional
   fun exemptSchedule(
     prisonNumber: String,
     status: PlanCreationScheduleStatus,
@@ -297,8 +298,12 @@ class PlanCreationScheduleService(
     )
   }
 
+  @Transactional
   fun createOrUpdateDueToNeedChange(prisonNumber: String) {
-    planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = null, earliestStartDate = null)
+    val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    if (existing == null) {
+      return createSchedule(prisonNumber = prisonNumber, deadlineDate = null, earliestStartDate = null)
+    }
+    // if they already have a schedule then do nothing.
   }
 }

@@ -71,29 +71,34 @@ class ScheduleService(
     log.info("{${info.reason.name}} event for ${info.nomsNumber} received")
   }
 
+  @Transactional
   fun processNeedChange(prisonNumber: String, hasNeed: Boolean) {
     log.info { "Processing needs change for $prisonNumber" }
     // If the person no longer has a need exempt any schedules
     if (!hasNeed) {
-      log.debug { "Prisoner $prisonNumber doesn't have a need." }
+      log.debug { "Prisoner $prisonNumber has no need exempt schedules." }
       planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NO_NEED)
       reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NO_NEED)
+      return
+    }
+
+    // Has a need but not in education do nothing
+    if (!educationService.inEducation(prisonNumber)) {
+      log.debug { "Prisoner $prisonNumber has a need but is not in education no action." }
+      return
     } else {
-      log.debug { "Prisoner $prisonNumber had a need." }
-      // if the person is in education
-      if (educationService.inEducation(prisonNumber)) {
-        log.debug { "Prisoner $prisonNumber was in education." }
-        // if the doesn't have a plan or plan creation schedule:
-        // does the person have an ELSP?
-        val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
-        if (plan == null) {
-          log.debug { "$prisonNumber doesn't have a plan - try to create a plan creation schedule." }
-          planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
-        } else {
-          log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
-          reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
-        }
-      }
+      log.debug { "Prisoner $prisonNumber was in education." }
+    }
+
+    // if the doesn't have a plan or plan creation schedule:
+    // does the person already have an ELSP?
+    val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
+    if (plan == null) {
+      log.debug { "$prisonNumber doesn't have a plan - try to create a plan creation schedule." }
+      planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+    } else {
+      log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
+      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
     }
   }
 }

@@ -24,6 +24,7 @@ class ConditionService(
   private val conditionRepository: ConditionRepository,
   private val referenceDataRepository: ReferenceDataRepository,
   private val conditionMapper: ConditionMapper,
+  private val scheduleService: ScheduleService,
 ) {
   fun getConditions(prisonNumber: String): ConditionListResponse {
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
@@ -45,6 +46,8 @@ class ConditionService(
     }
 
     val savedConditions = conditionRepository.saveAllAndFlush(conditions)
+    // update schedules and send messages
+    scheduleService.processNeedChange(prisonNumber, true)
     return ConditionListResponse(savedConditions.map { conditionMapper.toModel(it) })
   }
 
