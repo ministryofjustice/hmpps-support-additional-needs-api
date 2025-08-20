@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
@@ -13,6 +14,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
@@ -28,8 +33,11 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.TestDataService
+import java.time.Instant
 import java.time.LocalDate
 import java.util.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation as EducationStatusUpdateAdditionalInformation1
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
 @RestController
@@ -44,6 +52,7 @@ class TestDataController(
   private val strengthService: StrengthService,
   private val alnScreenerRepository: AlnScreenerRepository,
   private val scheduleService: ScheduleService,
+  private val testDataService: TestDataService,
 ) {
   /**
    * Test only endpoint to set up a person with appropriate test data.
@@ -135,8 +144,18 @@ class TestDataController(
             screeningDate = LocalDate.now(),
           ),
         )
-        challengeService.createAlnChallenges(prisonNumber, listOf(ALNChallenge(challengeTypeCode = "WORD_BASED_PROBLEMS")), prisonId, alnScreener.id)
-        strengthService.createAlnStrengths(prisonNumber, listOf(ALNStrength(strengthTypeCode = "PEOPLE_PERSON")), prisonId, alnScreener.id)
+        challengeService.createAlnChallenges(
+          prisonNumber,
+          listOf(ALNChallenge(challengeTypeCode = "WORD_BASED_PROBLEMS")),
+          prisonId,
+          alnScreener.id,
+        )
+        strengthService.createAlnStrengths(
+          prisonNumber,
+          listOf(ALNStrength(strengthTypeCode = "PEOPLE_PERSON")),
+          prisonId,
+          alnScreener.id,
+        )
       }
     }
 
@@ -144,7 +163,65 @@ class TestDataController(
 
     return planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
   }
+
+  @PreAuthorize(HAS_EDIT_ELSP)
+  @PostMapping("/aln-trigger")
+  @ResponseStatus(HttpStatus.CREATED)
+  fun alnTriggerSimulation(
+    @PathVariable prisonNumber: String,
+  ) {
+    val additionalInformation = EducationALNAssessmentUpdateAdditionalInformation(
+      curiousExternalReference = UUID.randomUUID(),
+    )
+    val domainEvent = domainEventMessage(
+      prisonNumber,
+      EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
+      additionalInformation = additionalInformation,
+    )
+    testDataService.sendDomainEvent(domainEvent)
+  }
+
+  @PreAuthorize(HAS_EDIT_ELSP)
+  @PostMapping("/education-trigger")
+  @ResponseStatus(HttpStatus.CREATED)
+  fun educationTriggerSimulation(
+    @PathVariable prisonNumber: String,
+  ) {
+    val additionalInformation = EducationStatusUpdateAdditionalInformation1(
+      curiousExternalReference = UUID.randomUUID(),
+    )
+    val domainEvent = domainEventMessage(
+      prisonNumber,
+      EventType.EDUCATION_STATUS_UPDATE,
+      additionalInformation = additionalInformation,
+    )
+    testDataService.sendDomainEvent(domainEvent)
+  }
 }
+
+fun domainEventMessage(
+  prisonNumber: String,
+  eventType: EventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
+  occurredAt: Instant = Instant.now().minusSeconds(10),
+  publishedAt: Instant = Instant.now(),
+  description: String = "Test message from test end point",
+  version: String = "1.0",
+  additionalInformation: AdditionalInformation,
+): SqsMessage = SqsMessage(
+  Type = "Notification",
+  Message = """
+        {
+          "eventType": "${eventType.eventType}",
+          "personReference": { "identifiers": [ { "type": "NOMS", "value": "$prisonNumber" } ] },
+          "occurredAt": "$occurredAt",
+          "publishedAt": "$publishedAt",
+          "description": "$description",
+          "version": "$version",
+          "additionalInformation": ${ObjectMapper().writeValueAsString(additionalInformation)}
+        }        
+  """.trimIndent(),
+  MessageId = UUID.randomUUID(),
+)
 
 data class EducationNeedRequest(
   val prisonId: String = "BXI",
