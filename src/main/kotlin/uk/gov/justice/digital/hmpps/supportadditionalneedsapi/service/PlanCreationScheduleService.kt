@@ -24,133 +24,12 @@ class PlanCreationScheduleService(
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
   private val planCreationScheduleRepository: PlanCreationScheduleRepository,
   private val planCreationScheduleHistoryMapper: PlanCreationScheduleHistoryMapper,
-  private val educationSupportPlanRepository: ElspPlanRepository,
-  private val educationService: EducationService,
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val elspPlanRepository: ElspPlanRepository,
   private val workingDayService: WorkingDayService,
 ) {
-
-  /**
-   * This is called whenever:
-   * - An education message is processed
-   * - An ALN screener message is processed
-   * - SAN Condition or Challenge is created or made inactive.
-   */
-  @Transactional
-  fun attemptToCreate(prisonNumber: String, prisonId: String = "N/A") {
-    // TODO need to get this from the education start date
-    val educationStartDate = LocalDate.now()
-
-    log.debug("Attempting to create a new plan creation schedule for prisoner $prisonNumber")
-    if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
-
-    // already have a schedule so exit here.
-    if (planCreationScheduleRepository.findByPrisonNumber(prisonNumber) != null) return
-
-    if (educationService.inEducation(prisonNumber) && needService.hasNeed(prisonNumber)) {
-      log.debug("Person [$prisonNumber] was in education and has a need")
-      // Create a new schedule
-      val planCreationSchedule = PlanCreationScheduleEntity(
-        prisonNumber = prisonNumber,
-        status = PlanCreationScheduleStatus.SCHEDULED,
-        deadlineDate = getDeadlineDate(educationStartDate),
-        createdAtPrison = prisonId,
-        updatedAtPrison = prisonId,
-        needSources = needService.getNeedSources(prisonNumber),
-        earliestStartDate = educationStartDate,
-      )
-      log.debug("saving plan creation schedule for prisoner $prisonNumber")
-      planCreationScheduleRepository.saveAndFlush(planCreationSchedule)
-      eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
-    }
-  }
-
-  /**
-   * This is called whenever:
-   * - An education message is processed
-   * - An ALN screener message is processed
-   * - SAN Condition or Challenge is created or made inactive.
-   *
-   * if there is a schedule and the person no longer has a need or is no longer in education
-   * then set the deadline date to null - only reset the deadline date in the case where the person
-   * is back in education.
-   */
-  @Transactional
-  fun attemptToUpdate(prisonNumber: String, prisonId: String = "N/A") {
-    log.debug("Attempting to update a plan creation schedule for prisoner $prisonNumber")
-    // TODO need to get this from the education start date
-    val educationStartDate = LocalDate.now()
-
-    if (educationSupportPlanRepository.findByPrisonNumber(prisonNumber) != null) return
-
-    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber) ?: return
-    if (planCreationSchedule.status == PlanCreationScheduleStatus.COMPLETED) return
-
-    val inEducation = educationService.inEducation(prisonNumber)
-    val hasNeed = needService.hasNeed(prisonNumber)
-
-    when {
-      inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
-        log.debug("Prisoner $prisonNumber has a need and is in education do nothing to the schedule")
-      }
-
-      !inEducation && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
-        log.debug("Prisoner $prisonNumber is no longer in education, clearing deadline date, setting status to EXEMPT_NOT_IN_EDUCATION")
-        updateSchedule(
-          planCreationSchedule,
-          PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
-          prisonId,
-          null,
-          null,
-          prisonNumber,
-        )
-      }
-
-      inEducation && hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION -> {
-        val deadlineDate = getDeadlineDate(educationStartDate)
-        log.debug(
-          "Prisoner {} is back in education, setting deadline date to {}, setting status to SCHEDULED",
-          prisonNumber,
-          deadlineDate,
-        )
-        updateSchedule(
-          planCreationSchedule,
-          PlanCreationScheduleStatus.SCHEDULED,
-          prisonId,
-          deadlineDate,
-          educationStartDate,
-          prisonNumber,
-        )
-      }
-
-      !hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.SCHEDULED -> {
-        log.debug("Prisoner $prisonNumber no longer has a need, clearing deadline date, setting status to EXEMPT_NO_NEED ")
-        updateSchedule(
-          planCreationSchedule,
-          PlanCreationScheduleStatus.EXEMPT_NO_NEED,
-          prisonId,
-          null,
-          null,
-          prisonNumber,
-        )
-      }
-
-      hasNeed && planCreationSchedule.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED -> {
-        log.debug("Prisoner $prisonNumber has a need but is already in education, leaving deadline date null setting status to SCHEDULED")
-        updateSchedule(
-          planCreationSchedule,
-          PlanCreationScheduleStatus.SCHEDULED,
-          prisonId,
-          null,
-          null,
-          prisonNumber,
-        )
-      }
-    }
-  }
 
   private fun updateSchedule(
     schedule: PlanCreationScheduleEntity,
@@ -169,7 +48,7 @@ class PlanCreationScheduleService(
   }
 
   fun createSchedule(prisonNumber: String, prisonId: String = "N/A", deadlineDate: LocalDate?, earliestStartDate: LocalDate?) {
-    if (educationService.inEducation(prisonNumber) && needService.hasNeed(prisonNumber)) {
+    if (needService.hasNeed(prisonNumber)) {
       log.debug("Person [$prisonNumber] was in education and has a need")
       // Create a new schedule
       val planCreationSchedule = PlanCreationScheduleEntity(
@@ -204,6 +83,7 @@ class PlanCreationScheduleService(
     return PlanCreationSchedulesResponse(models)
   }
 
+  @Transactional
   fun exemptScheduleWithValidate(
     prisonNumber: String,
     status: PlanCreationScheduleStatus,

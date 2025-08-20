@@ -10,8 +10,6 @@ import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
-import org.mockito.kotlin.eq
-import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
@@ -27,7 +25,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreatio
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPublisher
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
-import java.time.Instant
 import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
@@ -90,8 +87,6 @@ class PlanCreationScheduleServiceTest {
       planCreationScheduleHistoryRepository,
       planCreationScheduleRepository,
       planCreationScheduleHistoryMapper,
-      educationSupportPlanRepository,
-      educationService,
       needService,
       eventPublisher,
       LocalDate.parse("2025-10-01"),
@@ -108,168 +103,10 @@ class PlanCreationScheduleServiceTest {
       .thenReturn(LocalDate.of(2024, 10, 1).plusDays(5))
   }
 
-  @Test
-  fun `does nothing if plan already exists`() {
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
-
-    service.attemptToCreate(prisonNumber)
-
-    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
-    verify(planCreationScheduleHistoryRepository, never()).save(any())
-  }
-
-  @Test
-  fun `does nothing if schedule already exists`() {
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
-
-    service.attemptToCreate(prisonNumber)
-
-    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
-    verify(planCreationScheduleHistoryRepository, never()).save(any())
-  }
-
-  @Test
-  fun `does nothing if not in education or no need`() {
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(false)
-
-    service.attemptToCreate(prisonNumber)
-
-    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
-  }
-
-  @Test
-  fun `creates plan schedule and history when PES contract date is in the past`() {
-    val pesContractDate = LocalDate.parse("2024-10-01")
-    assertCreatesPlanWithExpectedDeadline(pesContractDate, LocalDate.now().plusDays(5))
-  }
-
-  @Test
-  fun `creates plan schedule and history when PES contract date is in the future`() {
-    val pesContractDate = LocalDate.now().plusMonths(6)
-    assertCreatesPlanWithExpectedDeadline(pesContractDate, pesContractDate.plusDays(5))
-  }
-
-  private fun assertCreatesPlanWithExpectedDeadline(
-    pesContractDate: LocalDate,
-    expectedDeadline: LocalDate,
-  ) {
-    val service = PlanCreationScheduleService(
-      planCreationScheduleHistoryRepository,
-      planCreationScheduleRepository,
-      planCreationScheduleHistoryMapper,
-      educationSupportPlanRepository,
-      educationService,
-      needService,
-      eventPublisher,
-      pesContractDate,
-      elspPlanRepository,
-      workingDayService,
-    )
-
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
-    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
-    whenever(needService.getNeedSources(prisonNumber)).thenReturn(setOf(ALN_SCREENER))
-
-    val savedEntity = PlanCreationScheduleEntity(
-      prisonNumber = prisonNumber,
-      status = PlanCreationScheduleStatus.SCHEDULED,
-      deadlineDate = expectedDeadline,
-      createdAtPrison = "N/A",
-      updatedAtPrison = "N/A",
-      version = 1,
-      needSources = setOf(ALN_SCREENER),
-      earliestStartDate = null,
-    ).apply {
-      createdAt = Instant.now()
-      updatedAt = Instant.now()
-      createdBy = "system"
-      updatedBy = "system"
-    }
-
-    whenever(planCreationScheduleRepository.saveAndFlush(any())).thenReturn(savedEntity)
-
-    service.attemptToCreate(prisonNumber)
-
-    verify(planCreationScheduleRepository).saveAndFlush(
-      check {
-        assert(it.prisonNumber == prisonNumber)
-        assertEquals(it.status, PlanCreationScheduleStatus.SCHEDULED)
-        assertEquals(expectedDeadline, it.deadlineDate)
-        assertEquals(savedEntity.needSources, it.needSources)
-      },
-    )
-    verify(eventPublisher).createAndPublishPlanCreationSchedule(eq(prisonNumber), any<Instant>())
-  }
-
-  @Test
-  fun `attemptToUpdate does nothing if plan already exists`() {
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(mock())
-
-    service.attemptToUpdate(prisonNumber)
-
-    verify(planCreationScheduleRepository, never()).findByPrisonNumber(any())
-  }
-
-  @Test
-  fun `attemptToUpdate does nothing if no schedule exists`() {
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-
-    service.attemptToUpdate(prisonNumber)
-
-    verify(planCreationScheduleRepository).findByPrisonNumber(prisonNumber)
-    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
-  }
-
-  @Test
-  fun `attemptToUpdate does nothing if schedule is already completed`() {
-    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.COMPLETED)
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
-
-    service.attemptToUpdate(prisonNumber)
-
-    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
-  }
-
-  private fun planCreationScheduleEntity(status: PlanCreationScheduleStatus) = PlanCreationScheduleEntity(
-    prisonNumber = prisonNumber,
-    status = status,
-    deadlineDate = LocalDate.now(),
-    createdAtPrison = "BXI",
-    updatedAtPrison = "BXI",
-    earliestStartDate = null,
-  )
-
-  @Test
-  fun `attemptToUpdate transition from SCHEDULED to EXEMPT_NOT_IN_EDUCATION`() {
-    val service = setUpService()
-    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.SCHEDULED)
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(false)
-    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
-
-    service.attemptToUpdate(prisonNumber, "MDI")
-
-    assertEquals(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, schedule.status)
-    assertEquals("MDI", schedule.updatedAtPrison)
-    assertEquals(null, schedule.deadlineDate)
-    verify(planCreationScheduleRepository).saveAndFlush(schedule)
-    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
-  }
-
   private fun setUpService() = PlanCreationScheduleService(
     planCreationScheduleHistoryRepository,
     planCreationScheduleRepository,
     planCreationScheduleHistoryMapper,
-    educationSupportPlanRepository,
-    educationService,
     needService,
     eventPublisher,
     LocalDate.parse("2024-10-01"),
@@ -278,56 +115,62 @@ class PlanCreationScheduleServiceTest {
   )
 
   @Test
-  fun `attemptToUpdate transition from EXEMPT_NOT_IN_EDUCATION to SCHEDULED`() {
-    val service = setUpService()
-    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
+  fun `createSchedule creates when in education and has need`() {
+    setUpService()
     whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+    whenever(needService.getNeedSources(prisonNumber)).thenReturn(setOf(ALN_SCREENER))
+    whenever(planCreationScheduleRepository.saveAndFlush(any())).thenAnswer { it.arguments[0] }
 
-    service.attemptToUpdate(prisonNumber, "MDI")
+    val deadline = LocalDate.now().plusDays(5)
+    val earliest = LocalDate.now()
 
-    assertEquals(PlanCreationScheduleStatus.SCHEDULED, schedule.status)
-    assertEquals("MDI", schedule.updatedAtPrison)
-    assertEquals(LocalDate.now().plusDays(5), schedule.deadlineDate)
-    verify(planCreationScheduleRepository).saveAndFlush(schedule)
-    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+    service.createSchedule(prisonNumber = prisonNumber, prisonId = "MDI", deadlineDate = deadline, earliestStartDate = earliest)
+
+    verify(planCreationScheduleRepository).saveAndFlush(
+      check<PlanCreationScheduleEntity> {
+        assertEquals(prisonNumber, it.prisonNumber)
+        assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
+        assertEquals("MDI", it.createdAtPrison)
+        assertEquals("MDI", it.updatedAtPrison)
+        assertEquals(deadline, it.deadlineDate)
+        assertEquals(earliest, it.earliestStartDate)
+        assertEquals(setOf(ALN_SCREENER), it.needSources)
+      },
+    )
   }
 
   @Test
-  fun `attemptToUpdate transition from SCHEDULED to EXEMPT_NO_NEED`() {
-    val service = setUpService()
-    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.SCHEDULED)
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
-    whenever(needService.hasNeed(prisonNumber)).thenReturn(false)
+  fun `createSchedule does nothing if not in education or no need`() {
+    service.createSchedule(prisonNumber, deadlineDate = null, earliestStartDate = null)
 
-    service.attemptToUpdate(prisonNumber, "MDI")
-
-    assertEquals(PlanCreationScheduleStatus.EXEMPT_NO_NEED, schedule.status)
-    assertEquals("MDI", schedule.updatedAtPrison)
-    assertEquals(null, schedule.deadlineDate)
-    verify(planCreationScheduleRepository).saveAndFlush(schedule)
-    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
   }
 
   @Test
-  fun `attemptToUpdate transition from EXEMPT_NO_NEED to SCHEDULED`() {
-    val service = setUpService()
-    val schedule = planCreationScheduleEntity(PlanCreationScheduleStatus.EXEMPT_NO_NEED)
-    whenever(educationSupportPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
-    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(schedule)
-    whenever(educationService.inEducation(prisonNumber)).thenReturn(true)
-    whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
+  fun `getDeadlineDate returns max of start date plus 5WD and PES plus 5WD`() {
+    val start = LocalDate.parse("2024-09-01")
+    whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, start)).thenReturn(LocalDate.parse("2024-09-06"))
 
-    service.attemptToUpdate(prisonNumber, "MDI")
+    val result = service.getDeadlineDate(start)
+    assertEquals(LocalDate.parse("2025-10-06"), result)
+  }
 
-    assertEquals(PlanCreationScheduleStatus.SCHEDULED, schedule.status)
-    assertEquals("MDI", schedule.updatedAtPrison)
-    assertEquals(null, schedule.deadlineDate)
-    verify(planCreationScheduleRepository).saveAndFlush(schedule)
-    verify(eventPublisher).createAndPublishPlanCreationSchedule(any<String>(), any<Instant>())
+  @Test
+  fun `completeSchedule marks completed when scheduled`() {
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.SCHEDULED,
+      deadlineDate = LocalDate.now(),
+      createdAtPrison = "N/A",
+      updatedAtPrison = "N/A",
+      earliestStartDate = null,
+    )
+    whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(existing)
+
+    service.completeSchedule(prisonNumber, "MDI")
+
+    assertEquals(PlanCreationScheduleStatus.COMPLETED, existing.status)
+    assertEquals("MDI", existing.updatedAtPrison)
+    verify(planCreationScheduleRepository).save(existing)
   }
 }

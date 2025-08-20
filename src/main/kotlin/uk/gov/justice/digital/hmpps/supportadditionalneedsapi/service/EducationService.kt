@@ -2,7 +2,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
-import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Education
@@ -30,7 +29,7 @@ class EducationService(
   private val educationEnrolmentRepository: EducationEnrolmentRepository,
   private val needService: NeedService,
   private val reviewScheduleService: ReviewScheduleService,
-  @Lazy private val planCreationScheduleService: PlanCreationScheduleService,
+  private val planCreationScheduleService: PlanCreationScheduleService,
   private val elspPlanRepository: ElspPlanRepository,
 ) {
 
