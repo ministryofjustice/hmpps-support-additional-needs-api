@@ -26,7 +26,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import java.time.LocalDate
 import java.util.*
@@ -43,7 +43,7 @@ class TestDataController(
   private val challengeService: ChallengeService,
   private val strengthService: StrengthService,
   private val alnScreenerRepository: AlnScreenerRepository,
-  private val planCreationScheduleService: PlanCreationScheduleService,
+  private val scheduleService: ScheduleService,
 ) {
   /**
    * Test only endpoint to set up a person with appropriate test data.
@@ -140,8 +140,7 @@ class TestDataController(
       }
     }
 
-    planCreationScheduleService.attemptToCreate(prisonNumber, request.prisonId)
-    planCreationScheduleService.attemptToUpdate(prisonNumber, request.prisonId)
+    scheduleService.processNeedChange(prisonNumber, needService.hasNeed(prisonNumber))
 
     return planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
   }
