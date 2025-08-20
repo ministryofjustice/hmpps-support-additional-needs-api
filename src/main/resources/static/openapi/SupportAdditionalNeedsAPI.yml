@@ -118,6 +118,7 @@ paths:
           description: Successfully created review (no response body)
         '400':
           $ref: '#/components/responses/400Error'
+#       TODO think about the other error responses - like if someone reviews a plan where there is no plan?
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
 
@@ -1060,6 +1061,7 @@ components:
           min: 1
         prisonerDeclinedFeedback:
           type: boolean
+          default: false
           description: whether or not the prisoner declined to be part of the review
         prisonerFeedback:
           type: string
@@ -1080,6 +1082,7 @@ components:
         - reviewDate
         - nextReviewDate
         - updateEducationSupportPlan
+        - prisonerDeclinedFeedback
 
     UpdateEducationSupportPlanRequest:
       title: UpdateEducationSupportPlanRequest
