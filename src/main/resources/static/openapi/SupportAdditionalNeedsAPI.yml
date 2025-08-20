@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.10.3'
+  version: '0.11.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -99,6 +99,27 @@ paths:
         '404':
           $ref: '#/components/responses/404Error'
 
+  '/profile/{prisonNumber}/education-support-plan/review':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    post:
+      summary: Review an Education Support Plan
+      description: |
+        Creates an Education Support Plan Review and updates the plan for the specified prisoner.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Plan
+      operationId: create-education-support-plan-review
+      responses:
+        '201':
+          description: Successfully created review (no response body)
+        '400':
+          $ref: '#/components/responses/400Error'
+      requestBody:
+        $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
 
   '/profile/{prisonNumber}/conditions':
     parameters:
@@ -645,6 +666,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CreateEducationSupportPlanRequest'
+    CreateEducationSupportPlanReview:
+      description: Request body to create an Education Support Plan for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SupportPlanReviewRequest'
     UpdatePlanCreationStatus:
       description: Request body to update the status of the plan creation schedule.
       content:
@@ -999,6 +1026,105 @@ components:
       required:
         - strengths
 
+    SupportPlanReviewRequest:
+      title: SupportPlanReviewRequest
+      description: A request to create an Education Support Plan Review for a person.
+      type: object
+      properties:
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+          description: The prisonId that the person is a resident at at the time of creating the review.
+        reviewDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the review was carried out.
+          example: '2023-11-19'
+        nextReviewDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the next review should be scheduled.
+          example: '2023-11-19'
+        reviewCreatedBy:
+          description: Optional details of who created the Education Support Plan review. If not specified the authenticated user is assumed to have created it.
+          $ref: '#/components/schemas/ReviewContributor'
+        otherContributors:
+          description: |
+            Optional list of other people involved in the creation of the Education Support Plan Review.
+
+            If provided, the list must contain at least 1 contributor. The list must not be empty.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewContributor'
+          min: 1
+        prisonerDeclinedFeedback:
+          type: boolean
+          description: whether or not the prisoner declined to be part of the review
+        prisonerFeedback:
+          type: string
+          description: Details about how the prisoner feels they are progressing. This is mandatory if the prisonerDeclinedFeedback is false.
+          example: The education support changes have really helped me to concentrate in lessons.
+          maxLength: 4096
+        reviewerFeedback:
+          type: string
+          description: Details about how the reviewer feels the prisoner has progressed.
+          example: Chris has really improved his concentration in lessons.
+          maxLength: 4096
+        updateEducationSupportPlan:
+          description: Request object containing updates to the education support plan .
+          $ref: '#/components/schemas/UpdateEducationSupportPlanRequest'
+      required:
+        - prisonId
+        - reviewerFeedback
+        - reviewDate
+        - nextReviewDate
+        - updateEducationSupportPlan
+
+    UpdateEducationSupportPlanRequest:
+      title: UpdateEducationSupportPlanRequest
+      description: A request to update an Education Support Plan for a person.
+      type: object
+      properties:
+        anyChanges:
+          type: boolean
+          default: false
+          description: If there are no changes to the plan then this is false and we ignore any updated fields.
+                       This maybe necessary for day one with a reduced review journey.
+        teachingAdjustments:
+          type: string
+          description: Optional details of any adjustments that need to be made to the teaching or curriculum.
+          example: Ensure simple, clear and relevant examples of used when explaining concepts.
+          maxLength: 4096
+        specificTeachingSkills:
+          type: string
+          description: Optional details of any specific teaching skills or knowledge that are required.
+          example: British Sign Language.
+          maxLength: 4096
+        examAccessArrangements:
+          type: string
+          description: Optional details of any exam access arrangements that need to be made.
+          example: Escort Chris to the exam hall 10 minutes before other students to allow him time to settle and collect his thoughts before the exam.
+          maxLength: 4096
+        lnspSupport:
+          type: string
+          description: Optional details of any support that a Learning Needs Support Practitioner needs to provide.
+          example: An LNSP is required for approx 1 hour per week to read and explain passages of text to Chris.
+          maxLength: 4096
+        lnspSupportHours:
+          type: integer
+          description: |
+            Recommended number of additional support hours per week to meet the individual's educational needs.  
+            Mandatory when `lnspSupport` is populated.
+          example: 4
+        detail:
+          type: string
+          description: Optional Additional information about the plan that is not covered in the other questions.
+          example: Chris is very open about his issues and is a pleasure to talk to.
+          maxLength: 4096
+      required:
+        - anyChanges
+
     CreateEducationSupportPlanRequest:
       title: CreateEducationSupportPlanRequest
       description: A request to create an Education Support Plan for a person.
@@ -1074,6 +1200,23 @@ components:
     PlanContributor:
       title: PlanContributor
       description: An object describing someone who contributed to the Education Support Plan
+      type: object
+      properties:
+        name:
+          type: string
+          example: Joe Bloggs
+          maxLength: 200
+        jobRole:
+          type: string
+          example: Education Instructor
+          maxLength: 200
+      required:
+        - name
+        - jobRole
+
+    ReviewContributor:
+      title: ReviewContributor
+      description: An object describing someone who contributed to the Review of an Education Support Plan
       type: object
       properties:
         name:
