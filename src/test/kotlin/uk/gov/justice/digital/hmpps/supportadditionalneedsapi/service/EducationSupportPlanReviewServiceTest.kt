@@ -16,9 +16,9 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotCompleteReviewWithNoSchedule
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportPlanReviewRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewContributor
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportPlanReviewRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateEducationSupportPlanRequest
 import java.time.LocalDate
 import java.util.*
@@ -105,16 +105,14 @@ class EducationSupportPlanReviewServiceTest {
     )
   }
 
-  private fun aValidSupportPlanReviewRequest(nextReviewDate: LocalDate = LocalDate.now().plusMonths(1)): SupportPlanReviewRequest {
-    return SupportPlanReviewRequest(
-      nextReviewDate = nextReviewDate,
-      prisonId = "BXI",
-      prisonerDeclinedFeedback = false,
-      reviewerFeedback = "reviewerFeedback",
-      updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false),
-      reviewCreatedBy = ReviewContributor(name = "John Smith", jobRole = "teacher"),
-      otherContributors = listOf(),
-      prisonerFeedback = "prisonerFeedback",
-    )
-  }
+  private fun aValidSupportPlanReviewRequest(nextReviewDate: LocalDate = LocalDate.now().plusMonths(1)): SupportPlanReviewRequest = SupportPlanReviewRequest(
+    nextReviewDate = nextReviewDate,
+    prisonId = "BXI",
+    prisonerDeclinedFeedback = false,
+    reviewerFeedback = "reviewerFeedback",
+    updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false),
+    reviewCreatedBy = ReviewContributor(name = "John Smith", jobRole = "teacher"),
+    otherContributors = listOf(),
+    prisonerFeedback = "prisonerFeedback",
+  )
 }
