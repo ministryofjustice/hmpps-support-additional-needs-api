@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
@@ -147,6 +148,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var educationEnrolmentRepository: EducationEnrolmentRepository
+
+  @Autowired
+  protected lateinit var elspReviewRepository: ElspReviewRepository
 
   @Autowired
   protected lateinit var elspPlanService: EducationSupportPlanService
