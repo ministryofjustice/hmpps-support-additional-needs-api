@@ -41,6 +41,7 @@ class ReviewScheduleService(
       }
   }
 
+  @Transactional
   fun createReviewSchedule(prisonNumber: String, reviewDate: LocalDate?, prisonId: String) {
     val currentSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     if (currentSchedule != null && currentSchedule.status == ReviewScheduleStatus.SCHEDULED) {
@@ -58,6 +59,19 @@ class ReviewScheduleService(
     eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
   }
 
+  @Transactional
+  fun completeExistingAndCreateNextReviewSchedule(
+    prisonNumber: String,
+    reviewDate: LocalDate?,
+    prisonId: String,
+    existingReviewSchedule: ReviewScheduleEntity,
+  ) {
+    existingReviewSchedule.status = ReviewScheduleStatus.COMPLETED
+    reviewScheduleRepository.save(existingReviewSchedule)
+    createReviewSchedule(prisonNumber, reviewDate, prisonId)
+  }
+
+  @Transactional
   fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     val proposedDeadline = getDeadlineDate(startDate)

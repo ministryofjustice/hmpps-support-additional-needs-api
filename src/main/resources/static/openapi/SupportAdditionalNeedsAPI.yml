@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.11.0'
+  version: '0.11.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -118,7 +118,12 @@ paths:
           description: Successfully created review (no response body)
         '400':
           $ref: '#/components/responses/400Error'
-#       TODO think about the other error responses - like if someone reviews a plan where there is no plan?
+        '404':
+          $ref: '#/components/responses/404Error'
+          description: Attempted to create a support plan review where there is no support plan
+        '409':
+          $ref: '#/components/responses/409Error'
+          description: Attempted to create a support plan review where there is no active review schedule
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
 
@@ -1035,12 +1040,6 @@ components:
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prisonId that the person is a resident at at the time of creating the review.
-        reviewDate:
-          type: string
-          format: date
-          description: |
-            An ISO-8601 date representing date that the review was carried out.
-          example: '2023-11-19'
         nextReviewDate:
           type: string
           format: date

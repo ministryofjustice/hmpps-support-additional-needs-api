@@ -8,4 +8,5 @@ import java.util.UUID
 @Repository
 interface ElspPlanRepository : JpaRepository<ElspPlanEntity, UUID> {
   fun findByPrisonNumber(prisonNumber: String): ElspPlanEntity?
+  fun existsByPrisonNumber(prisonNumber: String): Boolean
 }

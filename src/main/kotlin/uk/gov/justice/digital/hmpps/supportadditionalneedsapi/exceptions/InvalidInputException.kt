@@ -34,6 +34,8 @@ class PlanNotFoundException(prisonNumber: String) : RuntimeException("ELSP plan 
 
 class PlanCreationScheduleNotFoundException(prisonNumber: String) : RuntimeException("Plan creation schedule not found for prisoner [$prisonNumber]")
 
+class CannotCompleteReviewWithNoSchedule(prisonNumber: String) : RuntimeException("Attempted to create a Review with no schedule for prisoner [$prisonNumber]")
+
 class PlanCreationScheduleStateException(
   prisonNumber: String,
   status: PlanCreationScheduleStatus,

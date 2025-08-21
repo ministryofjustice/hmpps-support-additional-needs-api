@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNot
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 
 @Service
@@ -45,6 +46,25 @@ class EducationSupportPlanService(
   private fun checkPlanDoesNotExist(prisonNumber: String) {
     elspPlanRepository.findByPrisonNumber(prisonNumber)?.let {
       throw PersonAlreadyHasAPlanException(prisonNumber)
+    }
+  }
+
+  fun hasPlan(prisonNumber: String): Boolean = elspPlanRepository.existsByPrisonNumber(prisonNumber)
+
+  @Transactional
+  fun updatePlan(prisonNumber: String, request: UpdateEducationSupportPlanRequest) {
+    // only update if there are any changes
+    if (request.anyChanges) {
+      val elsp = elspPlanRepository.findByPrisonNumber(prisonNumber) ?: throw PlanNotFoundException(prisonNumber)
+      with(request) {
+        elsp.lnspSupport = lnspSupport
+        elsp.lnspSupportHours = lnspSupportHours
+        elsp.detail = detail
+        elsp.teachingAdjustments = teachingAdjustments
+        elsp.examAccessArrangements = examAccessArrangements
+        elsp.specificTeachingSkills = specificTeachingSkills
+      }
+      elspPlanRepository.save(elsp)
     }
   }
 }
