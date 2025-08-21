@@ -19,41 +19,26 @@ import java.util.*
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
-@Table(name = "elsp_plan")
+@Table(name = "elsp_review")
 @Audited(withModifiedFlag = false)
-data class ElspPlanEntity(
+data class ElspReviewEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 
   @Column(length = 200)
-  val planCreatedByName: String? = null,
+  val reviewCreatedByName: String? = null,
 
   @Column(length = 200)
-  val planCreatedByJobRole: String? = null,
+  val reviewCreatedByJobRole: String? = null,
 
   @Column(nullable = false)
-  val hasCurrentEhcp: Boolean = false,
+  val prisonerDeclinedFeedback: Boolean = false,
 
   @Column
-  var teachingAdjustments: String? = null,
+  val prisonerFeedback: String? = null,
 
   @Column
-  var specificTeachingSkills: String? = null,
-
-  @Column
-  var examAccessArrangements: String? = null,
-
-  @Column
-  var lnspSupport: String? = null,
-
-  @Column
-  var lnspSupportHours: Int? = null,
-
-  @Column
-  var detail: String? = null,
-
-  @Column(nullable = false)
-  val individualSupport: String,
+  val reviewerFeedback: String? = null,
 
   @Column(updatable = false)
   val createdAtPrison: String,
@@ -61,8 +46,11 @@ data class ElspPlanEntity(
   @Column
   var updatedAtPrison: String,
 
-  @OneToMany(mappedBy = "elspPlan", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
-  val otherContributors: MutableList<OtherContributorEntity> = mutableListOf(),
+  @OneToMany(mappedBy = "elspReview", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.EAGER)
+  val otherContributors: MutableList<OtherReviewContributorEntity> = mutableListOf(),
+
+  @Column(updatable = false)
+  val reviewScheduleReference: UUID,
 
   @Id
   @Column

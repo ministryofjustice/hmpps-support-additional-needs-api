@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotCompleteReviewWithNoSchedule
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
@@ -188,6 +189,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
     value = [
       PersonAlreadyHasAPlanException::class,
       PlanCreationScheduleStateException::class,
+      CannotCompleteReviewWithNoSchedule::class,
     ],
   )
   protected fun handleExceptionReturnConflictErrorResponse(

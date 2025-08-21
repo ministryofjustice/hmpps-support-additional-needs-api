@@ -25,6 +25,6 @@ class EducationSupportPlanReviewController(private val educationSupportPlanRevie
     @PathVariable prisonNumber: String,
     @RequestBody request: SupportPlanReviewRequest,
   ) {
-    educationSupportPlanReviewService.createReview(prisonNumber, request)
+    educationSupportPlanReviewService.processReview(prisonNumber, request)
   }
 }
