@@ -1078,7 +1078,6 @@ components:
       required:
         - prisonId
         - reviewerFeedback
-        - reviewDate
         - nextReviewDate
         - updateEducationSupportPlan
         - prisonerDeclinedFeedback

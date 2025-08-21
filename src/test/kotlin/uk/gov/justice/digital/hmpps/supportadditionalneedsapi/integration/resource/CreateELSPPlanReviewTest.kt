@@ -38,7 +38,7 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     val reviews = elspReviewRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(reviews).hasSize(1)
 
-    val reviewSchedules = reviewScheduleRepository.findAll()
+    val reviewSchedules = reviewScheduleRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(reviewSchedules).hasSize(2)
     assertThat(reviewSchedules[0].status).isEqualTo(ReviewScheduleStatusEntity.COMPLETED)
 
@@ -50,5 +50,12 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.ELSP_REVIEW_CREATED)
   }
 
-  fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(nextReviewDate = LocalDate.now().plusMonths(1), prisonId = "BXI", prisonerDeclinedFeedback = false, reviewerFeedback = "reviewerFeedback", prisonerFeedback = "prisonerFeedback", updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false))
+  fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
+    nextReviewDate = LocalDate.now().plusMonths(1),
+    prisonId = "BXI",
+    prisonerDeclinedFeedback = false,
+    reviewerFeedback = "reviewerFeedback",
+    prisonerFeedback = "prisonerFeedback",
+    updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false),
+  )
 }
