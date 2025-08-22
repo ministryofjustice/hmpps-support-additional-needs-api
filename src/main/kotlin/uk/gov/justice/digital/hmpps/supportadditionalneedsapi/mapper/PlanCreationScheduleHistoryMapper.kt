@@ -32,11 +32,11 @@ class PlanCreationScheduleHistoryMapper(
       null
     }
 
-    val planKeyedInBy = if (isCompleted) planEntity?.planCreatedByName else null
+    val planCompletedBy = if (isCompleted) planEntity?.planCreatedByName else null
 
     val planCompletedByJobRole = if (isCompleted) planEntity?.planCreatedByJobRole else null
 
-    val planCompletedBy = if (isCompleted) {
+    val planKeyedInBy = if (isCompleted) {
       planEntity?.createdBy?.let { userService.getUserDetails(it).name }
     } else {
       null

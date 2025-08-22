@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ReviewScheduleHistoryMapper
@@ -24,11 +25,17 @@ class ReviewScheduleService(
   private val eventPublisher: EventPublisher,
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val workingDayService: WorkingDayService,
+  private val reviewRepository: ElspReviewRepository,
 ) {
 
-  fun getSchedules(prisonId: String): ReviewSchedulesResponse = ReviewSchedulesResponse(
-    reviewScheduleHistoryRepository.findAllByPrisonNumber(prisonId).map { reviewScheduleHistoryMapper.toModel(it) },
-  )
+  fun getSchedules(prisonNumber: String): ReviewSchedulesResponse {
+    // create a map of all the completed reviews:
+    val reviews = reviewRepository.findAllByPrisonNumber(prisonNumber).associateBy { it.reviewScheduleReference }
+    return ReviewSchedulesResponse(
+      reviewScheduleHistoryRepository.findAllByPrisonNumber(prisonNumber)
+        .map { reviewScheduleHistoryMapper.toModel(it, reviews) },
+    )
+  }
 
   @Transactional
   fun exemptSchedule(prisonNumber: String, status: ReviewScheduleStatus) {
