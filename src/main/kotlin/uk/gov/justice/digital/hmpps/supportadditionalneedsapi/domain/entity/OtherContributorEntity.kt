@@ -19,7 +19,7 @@ import java.util.*
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
-@Table(name = "OTHER_CONTRIBUTOR")
+@Table(name = "other_contributor")
 @Audited(withModifiedFlag = false)
 data class OtherContributorEntity(
 

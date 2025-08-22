@@ -78,6 +78,42 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     assertThat(actual.reviewSchedules[1].status).isEqualTo(ReviewScheduleStatus.COMPLETED)
   }
 
+  @Test
+  fun `Create an ELSP plan review for a given prisoner where the plan has changes`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val planReviewRequest = createELSPPlanReviewWithPlanChangesRequest()
+    anElSPExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+
+    // When
+    webTestClient.post()
+      .uri(URI_REVIEW, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planReviewRequest)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    // Then
+    val plan = elspPlanService.getPlan(prisonNumber)
+    assertThat(plan).isNotNull
+    assertThat(plan.teachingAdjustments).isEqualTo("teachingAdjustmentsUpdated")
+    assertThat(plan.specificTeachingSkills).isEqualTo("specificTeachingSkillsUpdated")
+    assertThat(plan.lnspSupport).isEqualTo("lnspSupportUpdated")
+    assertThat(plan.lnspSupportHours).isEqualTo(69)
+    assertThat(plan.detail).isEqualTo("detailUpdated")
+    assertThat(plan.examAccessArrangements).isEqualTo("examAccessArrangementsUpdated")
+
+    // check that the plan history has been recorded:
+    val planHistory = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(planHistory).hasSize(2)
+    assertThat(planHistory[0].examAccessArrangements).isNull()
+    assertThat(planHistory[1].examAccessArrangements).isEqualTo("examAccessArrangementsUpdated")
+  }
+
   fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
     nextReviewDate = LocalDate.now().plusMonths(1),
     prisonId = "BXI",
@@ -86,5 +122,23 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     prisonerFeedback = "prisonerFeedback",
     reviewCreatedBy = ReviewContributor("Bob Smith", "Teacher"),
     updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false),
+  )
+
+  fun createELSPPlanReviewWithPlanChangesRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
+    nextReviewDate = LocalDate.now().plusMonths(1),
+    prisonId = "BXI",
+    prisonerDeclinedFeedback = false,
+    reviewerFeedback = "reviewerFeedback",
+    prisonerFeedback = "prisonerFeedback",
+    reviewCreatedBy = ReviewContributor("Bob Smith", "Teacher"),
+    updateEducationSupportPlan = UpdateEducationSupportPlanRequest(
+      anyChanges = true,
+      teachingAdjustments = "teachingAdjustmentsUpdated",
+      specificTeachingSkills = "specificTeachingSkillsUpdated",
+      lnspSupport = "lnspSupportUpdated",
+      lnspSupportHours = 69,
+      detail = "detailUpdated",
+      examAccessArrangements = "examAccessArrangementsUpdated",
+    ),
   )
 }
