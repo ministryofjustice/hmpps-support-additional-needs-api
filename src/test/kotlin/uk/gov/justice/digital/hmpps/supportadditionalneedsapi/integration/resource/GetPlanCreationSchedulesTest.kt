@@ -117,8 +117,8 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     assertThat(actual.planCreationSchedules[1].status).isEqualTo(PlanCreationStatus.COMPLETED)
     assertThat(actual.planCreationSchedules[1].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
 
-    assertThat(actual.planCreationSchedules[1].planCompletedBy).isEqualTo("Test User")
-    assertThat(actual.planCreationSchedules[1].planKeyedInBy).isEqualTo("Fred Johns")
+    assertThat(actual.planCreationSchedules[1].planCompletedBy).isEqualTo("Fred Johns")
+    assertThat(actual.planCreationSchedules[1].planKeyedInBy).isEqualTo("Test User")
     assertThat(actual.planCreationSchedules[1].planCompletedByJobRole).isEqualTo("Manager")
     assertThat(actual.planCreationSchedules[1].planCompletedDate).isEqualTo(LocalDate.now())
   }
