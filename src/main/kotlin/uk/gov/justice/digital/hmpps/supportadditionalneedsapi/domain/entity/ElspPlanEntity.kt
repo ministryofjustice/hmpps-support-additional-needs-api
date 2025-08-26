@@ -21,7 +21,7 @@ import java.util.*
 @EntityListeners(value = [AuditingEntityListener::class])
 @Table(name = "elsp_plan")
 @Audited(withModifiedFlag = false)
-data class ElspPlanEntity(
+class ElspPlanEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 

@@ -21,7 +21,7 @@ import java.util.*
 @EntityListeners(value = [AuditingEntityListener::class])
 @Table(name = "other_review_contributor")
 @Audited(withModifiedFlag = false)
-data class OtherReviewContributorEntity(
+class OtherReviewContributorEntity(
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "elsp_review_id")

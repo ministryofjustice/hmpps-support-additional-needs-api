@@ -15,8 +15,8 @@ import java.util.*
 
 @Entity
 @Immutable
-@Table(name = "other_contributor_history")
-class OtherContributorHistoryEntity(
+@Table(name = "other_review_contributor_history")
+class OtherReviewContributorHistoryEntity(
 
   @Column(length = 200, nullable = false)
   val name: String,
@@ -33,12 +33,12 @@ class OtherContributorHistoryEntity(
       insertable = false,
       updatable = false,
     ),
-    JoinColumn(name = "elsp_plan_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false),
+    JoinColumn(name = "elsp_review_id", referencedColumnName = "id", nullable = false, insertable = false, updatable = false),
   )
-  val plan: ElspPlanHistoryEntity,
+  val elspReview: ElspReviewHistoryEntity,
 
   @EmbeddedId
-  val id: OtherContributorHistoryEntityKey,
+  val id: OtherReviewContributorHistoryEntityKey,
 
   @Column(updatable = false)
   val reference: UUID = UUID.randomUUID(),
@@ -63,8 +63,8 @@ class OtherContributorHistoryEntity(
 )
 
 @Embeddable
-data class OtherContributorHistoryEntityKey(
+data class OtherReviewContributorHistoryEntityKey(
   @Column(name = "rev_id") val revisionNumber: Long,
-  @Column(name = "elsp_plan_id") val planId: UUID,
+  @Column(name = "elsp_review_id") val elspReviewId: UUID,
   @Column(name = "id") val id: UUID,
 )

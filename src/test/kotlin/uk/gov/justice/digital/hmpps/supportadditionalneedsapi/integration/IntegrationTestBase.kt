@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -37,6 +36,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
@@ -59,7 +59,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.HmppsPrisonerSearchApiExtension.Companion.hmppsPrisonerSearchApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
@@ -101,6 +104,9 @@ abstract class IntegrationTestBase {
     Awaitility.setDefaultPollInterval(500, MILLISECONDS)
     Awaitility.setDefaultTimeout(5, SECONDS)
   }
+
+  @Autowired
+  private lateinit var elspPlanMapper: ElspPlanMapper
 
   @Autowired
   lateinit var educationRepository: EducationRepository
@@ -155,6 +161,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var elspReviewRepository: ElspReviewRepository
+
+  @Autowired
+  protected lateinit var elspReviewHistoryRepository: ElspReviewHistoryRepository
 
   @Autowired
   protected lateinit var elspPlanService: EducationSupportPlanService
@@ -294,7 +303,23 @@ abstract class IntegrationTestBase {
     educationRepository.save(educationEntity)
   }
   fun anElSPExists(prisonNumber: String) {
-    val elsp = ElspPlanEntity(prisonNumber = prisonNumber, individualSupport = "support", createdAtPrison = "BXI", updatedAtPrison = "BXI")
+    val elsp = elspPlanMapper.toEntity(
+      prisonNumber,
+      educationSupportPlanResponse = CreateEducationSupportPlanRequest(
+        prisonId = "BXI",
+        hasCurrentEhcp = true,
+        reviewDate = LocalDate.now(),
+        individualSupport = "support",
+        planCreatedBy = PlanContributor("Tom Brown", jobRole = "Education coordinator"),
+        otherContributors = listOf(PlanContributor(name = "Bob Smith", jobRole = "Teacher")),
+        teachingAdjustments = "teachingAdjustments",
+        specificTeachingSkills = "specificTeachingSkills",
+        examAccessArrangements = "examAccessArrangements",
+        lnspSupport = "lnspSupport",
+        lnspSupportHours = 2,
+        detail = "detail",
+      ),
+    )
 
     elspPlanRepository.save(elsp)
   }
