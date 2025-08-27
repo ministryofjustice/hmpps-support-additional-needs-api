@@ -5,7 +5,6 @@ import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
@@ -34,7 +33,7 @@ class ElspReviewHistoryEntity(
   @Column(name = "reviewer_feedback")
   val reviewerFeedback: String? = null,
 
-  @OneToMany(mappedBy = "elspReview", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "elspReview")
   val otherContributors: List<OtherReviewContributorHistoryEntity> = emptyList(),
 
   @Column(name = "review_schedule_reference", updatable = false)

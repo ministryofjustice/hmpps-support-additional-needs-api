@@ -4,7 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
@@ -24,7 +23,7 @@ class ElspPlanHistoryEntity(
   @Column(name = "plan_created_by_job_role")
   val planCreatedByJobRole: String? = null,
 
-  @OneToMany(mappedBy = "plan", fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "plan")
   val otherContributors: List<OtherContributorHistoryEntity> = emptyList(),
 
   @Column(name = "has_current_ehcp")

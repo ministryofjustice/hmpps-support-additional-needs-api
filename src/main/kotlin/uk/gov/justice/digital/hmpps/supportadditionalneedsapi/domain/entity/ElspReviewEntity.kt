@@ -4,7 +4,6 @@ import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
@@ -46,7 +45,7 @@ class ElspReviewEntity(
   @Column
   var updatedAtPrison: String,
 
-  @OneToMany(mappedBy = "elspReview", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
+  @OneToMany(mappedBy = "elspReview", cascade = [CascadeType.ALL], orphanRemoval = true)
   val otherContributors: MutableList<OtherReviewContributorEntity> = mutableListOf(),
 
   @Column(updatable = false)

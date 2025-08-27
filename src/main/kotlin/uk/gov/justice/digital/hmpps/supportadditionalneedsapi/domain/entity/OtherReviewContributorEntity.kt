@@ -3,8 +3,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -24,7 +22,7 @@ import java.util.*
 @Audited(withModifiedFlag = false)
 class OtherReviewContributorEntity(
 
-  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @ManyToOne(optional = false)
   @JoinColumn(name = "elsp_review_id", nullable = false)
   var elspReview: ElspReviewEntity,
 
@@ -41,9 +39,8 @@ class OtherReviewContributorEntity(
   var updatedAtPrison: String,
 
   @Id
-  @GeneratedValue
   @Column
-  var id: UUID? = null,
+  val id: UUID = UUID.randomUUID(),
 
   @Column(updatable = false)
   val reference: UUID = UUID.randomUUID(),
