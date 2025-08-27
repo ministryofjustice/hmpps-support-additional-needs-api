@@ -110,8 +110,67 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     // check that the plan history has been recorded:
     val planHistory = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(planHistory).hasSize(2)
-    assertThat(planHistory[0].examAccessArrangements).isNull()
+    assertThat(planHistory[0].examAccessArrangements).isEqualTo("examAccessArrangements")
+    assertThat(planHistory[0].otherContributors[0].name).isEqualTo("Bob Smith")
+    assertThat(planHistory[0].otherContributors[0].jobRole).isEqualTo("Teacher")
     assertThat(planHistory[1].examAccessArrangements).isEqualTo("examAccessArrangementsUpdated")
+    assertThat(planHistory[1].otherContributors).hasSize(0)
+  }
+
+  @Test
+  fun `Make 2 ELSP plan reviews for a given prisoner`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val planReviewRequest1 = createELSPPlanReviewWithPlanChangesRequest()
+    val planReviewRequest2 = createELSPPlanReviewWithPlanChangesRequest(detailUpdated = "detailUpdatedAgain", createdByName = "Fred Brown", "Teaching assistant")
+
+    anElSPExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+
+    // When
+    // add review #1
+    webTestClient.post()
+      .uri(URI_REVIEW, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planReviewRequest1)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    // add review #2
+    webTestClient.post()
+      .uri(URI_REVIEW, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planReviewRequest2)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    // Then
+    val plan = elspPlanService.getPlan(prisonNumber)
+    assertThat(plan).isNotNull
+    assertThat(plan.teachingAdjustments).isEqualTo("teachingAdjustmentsUpdated")
+    assertThat(plan.specificTeachingSkills).isEqualTo("specificTeachingSkillsUpdated")
+    assertThat(plan.lnspSupport).isEqualTo("lnspSupportUpdated")
+    assertThat(plan.lnspSupportHours).isEqualTo(69)
+    assertThat(plan.detail).isEqualTo("detailUpdatedAgain")
+    assertThat(plan.examAccessArrangements).isEqualTo("examAccessArrangementsUpdated")
+
+    // check that the plan history has three records,
+    // 1 original plan
+    // 2 updated as part of reviews:
+    val planHistory = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(planHistory).hasSize(3)
+
+    // check that the review history has two records:
+    val reviewHistory = elspReviewHistoryRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(reviewHistory).hasSize(2)
+    assertThat(reviewHistory[0].reviewCreatedByName).isEqualTo(planReviewRequest1.reviewCreatedBy!!.name)
+    assertThat(reviewHistory[0].reviewCreatedByJobRole).isEqualTo(planReviewRequest1.reviewCreatedBy!!.jobRole)
+    assertThat(reviewHistory[1].reviewCreatedByName).isEqualTo(planReviewRequest2.reviewCreatedBy!!.name)
+    assertThat(reviewHistory[1].reviewCreatedByJobRole).isEqualTo(planReviewRequest2.reviewCreatedBy!!.jobRole)
   }
 
   fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
@@ -124,20 +183,20 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     updateEducationSupportPlan = UpdateEducationSupportPlanRequest(anyChanges = false),
   )
 
-  fun createELSPPlanReviewWithPlanChangesRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
+  fun createELSPPlanReviewWithPlanChangesRequest(detailUpdated: String = "detailUpdated", createdByName: String = "Bob Smith", createdByRole: String = "Teacher"): SupportPlanReviewRequest = SupportPlanReviewRequest(
     nextReviewDate = LocalDate.now().plusMonths(1),
     prisonId = "BXI",
     prisonerDeclinedFeedback = false,
     reviewerFeedback = "reviewerFeedback",
     prisonerFeedback = "prisonerFeedback",
-    reviewCreatedBy = ReviewContributor("Bob Smith", "Teacher"),
+    reviewCreatedBy = ReviewContributor(createdByName, createdByRole),
     updateEducationSupportPlan = UpdateEducationSupportPlanRequest(
       anyChanges = true,
       teachingAdjustments = "teachingAdjustmentsUpdated",
       specificTeachingSkills = "specificTeachingSkillsUpdated",
       lnspSupport = "lnspSupportUpdated",
       lnspSupportHours = 69,
-      detail = "detailUpdated",
+      detail = detailUpdated,
       examAccessArrangements = "examAccessArrangementsUpdated",
     ),
   )

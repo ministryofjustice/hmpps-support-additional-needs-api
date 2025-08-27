@@ -4,52 +4,44 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
+import jakarta.persistence.EntityListeners
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.Hibernate
-import org.hibernate.annotations.Immutable
+import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.util.*
 
 @Entity
-@Immutable
-@Table(name = "elsp_plan_history")
-data class ElspPlanHistoryEntity(
-  @Column(name = "prison_number")
+@EntityListeners(value = [AuditingEntityListener::class])
+@Table(name = "elsp_review_history")
+data class ElspReviewHistoryEntity(
+  @Column(name = "prison_number", updatable = false)
   val prisonNumber: String,
 
-  @Column(name = "plan_created_by_name")
-  val planCreatedByName: String? = null,
+  @Column(name = "review_created_by_name", length = 200)
+  val reviewCreatedByName: String? = null,
 
-  @Column(name = "plan_created_by_job_role")
-  val planCreatedByJobRole: String? = null,
+  @Column(name = "review_created_by_job_role", length = 200)
+  val reviewCreatedByJobRole: String? = null,
 
-  @OneToMany(mappedBy = "plan")
-  val otherContributors: List<OtherContributorHistoryEntity> = emptyList(),
+  @Column(name = "prisoner_declined_feedback", nullable = false)
+  val prisonerDeclinedFeedback: Boolean = false,
 
-  @Column(name = "has_current_ehcp")
-  val hasCurrentEhcp: Boolean = false,
+  @Column(name = "prisoner_feedback")
+  val prisonerFeedback: String? = null,
 
-  @Column(name = "teaching_adjustments")
-  var teachingAdjustments: String? = null,
+  @Column(name = "reviewer_feedback")
+  val reviewerFeedback: String? = null,
 
-  @Column(name = "specific_teaching_Skills")
-  var specificTeachingSkills: String? = null,
+  @OneToMany(mappedBy = "elspReview")
+  val otherContributors: List<OtherReviewContributorHistoryEntity> = emptyList(),
 
-  @Column(name = "exam_access_arrangements")
-  var examAccessArrangements: String? = null,
+  @Column(name = "review_schedule_reference", updatable = false)
+  val reviewScheduleReference: UUID,
 
-  @Column(name = "lnsp_support")
-  var lnspSupport: String? = null,
-
-  @Column(name = "lnsp_support_hours")
-  var lnspSupportHours: Int? = null,
-
-  @Column
-  var detail: String? = null,
-
-  @Column(name = "individual_support")
-  val individualSupport: String,
+  @EmbeddedId
+  val id: ElspReviewHistoryEntityKey,
 
   @Column(updatable = false)
   val reference: UUID = UUID.randomUUID(),
@@ -71,14 +63,11 @@ data class ElspPlanHistoryEntity(
 
   @Column(name = "updated_at_prison")
   val updatedAtPrison: String,
-
-  @EmbeddedId
-  val id: ElspPlanHistoryEntityKey,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-    other as ElspPlanHistoryEntity
+    other as ElspReviewHistoryEntity
 
     return id == other.id
   }
@@ -89,7 +78,7 @@ data class ElspPlanHistoryEntity(
 }
 
 @Embeddable
-data class ElspPlanHistoryEntityKey(
+data class ElspReviewHistoryEntityKey(
   @Column(name = "rev_id")
   val revisionNumber: Long,
   @Column(name = "id")

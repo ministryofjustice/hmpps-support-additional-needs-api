@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -23,8 +22,8 @@ import java.util.*
 @Audited(withModifiedFlag = false)
 data class OtherContributorEntity(
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "elsp_plan_id")
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "elsp_plan_id", nullable = false)
   var elspPlan: ElspPlanEntity,
 
   @Column(length = 200, nullable = false)

@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
-import jakarta.persistence.FetchType
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -21,10 +20,10 @@ import java.util.*
 @EntityListeners(value = [AuditingEntityListener::class])
 @Table(name = "other_review_contributor")
 @Audited(withModifiedFlag = false)
-data class OtherReviewContributorEntity(
+class OtherReviewContributorEntity(
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "elsp_review_id")
+  @ManyToOne(optional = false)
+  @JoinColumn(name = "elsp_review_id", nullable = false)
   var elspReview: ElspReviewEntity,
 
   @Column(length = 200, nullable = false)
