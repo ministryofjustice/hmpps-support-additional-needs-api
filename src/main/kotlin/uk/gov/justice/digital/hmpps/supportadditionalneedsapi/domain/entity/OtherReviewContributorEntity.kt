@@ -4,6 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
+import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
@@ -23,8 +24,8 @@ import java.util.*
 @Audited(withModifiedFlag = false)
 class OtherReviewContributorEntity(
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "elsp_review_id")
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "elsp_review_id", nullable = false)
   var elspReview: ElspReviewEntity,
 
   @Column(length = 200, nullable = false)
@@ -40,8 +41,9 @@ class OtherReviewContributorEntity(
   var updatedAtPrison: String,
 
   @Id
+  @GeneratedValue
   @Column
-  val id: UUID = UUID.randomUUID(),
+  var id: UUID? = null,
 
   @Column(updatable = false)
   val reference: UUID = UUID.randomUUID(),

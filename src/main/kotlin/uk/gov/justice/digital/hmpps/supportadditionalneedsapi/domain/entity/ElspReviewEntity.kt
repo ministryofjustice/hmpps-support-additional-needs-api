@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
@@ -45,7 +46,7 @@ class ElspReviewEntity(
   @Column
   var updatedAtPrison: String,
 
-  @OneToMany(mappedBy = "elspReview", fetch = FetchType.EAGER)
+  @OneToMany(mappedBy = "elspReview", cascade = [CascadeType.ALL], orphanRemoval = true, fetch = FetchType.LAZY)
   val otherContributors: MutableList<OtherReviewContributorEntity> = mutableListOf(),
 
   @Column(updatable = false)
