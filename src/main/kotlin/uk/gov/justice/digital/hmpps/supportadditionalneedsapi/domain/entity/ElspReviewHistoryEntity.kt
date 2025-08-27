@@ -7,6 +7,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.util.*
@@ -14,7 +15,7 @@ import java.util.*
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
 @Table(name = "elsp_review_history")
-class ElspReviewHistoryEntity(
+data class ElspReviewHistoryEntity(
   @Column(name = "prison_number", updatable = false)
   val prisonNumber: String,
 
@@ -62,7 +63,19 @@ class ElspReviewHistoryEntity(
 
   @Column(name = "updated_at_prison")
   val updatedAtPrison: String,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as ElspReviewHistoryEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
+}
 
 @Embeddable
 data class ElspReviewHistoryEntityKey(

@@ -6,6 +6,7 @@ import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import java.time.Instant
 import java.util.*
@@ -13,7 +14,7 @@ import java.util.*
 @Entity
 @Immutable
 @Table(name = "elsp_plan_history")
-class ElspPlanHistoryEntity(
+data class ElspPlanHistoryEntity(
   @Column(name = "prison_number")
   val prisonNumber: String,
 
@@ -73,7 +74,19 @@ class ElspPlanHistoryEntity(
 
   @EmbeddedId
   val id: ElspPlanHistoryEntityKey,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as ElspPlanHistoryEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
+}
 
 @Embeddable
 data class ElspPlanHistoryEntityKey(
