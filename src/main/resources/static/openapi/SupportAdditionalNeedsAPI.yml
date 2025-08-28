@@ -140,6 +140,8 @@ paths:
         The additional information in the actions area will use the  deadline dates for the plan 
         creation schedule and the review schedule. The endpoint also returns the reasons the person 
         refused a plan if any. 
+        
+        If there is no record of this peson in SAN then the status will be NO_PLAN. 
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
@@ -151,8 +153,6 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/PlanActionStatusResponse'
-        '404':
-          $ref: '#/components/responses/404Error'
       operationId: get-plan-action-status
 
   '/profile/{prisonNumber}/conditions':
