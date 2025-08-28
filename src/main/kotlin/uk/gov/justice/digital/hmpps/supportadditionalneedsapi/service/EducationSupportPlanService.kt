@@ -18,6 +18,7 @@ class EducationSupportPlanService(
   private val elspPlanMapper: ElspPlanMapper,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val planReviewScheduleService: ReviewScheduleService,
+  private val reviewScheduleService: ReviewScheduleService,
 ) {
   fun getPlan(prisonNumber: String): EducationSupportPlanResponse {
     val entity = elspPlanRepository.findByPrisonNumber(prisonNumber) ?: throw PlanNotFoundException(prisonNumber)
