@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.11.1'
+  version: '0.12.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -126,6 +126,34 @@ paths:
           description: Attempted to create a support plan review where there is no active review schedule
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
+
+  '/profile/{prisonNumber}/plan-action-status':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    get:
+      summary: Returns the plan action status for a person
+      description: |
+        This endpoint has been written to satisfy the data requirements for the Actions
+        box on the SAN pages.
+        
+        The UI will decode the planStatus to decide which links to display in the actions area. 
+        The additional information in the actions area will use the  deadline dates for the plan 
+        creation schedule and the review schedule. The endpoint also returns the reasons the person 
+        refused a plan if any. 
+        
+        If there is no record of this peson in SAN then the status will be NO_PLAN. 
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+
+      tags:
+        - Plan
+      responses:
+        '200':
+          $ref: '#/components/responses/PlanActionStatusResponse'
+      operationId: get-plan-action-status
 
   '/profile/{prisonNumber}/conditions':
     parameters:
@@ -1871,6 +1899,33 @@ components:
         - reference
         - status
 
+    PlanActionStatus:
+      title: PlanActionStatus
+      type: object
+      properties:
+        planCreationDeadlineDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the plan creation is due.
+          example: '2023-11-19'
+        reviewDeadlineDate:
+          type: string
+          format: date
+          description: |
+            An ISO-8601 date representing date that the next plan review is due.
+          example: '2023-11-19'
+        status:
+          $ref: '#/components/schemas/PlanStatus'
+        exemptionReason:
+          $ref: '#/components/schemas/PlanCreationScheduleExemptionReason'
+        exemptionDetail:
+          type: string
+          description: |
+            More detail about the reason for this exemption. This is mainly used for EXEMPT_PRISONER_NOT_COMPLY.
+      required:
+        - status
+
     PlanCreationStatus:
       title: PlanCreationStatus
       description: Enum of the various plan creation schedule statuses.
@@ -2302,6 +2357,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PlanCreationSchedulesResponse'
+
+    PlanActionStatusResponse:
+      description: Response body containing the Education Support Plan action status.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlanActionStatus'
 
     EducationSupportPlan:
       description: Response body containing an Education Support Plan.
