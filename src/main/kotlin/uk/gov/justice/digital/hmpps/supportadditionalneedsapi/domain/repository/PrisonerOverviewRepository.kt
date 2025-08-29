@@ -7,4 +7,5 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Pris
 @Repository
 interface PrisonerOverviewRepository : JpaRepository<PrisonerOverviewEntity, String> {
   fun findByPrisonNumberIn(prisonNumbers: List<String>): List<PrisonerOverviewEntity>
+  fun findByPrisonNumber(prisonNumber: String): PrisonerOverviewEntity?
 }
