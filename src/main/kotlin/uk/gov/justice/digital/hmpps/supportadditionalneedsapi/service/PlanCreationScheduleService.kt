@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -138,8 +139,8 @@ class PlanCreationScheduleService(
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
-    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
-    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
+    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
+    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
