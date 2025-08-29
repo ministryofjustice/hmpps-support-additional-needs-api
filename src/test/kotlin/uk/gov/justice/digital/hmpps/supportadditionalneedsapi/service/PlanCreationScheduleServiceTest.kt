@@ -14,6 +14,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource.ALN_SCREENER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -95,12 +96,16 @@ class PlanCreationScheduleServiceTest {
     )
 
     // set up common working day scenarios:
-    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.now())).thenReturn(LocalDate.now().plusDays(5))
-    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.of(2025, 10, 1)))
-      .thenReturn(LocalDate.of(2025, 10, 1).plusDays(5))
-    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.now().plusMonths(6))).thenReturn(LocalDate.now().plusMonths(6).plusDays(5))
-    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, LocalDate.of(2024, 10, 1)))
-      .thenReturn(LocalDate.of(2024, 10, 1).plusDays(5))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.now())).thenReturn(
+      LocalDate.now().plusDays(
+        PLAN_DEADLINE_DAYS_TO_ADD,
+      ),
+    )
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2025, 10, 1)))
+      .thenReturn(LocalDate.of(2025, 10, 1).plusDays(PLAN_DEADLINE_DAYS_TO_ADD))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.now().plusMonths(6))).thenReturn(LocalDate.now().plusMonths(6).plusDays(PLAN_DEADLINE_DAYS_TO_ADD))
+    lenient().whenever(workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2024, 10, 1)))
+      .thenReturn(LocalDate.of(2024, 10, 1).plusDays(PLAN_DEADLINE_DAYS_TO_ADD))
   }
 
   private fun setUpService() = PlanCreationScheduleService(
@@ -147,12 +152,12 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `getDeadlineDate returns max of start date plus 5WD and PES plus 5WD`() {
+  fun `getDeadlineDate returns max of start date plus DEADLINE_DAYS_TO_ADD and PES plus DEADLINE_DAYS_TO_ADD`() {
     val start = LocalDate.parse("2024-09-01")
-    whenever(workingDayService.getNextWorkingDayNDaysFromDate(5, start)).thenReturn(LocalDate.parse("2024-09-06"))
+    whenever(workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, start)).thenReturn(LocalDate.parse("2024-09-06"))
 
     val result = service.getDeadlineDate(start)
-    assertEquals(LocalDate.parse("2025-10-06"), result)
+    assertEquals(LocalDate.parse("2025-10-01").plusDays(PLAN_DEADLINE_DAYS_TO_ADD), result)
   }
 
   @Test

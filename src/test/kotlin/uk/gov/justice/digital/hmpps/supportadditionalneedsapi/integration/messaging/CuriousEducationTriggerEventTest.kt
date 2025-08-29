@@ -10,6 +10,8 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
@@ -43,8 +45,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(LocalDate.of(2025, 10, 2))
-    // because the education start date is greater than PES date then the deadline date is education start date + 5 working days
-    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(LocalDate.of(2025, 10, 9))
+    // because the education start date is greater than PES date then the deadline date is education start date + DEADLINE_DAYS_TO_ADD working days
+    val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2025, 10, 2))
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
   }
 
   @Test
@@ -61,7 +64,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(LocalDate.of(2025, 6, 12))
     // because the education start date is less than PES date then the deadline date is PES date + 5 working days
-    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(LocalDate.of(2025, 10, 8))
+    val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2025, 10, 1))
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
   }
 
   @Test
@@ -161,7 +165,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isNotNull()
     // this is the date that the education starts from the curious API
     val educationStartDate = LocalDate.of(2025, 10, 2)
-    val deadlineDate = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
+    val deadlineDate = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
 
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isEqualTo(deadlineDate)
   }

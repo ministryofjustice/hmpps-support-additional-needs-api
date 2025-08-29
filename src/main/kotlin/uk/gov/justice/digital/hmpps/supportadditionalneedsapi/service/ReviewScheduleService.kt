@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
@@ -105,8 +106,8 @@ class ReviewScheduleService(
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
-    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, educationStartDate)
-    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
+    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
+    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
