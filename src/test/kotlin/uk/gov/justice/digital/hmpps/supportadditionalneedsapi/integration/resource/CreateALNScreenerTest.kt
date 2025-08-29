@@ -159,7 +159,10 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(screener.challenges.map { it.challengeType.code }).containsExactlyInAnyOrder("MEMORY", "SPEED_OF_CALCULATION")
     assertThat(screener.strengths.map { it.strengthType.code }).containsExactlyInAnyOrder("PEOPLE_PERSON", "SPATIAL_AWARENESS")
     assertThat(screener.createdBy).isEqualTo("testuser")
-    assertThat(screener.createdByDisplayName).isEqualTo("Test User") // This depends on what `stubGetDisplayName` returns
+    assertThat(screener.createdByDisplayName).isEqualTo("Test User")
+    assertThat(screener.challenges.map { it.alnScreenerDate }).containsOnly(screenerDate)
+    assertThat(screener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
+
   }
 
   private fun createChallengesList(): List<ALNChallenge> = listOf(

@@ -20,8 +20,8 @@ class ALNScreenerMapper(
     ALNScreenerResponse(
       reference = reference,
       screenerDate = screeningDate,
-      challenges = challenges.map(challengeMapper::toModel),
-      strengths = strengths.map(strengthMapper::toModel),
+      challenges = entity.challenges.map { challengeMapper.toModel(it, screenerDate = screeningDate) },
+      strengths = entity.strengths.map { strengthMapper.toModel(it, screenerDate = screeningDate) },
       createdBy = createdBy!!,
       createdByDisplayName = createdByName,
       createdAt = instantMapper.toOffsetDateTime(createdAt)!!,
