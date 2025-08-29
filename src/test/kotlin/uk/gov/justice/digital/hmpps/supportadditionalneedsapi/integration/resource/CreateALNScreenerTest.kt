@@ -162,7 +162,6 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(screener.createdByDisplayName).isEqualTo("Test User")
     assertThat(screener.challenges.map { it.alnScreenerDate }).containsOnly(screenerDate)
     assertThat(screener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
-
   }
 
   private fun createChallengesList(): List<ALNChallenge> = listOf(
