@@ -93,6 +93,16 @@ tasks {
 tasks.named("jar") {
   enabled = true
 }
+
+val test by testing.suites.existing(JvmTestSuite::class)
+
+tasks.register<Test>("initialiseDatabase") {
+  testClassesDirs = files(test.map { it.sources.output.classesDirs })
+  classpath = files(test.map { it.sources.runtimeClasspath })
+  include("**/InitialiseDatabase.class")
+  onlyIf { gradle.startParameter.taskNames.contains("initialiseDatabase") }
+}
+
 tasks.named("assemble") {
   // `assemble` task assembles the classes and dependencies into a fat jar
   // Beforehand we need to remove the plain jar and test-fixtures jars if they exist
