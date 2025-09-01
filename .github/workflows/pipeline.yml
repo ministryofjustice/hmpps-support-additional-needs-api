@@ -72,6 +72,8 @@ jobs:
       - uses: ministryofjustice/hmpps-github-actions/.github/actions/database_schema_report@v2 # WORKFLOW_VERSION
         with:
           schema: public
+          user: '${{ secrets.SCHEMA_SPY_USERNAME }}'
+          password: '${{secrets.SCHEMA_SPY_PASSWORD}}'
   deploy_dev:
     name: Deploy to the development environment
     needs:
