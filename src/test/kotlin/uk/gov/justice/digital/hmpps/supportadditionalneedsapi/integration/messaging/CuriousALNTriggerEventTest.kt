@@ -178,6 +178,47 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
+  @Test
+  fun `should set up a review schedule as having a null deadline date`() {
+    // This is an obscure scenario where somehow a person has an ELSP created but doesn't have a need.
+    // maybe their need was temporary in the past.
+    // Then they are in education and they have a need added.
+    // this should schedule a review BUT not set a deadline date.
+
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
+    prisonerInEducation(prisonNumber)
+    anElSPExists(prisonNumber)
+
+    // When
+    val curiousReference = UUID.randomUUID()
+    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
+      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
+      description = "ASSESSMENT_COMPLETED",
+    )
+    sendCuriousALNMessage(sqsMessage)
+
+    // Then
+    // wait until the queue is drained / message is processed
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+    await untilCallTo {
+      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
+      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
+      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
+    } matches { it != null }
+
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isNull()
+    Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
   fun createTestALNAssessment(prisonNumber: String, hasNeed: Boolean = true): String = """{
   "v2": {
     "assessments": {
