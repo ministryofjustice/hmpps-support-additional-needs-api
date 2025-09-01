@@ -66,8 +66,12 @@ class ScheduleService(
 
   private fun processTransfer(info: PrisonerReceivedAdditionalInformation) {
     // Curious also process transfer messages and will be sending us a message to say the
-    // person has been un-enrolled in education. If this decision changes then we may want
-    // to exempt the schedules here but for now only log that we received the message.
+    // person has been un-enrolled in education.
+    // Decision was made to also exempt the schedules here, even though we will also be receiving a
+    // message from Curious to say that the person is exempt due to not being in education.
+    planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+
     log.info("{${info.reason.name}} event for ${info.nomsNumber} received")
   }
 
