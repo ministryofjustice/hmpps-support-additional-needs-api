@@ -37,7 +37,7 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
-    //prisoner should no longer be in education
+    // prisoner should no longer be in education
     val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
@@ -60,7 +60,7 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
-    //prisoner should no longer be in education
+    // prisoner should no longer be in education
     val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
