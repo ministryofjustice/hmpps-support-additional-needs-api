@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.12.0'
+  version: '0.12.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1922,7 +1922,17 @@ components:
         exemptionDetail:
           type: string
           description: |
-            More detail about the reason for this exemption. This is mainly used for EXEMPT_PRISONER_NOT_COMPLY.
+            More detail about the reason the plan was declined. This is mainly used for EXEMPT_PRISONER_NOT_COMPLY.
+        exemptionRecordedBy:
+          type: string
+          description: If the plan was declined by the prisoner, the display name of the person who recorded the plan exemption.
+          example: Alex Smith
+        exemptionRecordedAt:
+          type: string
+          format: date-time
+          description: If the plan was declined by the prisoner, the timestamp that the plan was exempted.
+          example: 2025-10-04
+
       required:
         - status
 
