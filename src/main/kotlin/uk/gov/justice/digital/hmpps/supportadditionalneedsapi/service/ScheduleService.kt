@@ -71,7 +71,17 @@ class ScheduleService(
     // message from Curious to say that the person is exempt due to not being in education.
     planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
     reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
-
+    // If the person is currently in education set them to not being in education any more
+    // null curious reference since this wasn't from a curious message.
+    val inEducation = educationService.inEducation(info.nomsNumber)
+    if(inEducation) {
+      log.info("Setting ${info.nomsNumber} to no longer in education due to transfer message.")
+      educationService.recordEducationRecord(
+        prisonNumber = info.nomsNumber,
+        inEducation = false,
+        curiousReference = null
+      )
+    }
     log.info("{${info.reason.name}} event for ${info.nomsNumber} received")
   }
 

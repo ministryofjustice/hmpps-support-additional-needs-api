@@ -24,6 +24,7 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     aValidPlanCreationScheduleExists(prisonNumber)
+    prisonerInEducation(prisonNumber)
 
     // When
     sendPrisonerTransferMessage(prisonNumber)
@@ -36,6 +37,9 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    //prisoner should no longer be in education
+    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
 
   @Test
@@ -43,6 +47,7 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     aValidReviewScheduleExists(prisonNumber)
+    prisonerInEducation(prisonNumber)
 
     // When
     sendPrisonerTransferMessage(prisonNumber)
@@ -55,6 +60,9 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    //prisoner should no longer be in education
+    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
 
   private fun sendPrisonerTransferMessage(prisonNumber: String) {

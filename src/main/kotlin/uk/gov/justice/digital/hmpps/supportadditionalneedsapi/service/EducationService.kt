@@ -46,7 +46,7 @@ class EducationService(
    * We record this record when we receive an education message from Curious.
    */
   @Transactional
-  fun recordEducationRecord(prisonNumber: String, inEducation: Boolean, curiousReference: UUID) {
+  fun recordEducationRecord(prisonNumber: String, inEducation: Boolean, curiousReference: UUID?) {
     educationRepository.save(
       EducationEntity(
         inEducation = inEducation,
