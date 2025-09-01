@@ -20,10 +20,11 @@ import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 class PrisonerTransferEventTest : IntegrationTestBase() {
 
   @Test
-  fun `should process prisoner transfer event and not change the status of the plan creation schedule`() {
+  fun `should process prisoner transfer event and change the status of the plan creation schedule to EXEMPT_PRISONER_TRANSFER`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     aValidPlanCreationScheduleExists(prisonNumber)
+    prisonerInEducation(prisonNumber)
 
     // When
     sendPrisonerTransferMessage(prisonNumber)
@@ -35,14 +36,18 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-    Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    // prisoner should no longer be in education
+    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
 
   @Test
-  fun `should process prisoner transfer event and not change the status of the review schedule`() {
+  fun `should process prisoner transfer event and change the status of the review schedule to EXEMPT_PRISONER_TRANSFER`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     aValidReviewScheduleExists(prisonNumber)
+    prisonerInEducation(prisonNumber)
 
     // When
     sendPrisonerTransferMessage(prisonNumber)
@@ -54,7 +59,10 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     } matches { it == 0 }
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+    Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    // prisoner should no longer be in education
+    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(educationEntity?.inEducation).isFalse()
   }
 
   private fun sendPrisonerTransferMessage(prisonNumber: String) {
