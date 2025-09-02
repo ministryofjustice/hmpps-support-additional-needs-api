@@ -68,18 +68,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Start Required Services
-        run: docker compose up -d
+        run: docker compose -f docker-compose-schemaspy.yml up -d
+
+      - name: Initialise DB
+        shell: bash
+        run: |
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew initialiseDatabase
       - uses: ministryofjustice/hmpps-github-actions/.github/actions/database_schema_report@v2 # WORKFLOW_VERSION
         with:
           schema: public
           user: '${{secrets.SCHEMA_SPY_USERNAME}}'
           password: '${{secrets.SCHEMA_SPY_PASSWORD}}'
           database_name: '${{secrets.SCHEMA_SPY_DB_NAME}}'
-          host: 'localhost'
-          port: '5432'
-          postgres_driver_version: '42.7.3'
-          schemaspy_version: '6.2.4'
-          jdk_tag: '21.0'
   deploy_dev:
     name: Deploy to the development environment
     needs:
