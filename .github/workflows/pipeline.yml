@@ -68,7 +68,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
       - name: Start Required Services
-        run: docker compose up -d
+        run: docker compose -f docker-compose-schemaspy.yml up -d
       - name: Initialise DB
         shell: bash
         run: |
