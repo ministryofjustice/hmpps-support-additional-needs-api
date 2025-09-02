@@ -69,6 +69,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Start Required Services
         run: docker compose up -d
+      - name: Initialise DB
+        shell: bash
+        run: |
+          export JAVA_OPTS="${{ inputs.java_options }}"
+          ./gradlew initialiseDatabase
       - uses: ministryofjustice/hmpps-github-actions/.github/actions/database_schema_report@v2 # WORKFLOW_VERSION
         with:
           schema: public
