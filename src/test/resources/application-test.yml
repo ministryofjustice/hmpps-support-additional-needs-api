@@ -9,7 +9,8 @@ spring:
   jpa:
     show-sql: true
   datasource:
-    url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=disable'
+#    url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=disable'
+     url: 'jdbc:postgresql://localhost/support-additional-needs-api-db?sslmode=disable'
 
 hmpps-auth:
   url: "http://localhost:8090/auth"
