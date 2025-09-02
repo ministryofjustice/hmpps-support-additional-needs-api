@@ -75,11 +75,6 @@ jobs:
           user: '${{secrets.SCHEMA_SPY_USERNAME}}'
           password: '${{secrets.SCHEMA_SPY_PASSWORD}}'
           database_name: '${{secrets.SCHEMA_SPY_DB_NAME}}'
-          host: 'localhost'
-          port: '5432'
-          postgres_driver_version: '42.7.3'
-          schemaspy_version: '6.2.4'
-          jdk_tag: '21.0'
   deploy_dev:
     name: Deploy to the development environment
     needs:
