@@ -55,7 +55,7 @@ jobs:
       docker_multiplatform: true
   database_report:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/RR-1857-2'
+    if: github.ref == 'refs/heads/main'
     name: Generate Database Schema Report
     steps:
       - name: Checkout code
@@ -69,6 +69,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
       - name: Start Required Services
         run: docker compose -f docker-compose-schemaspy.yml up -d
+
       - name: Initialise DB
         shell: bash
         run: |
