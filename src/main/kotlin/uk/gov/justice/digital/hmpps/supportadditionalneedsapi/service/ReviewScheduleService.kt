@@ -102,6 +102,7 @@ class ReviewScheduleService(
       existing.deadlineDate = desired
       reviewScheduleRepository.save(existing)
       eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
+      log.info("Review schedule deadline date updated to $desired for $prisonNumber, days to add was configured as $REVIEW_DEADLINE_DAYS_TO_ADD days")
     }
   }
 
