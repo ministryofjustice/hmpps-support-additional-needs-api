@@ -74,6 +74,8 @@ class ALNScreenerService(
         "Detail URL: ${inboundEvent.detailUrl}, reference: ${info.curiousExternalReference}",
     )
 
+    val originalOverallNeed = needService.hasNeed(prisonNumber = prisonNumber)
+
     log.info("Retrieving ALN assessments for $prisonNumber")
     val alnAssessments = curiousApiClient.getALNAssessment(prisonNumber).alnAssessments.orEmpty()
 
@@ -96,7 +98,14 @@ class ALNScreenerService(
       screenerDate = latestAssessment.assessmentDate!!,
     )
 
-    scheduleService.processNeedChange(prisonNumber, hasNeed)
+    val overallNeed = needService.hasNeed(prisonNumber = prisonNumber)
+    // has the overall need changed?
+    if (originalOverallNeed != overallNeed) {
+      log.info("The ALN need update changed the overall need of $prisonNumber")
+      scheduleService.processNeedChange(prisonNumber, overallNeed)
+    } else {
+      log.info("The ALN need update did not change the overall need of $prisonNumber")
+    }
 
     log.info("Processed ALN assessment for $prisonNumber: $latestAssessment")
   }
