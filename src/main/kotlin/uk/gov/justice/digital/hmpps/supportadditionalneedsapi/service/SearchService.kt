@@ -61,11 +61,14 @@ class SearchService(
       // No overview record at all
       overview == null -> PlanStatus.NO_PLAN
 
-      // No need, no education, and no plan = no plan required
-      !overview.inEducation && !overview.hasNeed && !overview.hasPlan -> PlanStatus.NO_PLAN
-
       // Explicitly declined
       overview.planDeclined -> PlanStatus.PLAN_DECLINED
+
+      // No need or not in education and no plan = NO_PLAN
+      (!overview.inEducation || !overview.hasNeed) && !overview.hasPlan -> PlanStatus.NO_PLAN
+
+      // Has a plan but is inactive (takes precedence over deadlines)
+      overview.hasPlan && (!overview.inEducation || !overview.hasNeed) -> PlanStatus.INACTIVE_PLAN
 
       // Overdue review
       overview.reviewDeadlineDate != null &&
@@ -81,9 +84,8 @@ class SearchService(
 
       // Needs plan (has needs and education, no deadline, and no plan yet)
       !overview.hasPlan &&
-        overview.deadlineDate == null &&
-        overview.hasNeed &&
-        overview.inEducation -> PlanStatus.NEEDS_PLAN
+        overview.deadlineDate == null
+      -> PlanStatus.NEEDS_PLAN
 
       // Review due soon (within 5 working days)
       overview.reviewDeadlineDate != null &&
@@ -100,9 +102,6 @@ class SearchService(
         !overview.planDeclined &&
         !overview.planCreationDeadlineDate.isBefore(today) &&
         !overview.planCreationDeadlineDate.isAfter(todayPlus5WorkingDays) -> PlanStatus.PLAN_DUE
-
-      // Has a plan but is effectively inactive
-      overview.hasPlan && (!overview.inEducation || !overview.hasNeed) -> PlanStatus.INACTIVE_PLAN
 
       // Has a plan and is active
       overview.hasPlan -> PlanStatus.ACTIVE_PLAN
