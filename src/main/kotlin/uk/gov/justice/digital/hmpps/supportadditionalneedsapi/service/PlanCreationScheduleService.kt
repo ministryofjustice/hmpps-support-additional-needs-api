@@ -124,7 +124,7 @@ class PlanCreationScheduleService(
     clearDeadlineDate: Boolean = false,
   ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
       ?.let {
         it.status = status
         it.exemptionReason = exemptionReason
@@ -144,9 +144,11 @@ class PlanCreationScheduleService(
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
+  // Can only complete a schedule if it is SCHEDULED or EXEMPT_PRISONER_NOT_COMPLY the latter is because a person may
+  // decide to create a plan despite previously not wanting to.
   fun completeSchedule(prisonNumber: String, prisonId: String) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED }
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
       ?.let {
         it.status = PlanCreationScheduleStatus.COMPLETED
         it.updatedAtPrison = prisonId
