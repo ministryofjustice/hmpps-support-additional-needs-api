@@ -33,6 +33,8 @@ class PlanActionStatusTest : IntegrationTestBase() {
     val PRISONER_7: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_8: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_9: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
+    val PRISONER_10: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
+    val PRISONER_11: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
   }
 
   @BeforeAll
@@ -63,6 +65,8 @@ class PlanActionStatusTest : IntegrationTestBase() {
     Arguments.of(PRISONER_7, PlanStatus.INACTIVE_PLAN),
     Arguments.of(PRISONER_8, PlanStatus.PLAN_DECLINED),
     Arguments.of(PRISONER_9, PlanStatus.NO_PLAN),
+    Arguments.of(PRISONER_10, PlanStatus.NO_PLAN),
+    Arguments.of(PRISONER_11, PlanStatus.NO_PLAN),
   )
 
   // --- Helpers ----------------------------------------------------------------------------------
@@ -137,5 +141,11 @@ class PlanActionStatusTest : IntegrationTestBase() {
     )
 
     // PRISONER_9 -> no data in SAN
+
+    // PRISONER_10 -> no need but in education.
+    prisonerInEducation(PRISONER_10.prisonerNumber)
+
+    // PRISONER_11 -> has need but not in education.
+    prisonerHasNeed(PRISONER_11.prisonerNumber)
   }
 }
