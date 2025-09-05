@@ -47,7 +47,7 @@ class PlanActionStatusServiceTest {
   private lateinit var instantMapper: InstantMapper
 
   @Test
-  fun `should return action status with deadlines and mapped exemption reason`() {
+  fun `should return action status with deadlines`() {
     // Given
 
     val planCreationDeadline = LocalDate.now().minusMonths(1)
@@ -63,10 +63,48 @@ class PlanActionStatusServiceTest {
     )
     whenever(prisonerOverviewRepository.findByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
 
+    val status = PlanStatus.PLAN_DUE
+    given(searchService.determinePlanStatus(prisonerOverview)).willReturn(status)
+
+    // When
+    val result: PlanActionStatus = service.getPlanActionStatus(prisonNumber)
+
+    // Then
+    assertThat(result.status).isEqualTo(status)
+    assertThat(result.planCreationDeadlineDate).isEqualTo(planCreationDeadline)
+    assertThat(result.reviewDeadlineDate).isEqualTo(reviewDeadline)
+    assertThat(result.exemptionDetail).isNull()
+    assertThat(result.exemptionReason).isNull()
+    assertThat(result.exemptionRecordedBy).isNull()
+    assertThat(result.exemptionRecordedAt).isNull()
+    then(searchService).should().determinePlanStatus(prisonerOverview)
+    verifyNoMoreInteractions(searchService)
+    verifyNoMoreInteractions(userService)
+    verifyNoMoreInteractions(instantMapper)
+  }
+
+  @Test
+  fun `should return action status with deadlines and mapped exemption reason`() {
+    // Given
+
+    val planCreationDeadline = LocalDate.now().minusMonths(1)
+    val reviewDeadline = LocalDate.now().plusMonths(1)
+    val prisonNumber = randomValidPrisonNumber()
+    val prisonerOverview = PrisonerOverviewEntity(
+      deadlineDate = reviewDeadline,
+      reviewDeadlineDate = reviewDeadline,
+      planCreationDeadlineDate = planCreationDeadline,
+      prisonNumber = "BXI",
+      hasAlnNeed = false,
+      hasLddNeed = false,
+      planDeclined = true,
+    )
+    whenever(prisonerOverviewRepository.findByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
+
     val exemptionReasonString = "EXEMPT_NOT_REQUIRED"
     val exemptionDetail = "about to be released"
 
-    val status = PlanStatus.PLAN_DUE
+    val status = PlanStatus.PLAN_DECLINED
     given(searchService.determinePlanStatus(prisonerOverview)).willReturn(status)
 
     val username = "ASMITH_GEN"
@@ -76,7 +114,7 @@ class PlanActionStatusServiceTest {
     val planCreatedUpdatedAt = Instant.now()
     val planCreationSchedule = PlanCreationScheduleEntity(
       prisonNumber = prisonNumber,
-      status = PlanCreationScheduleStatus.SCHEDULED,
+      status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
       deadlineDate = planCreationDeadline,
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
