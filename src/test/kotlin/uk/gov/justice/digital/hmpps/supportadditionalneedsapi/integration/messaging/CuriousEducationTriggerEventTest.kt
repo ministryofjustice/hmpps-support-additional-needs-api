@@ -99,6 +99,21 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should process Curious Education domain event and mark the person as out of education when the person had refused a plan`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
+    aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
+    putInEducationAndValidate(prisonNumber)
+    // Then
+    endEducationAndValidate(prisonNumber)
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+  }
+
+  @Test
   fun `should process Curious Education domain event and mark the person as out of education and Exempt the planCreationSchedule`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()

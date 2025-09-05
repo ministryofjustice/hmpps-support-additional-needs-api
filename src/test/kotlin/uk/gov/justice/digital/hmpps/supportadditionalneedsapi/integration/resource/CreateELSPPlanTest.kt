@@ -71,6 +71,56 @@ class CreateELSPPlanTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Create an ELSP plan for a given prisoner when they have previously declined to create a plan`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val planRequest = createPlanRequest()
+    aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(planRequest)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(EducationSupportPlanResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val planFromService = elspPlanService.getPlan(prisonNumber)
+
+    assertThat(planFromService).isNotNull()
+    assertThat(planFromService.createdByDisplayName).isEqualTo("Test User")
+    assertThat(planFromService.planCreatedBy?.name).isEqualTo(planRequest.planCreatedBy?.name)
+    assertThat(planFromService.planCreatedBy?.jobRole).isEqualTo(planRequest.planCreatedBy?.jobRole)
+    assertThat(planFromService.examAccessArrangements).isEqualTo(planRequest.examAccessArrangements)
+    assertThat(planFromService.hasCurrentEhcp).isEqualTo(planRequest.hasCurrentEhcp)
+    assertThat(planFromService.lnspSupport).isEqualTo(planRequest.lnspSupport)
+    assertThat(planFromService.lnspSupportHours).isEqualTo(planRequest.lnspSupportHours)
+    assertThat(planFromService.individualSupport).isEqualTo(planRequest.individualSupport)
+    assertThat(planFromService.specificTeachingSkills).isEqualTo(planRequest.specificTeachingSkills)
+    assertThat(planFromService.detail).isEqualTo(planRequest.detail)
+    assertThat(planFromService.otherContributors?.get(0)?.name).isEqualTo(planRequest.otherContributors?.get(0)?.name)
+    assertThat(planFromService.otherContributors?.get(0)?.jobRole).isEqualTo(planRequest.otherContributors?.get(0)?.jobRole)
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.COMPLETED)
+
+    val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    assertThat(reviewSchedule!!.status).isEqualTo(ReviewScheduleStatusEntity.SCHEDULED)
+    assertThat(reviewSchedule.deadlineDate).isEqualTo(planRequest.reviewDate)
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.ELSP_CREATED)
+  }
+
+  @Test
   fun `Create an ELSP plan given no LNSP support and support hours`() {
     // Given
     stubGetTokenFromHmppsAuth()
