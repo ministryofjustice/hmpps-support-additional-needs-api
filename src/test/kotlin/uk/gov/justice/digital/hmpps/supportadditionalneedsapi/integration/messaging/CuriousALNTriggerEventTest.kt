@@ -35,29 +35,12 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
+
     // When
     val curiousReference = UUID.randomUUID()
-    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
-      prisonNumber = prisonNumber,
-      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
-      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
-      description = "ASSESSMENT_COMPLETED",
-    )
-    sendCuriousALNMessage(sqsMessage)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
 
     // Then
-    // wait until the queue is drained / message is processed
-    await untilCallTo {
-      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
-    } matches { it == 0 }
-    await untilCallTo {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
-      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
-    } matches { it != null }
-
     Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isTrue()
 
@@ -72,29 +55,11 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
     prisonerInEducation(prisonNumber)
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
     // When
     val curiousReference = UUID.randomUUID()
-    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
-      prisonNumber = prisonNumber,
-      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
-      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
-      description = "ASSESSMENT_COMPLETED",
-    )
-    sendCuriousALNMessage(sqsMessage)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
 
     // Then
-    // wait until the queue is drained / message is processed
-    await untilCallTo {
-      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
-    } matches { it == 0 }
-    await untilCallTo {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
-      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
-    } matches { it != null }
-
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
 
     Assertions.assertThat(planCreationSchedule).isNotNull
@@ -110,30 +75,12 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     stubGetTokenFromHmppsAuth()
     prisonerInEducation(prisonNumber)
     anElSPExists(prisonNumber)
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
 
     // When
     val curiousReference = UUID.randomUUID()
-    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
-      prisonNumber = prisonNumber,
-      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
-      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
-      description = "ASSESSMENT_COMPLETED",
-    )
-    sendCuriousALNMessage(sqsMessage)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
 
     // Then
-    // wait until the queue is drained / message is processed
-    await untilCallTo {
-      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
-    } matches { it == 0 }
-    await untilCallTo {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
-      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
-    } matches { it != null }
-
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
     Assertions.assertThat(reviewScheduleEntity).isNotNull
@@ -146,30 +93,10 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber = prisonNumber, hasNeed = false))
-    // When
+    // when
     val curiousReference = UUID.randomUUID()
-    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
-      prisonNumber = prisonNumber,
-      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
-      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
-      description = "ASSESSMENT_COMPLETED",
-    )
-    sendCuriousALNMessage(sqsMessage)
-
-    // Then
-    // wait until the queue is drained / message is processed
-    await untilCallTo {
-      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
-    } matches { it == 0 }
-
-    await untilCallTo {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
-      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
-    } matches { it != null }
-
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
+    // then
     Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isFalse()
 
@@ -188,12 +115,60 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
     prisonerInEducation(prisonNumber)
     anElSPExists(prisonNumber)
 
     // When
     val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isNull()
+    Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  // The person has a challenge and an aln and a plan creation schedule then has an aln need removed via a message
+  // test that the person still has a need and that the plan creation schedule remains SCHEDULED
+  @Test
+  fun `person has a san need then gets an ALN need then has that need removed - the person should still have a SCHEDULED PCS`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    prisonerInEducation(prisonNumber)
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    // person has a challenge
+    aValidChallengeExists(prisonNumber)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
+
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule).isNotNull
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  // The person has a challenge and an aln and a Review schedule then has an aln need removed via a message
+  // test that the person still has a need and that the Review schedule remains SCHEDULED
+  @Test
+  fun `person has a san need then gets an ALN need then has that need removed - the person should still have a SCHEDULED RS`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    prisonerInEducation(prisonNumber)
+    anElSPExists(prisonNumber)
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    // person has a challenge
+    aValidChallengeExists(prisonNumber)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
+
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  private fun createALNAssessmentMessage(prisonNumber: String, curiousReference: UUID, hasNeed: Boolean = true) {
+    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber, hasNeed = hasNeed))
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
       prisonNumber = prisonNumber,
       eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
@@ -209,14 +184,14 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     } matches { it == 0 }
     await untilCallTo {
       val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
+      if (hasNeed) {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
+      } else {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
+      }
       Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
       Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
     } matches { it != null }
-
-    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isNull()
-    Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 
   fun createTestALNAssessment(prisonNumber: String, hasNeed: Boolean = true): String = """{
