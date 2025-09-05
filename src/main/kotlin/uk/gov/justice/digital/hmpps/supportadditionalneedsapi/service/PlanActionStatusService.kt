@@ -18,20 +18,37 @@ class PlanActionStatusService(
   fun getPlanActionStatus(prisonNumber: String): PlanActionStatus {
     val prisonerOverview = prisonerOverviewRepository.findByPrisonNumber(prisonNumber)
     val status = searchService.determinePlanStatus(prisonerOverview)
-    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    val isDeclined = prisonerOverview?.planDeclined == true
+
+    // Only get the planCreationSchedule if we need exemption details
+    val planCreationSchedule = if (isDeclined) {
+      planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    } else {
+      null
+    }
 
     return PlanActionStatus(
       status = status,
       planCreationDeadlineDate = prisonerOverview?.planCreationDeadlineDate,
       reviewDeadlineDate = prisonerOverview?.reviewDeadlineDate,
-      exemptionDetail = planCreationSchedule?.exemptionDetail,
-      exemptionReason = planCreationSchedule?.exemptionReason?.let {
-        PlanCreationScheduleExemptionReason.forValue(it)
+
+      // Exemption fields only populated when the plan has been declined
+      exemptionDetail = if (isDeclined) planCreationSchedule?.exemptionDetail else null,
+      exemptionReason = if (isDeclined) {
+        planCreationSchedule?.exemptionReason?.let { PlanCreationScheduleExemptionReason.forValue(it) }
+      } else {
+        null
       },
-      exemptionRecordedBy = planCreationSchedule?.updatedBy?.let {
-        userService.getUserDetails(it).name
+      exemptionRecordedBy = if (isDeclined) {
+        planCreationSchedule?.updatedBy?.let { userService.getUserDetails(it).name }
+      } else {
+        null
       },
-      exemptionRecordedAt = planCreationSchedule?.updatedAt?.let { instantMapper.toOffsetDateTime(it) },
+      exemptionRecordedAt = if (isDeclined) {
+        planCreationSchedule?.updatedAt?.let { instantMapper.toOffsetDateTime(it) }
+      } else {
+        null
+      },
     )
   }
 }
