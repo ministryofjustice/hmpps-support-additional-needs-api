@@ -34,7 +34,7 @@ data class PlanCreationScheduleEntity(
   val prisonNumber: String,
 
   @Column
-  var deadlineDate: LocalDate?,
+  var deadlineDate: LocalDate,
 
   @Column(name = "earliest_start_date")
   var earliestStartDate: LocalDate?,
