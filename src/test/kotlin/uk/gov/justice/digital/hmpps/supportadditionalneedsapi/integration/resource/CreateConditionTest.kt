@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
@@ -93,7 +94,7 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
 
     val planCreationScheduleEntity = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-    assertThat(planCreationScheduleEntity?.deadlineDate).isNull()
+    assertThat(planCreationScheduleEntity?.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     assertThat(planCreationScheduleEntity?.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
 

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus.COMPLETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -47,7 +48,7 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
 
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.EXEMPT_PRISONER_NOT_COMPLY)
-    assertThat(actual.planCreationSchedules[0].deadlineDate).isNull()
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     assertThat(actual.planCreationSchedules[0].exemptionReason).isEqualTo(PlanCreationScheduleExemptionReason.EXEMPT_NOT_REQUIRED)
     assertThat(actual.planCreationSchedules[0].exemptionDetail).isEqualTo("because I say so")
     assertThat(actual.planCreationSchedules[0].updatedAtPrison).isEqualTo("LWI")

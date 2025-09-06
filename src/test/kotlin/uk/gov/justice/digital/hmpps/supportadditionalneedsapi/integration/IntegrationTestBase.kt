@@ -249,7 +249,7 @@ abstract class IntegrationTestBase {
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
-    deadlineDate: LocalDate? = LocalDate.now().minusMonths(1),
+    deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
   ) {
     val planCreationScheduleEntity =
       PlanCreationScheduleEntity(

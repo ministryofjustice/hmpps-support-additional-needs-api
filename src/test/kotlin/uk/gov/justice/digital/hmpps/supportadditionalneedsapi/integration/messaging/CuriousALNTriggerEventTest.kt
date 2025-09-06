@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
@@ -63,7 +64,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
 
     Assertions.assertThat(planCreationSchedule).isNotNull
-    Assertions.assertThat(planCreationSchedule!!.deadlineDate).isNull()
+    Assertions.assertThat(planCreationSchedule!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
