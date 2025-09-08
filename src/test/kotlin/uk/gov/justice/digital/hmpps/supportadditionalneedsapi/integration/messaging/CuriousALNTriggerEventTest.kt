@@ -85,7 +85,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
     Assertions.assertThat(reviewScheduleEntity).isNotNull
-    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isNull()
+    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 
@@ -124,7 +124,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
 
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isNull()
+    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 

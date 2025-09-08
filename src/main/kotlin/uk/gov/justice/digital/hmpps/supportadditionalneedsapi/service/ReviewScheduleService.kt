@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
@@ -50,7 +51,7 @@ class ReviewScheduleService(
   }
 
   @Transactional
-  fun createReviewSchedule(prisonNumber: String, reviewDate: LocalDate?, prisonId: String) {
+  fun createReviewSchedule(prisonNumber: String, reviewDate: LocalDate, prisonId: String) {
     val currentSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     if (currentSchedule != null && currentSchedule.status == ReviewScheduleStatus.SCHEDULED) {
       log.info("Review schedule for prison $prisonNumber is already scheduled")
@@ -70,7 +71,7 @@ class ReviewScheduleService(
   @Transactional
   fun completeExistingAndCreateNextReviewSchedule(
     prisonNumber: String,
-    reviewDate: LocalDate?,
+    reviewDate: LocalDate,
     prisonId: String,
     existingReviewSchedule: ReviewScheduleEntity,
   ) {
@@ -96,7 +97,7 @@ class ReviewScheduleService(
 
     // Choose the earlier of the two deadlines; if unchanged do nothing
     val current = existing.deadlineDate
-    val desired = if (current == null) proposedDeadline else minOf(current, proposedDeadline)
+    val desired = minOf(current, proposedDeadline)
 
     if (current != desired) {
       existing.deadlineDate = desired
@@ -118,7 +119,7 @@ class ReviewScheduleService(
     if (existing == null || existing.status != ReviewScheduleStatus.SCHEDULED) {
       createReviewSchedule(
         prisonNumber = prisonNumber,
-        reviewDate = null,
+        reviewDate = IN_THE_FUTURE_DATE,
         prisonId = "N/A",
       )
     }

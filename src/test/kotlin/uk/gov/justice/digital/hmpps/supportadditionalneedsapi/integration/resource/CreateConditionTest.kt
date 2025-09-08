@@ -153,7 +153,7 @@ class CreateConditionTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
 
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    assertThat(reviewScheduleEntity?.deadlineDate).isNull()
+    assertThat(reviewScheduleEntity?.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     assertThat(reviewScheduleEntity?.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 
