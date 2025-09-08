@@ -40,6 +40,8 @@ class EducationService(
    */
   fun inEducation(prisonNumber: String): Boolean = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.inEducation ?: false
 
+  fun getEducationStartDate(prisonNumber: String): LocalDate = educationEnrolmentRepository.findEarliestLearningStartDateWithNoEndDate(prisonNumber)
+
   /**
    * Create the education record. Currently, this is simply whether the person is in education with the
    * latest record being the current status.

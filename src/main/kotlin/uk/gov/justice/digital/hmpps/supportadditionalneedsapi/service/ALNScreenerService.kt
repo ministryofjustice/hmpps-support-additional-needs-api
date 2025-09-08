@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 private const val YES = "YES"
@@ -101,8 +102,10 @@ class ALNScreenerService(
     val overallNeed = needService.hasNeed(prisonNumber = prisonNumber)
     // has the overall need changed?
     if (originalOverallNeed != overallNeed) {
+      val alnAssessmentDate: LocalDate? =
+        if (hasNeed) latestAssessment.assessmentDate else null
       log.info("The ALN need update changed the overall need of $prisonNumber")
-      scheduleService.processNeedChange(prisonNumber, overallNeed)
+      scheduleService.processNeedChange(prisonNumber, overallNeed, alnAssessmentDate)
     } else {
       log.info("The ALN need update did not change the overall need of $prisonNumber")
     }

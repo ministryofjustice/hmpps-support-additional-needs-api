@@ -49,7 +49,12 @@ class PlanCreationScheduleService(
     eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
   }
 
-  fun createSchedule(prisonNumber: String, prisonId: String = "N/A", deadlineDate: LocalDate, earliestStartDate: LocalDate?) {
+  fun createSchedule(
+    prisonNumber: String,
+    prisonId: String = "N/A",
+    deadlineDate: LocalDate,
+    earliestStartDate: LocalDate?,
+  ) {
     if (needService.hasNeed(prisonNumber)) {
       log.debug("Person [$prisonNumber] was in education and has a need")
       // Create a new schedule
@@ -140,7 +145,8 @@ class PlanCreationScheduleService(
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
-    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
+    val startDatePlusFive =
+      workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
     val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
@@ -183,11 +189,39 @@ class PlanCreationScheduleService(
   }
 
   @Transactional
-  fun createOrUpdateDueToNeedChange(prisonNumber: String) {
+  fun createOrUpdateDueToNeedChange(
+    prisonNumber: String,
+    educationStartDate: LocalDate,
+    alnAssessmentDate: LocalDate?,
+  ) {
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     if (existing == null) {
+      // need to do another check in here to see if the ALN assessment was done before the education start
+      // if it was then we need to create a schedule where the deadline/earliestStartDate date is based on the education start date
+      if (alnAssessmentDate != null) {
+        if (educationStartDate >= alnAssessmentDate) {
+          return createSchedule(
+            prisonNumber = prisonNumber,
+            deadlineDate = getDeadlineDate(educationStartDate),
+            earliestStartDate = educationStartDate,
+          )
+        }
+      }
       return createSchedule(prisonNumber = prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null)
+    } else {
+      // need to do check in here to see if the ALN assessment was done before the education start
+      // if it was then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
+      if (alnAssessmentDate != null) {
+        if (educationStartDate >= alnAssessmentDate) {
+          updateSchedule(
+            prisonNumber = prisonNumber,
+            schedule = existing,
+            newStatus = existing.status,
+            earliestStartDate = educationStartDate,
+            deadlineDate = getDeadlineDate(educationStartDate),
+          )
+        }
+      }
     }
-    // if they already have a schedule then do nothing.
   }
 }

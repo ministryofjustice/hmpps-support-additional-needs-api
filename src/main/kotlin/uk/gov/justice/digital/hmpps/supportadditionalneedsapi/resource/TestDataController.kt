@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
@@ -45,6 +47,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Ide
 @ConditionalOnProperty(name = ["ENABLE_TEST_ENDPOINTS"], havingValue = "true", matchIfMissing = false)
 class TestDataController(
   private val planCreationScheduleRepository: PlanCreationScheduleRepository,
+  private val educationEnrolmentRepository: EducationEnrolmentRepository,
   private val educationService: EducationService,
   private val needService: NeedService,
   private val conditionService: ConditionService,
@@ -68,6 +71,17 @@ class TestDataController(
     val curiousRef = UUID.randomUUID()
     with(request) {
       educationService.recordEducationRecord(prisonNumber, inEducation, curiousRef)
+      if (inEducation) {
+        val educationEnrolmentEntity = EducationEnrolmentEntity(
+          prisonNumber = prisonNumber,
+          qualificationCode = "123",
+          fundingType = "PES",
+          endDate = null,
+          learningStartDate = LocalDate.now(),
+          establishmentId = "1234",
+        )
+        educationEnrolmentRepository.save(educationEnrolmentEntity)
+      }
       if (alnNeed) {
         needService.recordAlnScreenerNeed(prisonNumber, true, curiousRef, LocalDate.now())
       }

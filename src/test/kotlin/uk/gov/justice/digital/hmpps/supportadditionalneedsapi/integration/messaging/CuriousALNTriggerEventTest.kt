@@ -51,14 +51,16 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should process Curious ALN domain event, mark the person as having an ALN need and create schedule`() {
+  fun `should process Curious ALN domain event where assessment date greater than education start date, mark the person as having an ALN need and create schedule with no deadline date`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    prisonerInEducation(prisonNumber)
+    // education with a date before ALN assessment
+    prisonerInEducation(prisonNumber, learningStartDate = LocalDate.now().minusDays(1))
+
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now())
 
     // Then
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -67,6 +69,60 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should process Curious ALN domain event where assessment date = education start date, mark the person as having an ALN need and create schedule with a KPI deadline date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    val learningStartDate = LocalDate.now()
+    // education with a date the same as ALN assessment
+    prisonerInEducation(prisonNumber, learningStartDate = learningStartDate)
+
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now())
+
+    // Then
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+
+    Assertions.assertThat(planCreationSchedule).isNotNull
+    Assertions.assertThat(planCreationSchedule!!.deadlineDate)
+      .isEqualTo(deadlineDateBasedOnPESContractDate(learningStartDate))
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(learningStartDate)
+    Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should process Curious ALN domain event where assessment date less than education start date, mark the person as having an ALN need and create schedule with a KPI deadline date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    val learningStartDate = LocalDate.now()
+    // education with a date the same as ALN assessment
+    prisonerInEducation(prisonNumber, learningStartDate = learningStartDate)
+
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now().minusDays(3))
+
+    // Then
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+
+    Assertions.assertThat(planCreationSchedule).isNotNull
+    Assertions.assertThat(planCreationSchedule!!.deadlineDate)
+      .isEqualTo(deadlineDateBasedOnPESContractDate(learningStartDate))
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(learningStartDate)
+    Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  private fun deadlineDateBasedOnPESContractDate(learningStartDate: LocalDate): LocalDate {
+    if (LocalDate.now() < pesContractDate) {
+      return workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
+    } else {
+      return workingDayService.getNextWorkingDayNDaysFromDate(5, learningStartDate)
+    }
   }
 
   @Test
@@ -168,8 +224,16 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 
-  private fun createALNAssessmentMessage(prisonNumber: String, curiousReference: UUID, hasNeed: Boolean = true) {
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber, hasNeed = hasNeed))
+  private fun createALNAssessmentMessage(
+    prisonNumber: String,
+    curiousReference: UUID,
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ) {
+    stubGetCurious2LearnerAssessments(
+      prisonNumber,
+      createTestALNAssessment(prisonNumber, hasNeed = hasNeed, assessmentDate = assessmentDate),
+    )
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
       prisonNumber = prisonNumber,
       eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
@@ -191,16 +255,20 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
         Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
       }
       Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
+      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(assessmentDate)
     } matches { it != null }
   }
 
-  fun createTestALNAssessment(prisonNumber: String, hasNeed: Boolean = true): String = """{
+  fun createTestALNAssessment(
+    prisonNumber: String,
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ): String = """{
   "v2": {
     "assessments": {
       "aln": [
         {
-          "assessmentDate": "2025-01-28",
+          "assessmentDate": "$assessmentDate",
           "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
           "establishmentId": "123",
           "establishmentName": "WTI",
