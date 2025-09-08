@@ -10,6 +10,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -81,7 +82,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
-    Assertions.assertThat(planCreationSchedule.deadlineDate).isNull()
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
   }
 
   @Test

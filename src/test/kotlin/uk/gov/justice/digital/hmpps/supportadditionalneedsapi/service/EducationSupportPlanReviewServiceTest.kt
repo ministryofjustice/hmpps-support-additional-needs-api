@@ -71,7 +71,7 @@ class EducationSupportPlanReviewServiceTest {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     val request = aValidSupportPlanReviewRequest()
-    val reviewSchedule = ReviewScheduleEntity(reference = UUID.randomUUID(), prisonNumber = prisonNumber, status = ReviewScheduleStatus.COMPLETED, createdAtPrison = "BXI", updatedAtPrison = "BXI")
+    val reviewSchedule = ReviewScheduleEntity(reference = UUID.randomUUID(), prisonNumber = prisonNumber, status = ReviewScheduleStatus.COMPLETED, createdAtPrison = "BXI", updatedAtPrison = "BXI", deadlineDate = LocalDate.now())
 
     given(educationSupportPlanService.hasPlan(prisonNumber)).willReturn(true)
     given(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).willReturn(reviewSchedule)
@@ -86,7 +86,7 @@ class EducationSupportPlanReviewServiceTest {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     val request = aValidSupportPlanReviewRequest(nextReviewDate = LocalDate.now().plusMonths(6))
-    val reviewSchedule = ReviewScheduleEntity(reference = UUID.randomUUID(), prisonNumber = prisonNumber, status = ReviewScheduleStatus.SCHEDULED, createdAtPrison = "BXI", updatedAtPrison = "BXI")
+    val reviewSchedule = ReviewScheduleEntity(reference = UUID.randomUUID(), prisonNumber = prisonNumber, status = ReviewScheduleStatus.SCHEDULED, createdAtPrison = "BXI", updatedAtPrison = "BXI", deadlineDate = LocalDate.now())
 
     given(educationSupportPlanService.hasPlan(prisonNumber)).willReturn(true)
     given(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).willReturn(reviewSchedule)

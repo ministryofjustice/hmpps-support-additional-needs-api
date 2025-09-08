@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -36,7 +37,7 @@ class PlanCreationScheduleService(
     schedule: PlanCreationScheduleEntity,
     newStatus: PlanCreationScheduleStatus,
     prisonId: String = "N/A",
-    deadlineDate: LocalDate?,
+    deadlineDate: LocalDate,
     earliestStartDate: LocalDate?,
     prisonNumber: String,
   ) {
@@ -48,7 +49,7 @@ class PlanCreationScheduleService(
     eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
   }
 
-  fun createSchedule(prisonNumber: String, prisonId: String = "N/A", deadlineDate: LocalDate?, earliestStartDate: LocalDate?) {
+  fun createSchedule(prisonNumber: String, prisonId: String = "N/A", deadlineDate: LocalDate, earliestStartDate: LocalDate?) {
     if (needService.hasNeed(prisonNumber)) {
       log.debug("Person [$prisonNumber] was in education and has a need")
       // Create a new schedule
@@ -131,7 +132,7 @@ class PlanCreationScheduleService(
         it.exemptionDetail = exemptionDetail
         it.updatedAtPrison = updatedAtPrison
         if (clearDeadlineDate) {
-          it.deadlineDate = null
+          it.deadlineDate = IN_THE_FUTURE_DATE
         }
         planCreationScheduleRepository.save(it)
         eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
@@ -160,7 +161,7 @@ class PlanCreationScheduleService(
   fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
     val isPES = fundingType.equals("PES", ignoreCase = true)
     val earliestStart = if (isPES) startDate else null
-    val deadline = if (isPES) getDeadlineDate(startDate) else null
+    val deadline = if (isPES) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
 
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart)
@@ -185,7 +186,7 @@ class PlanCreationScheduleService(
   fun createOrUpdateDueToNeedChange(prisonNumber: String) {
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     if (existing == null) {
-      return createSchedule(prisonNumber = prisonNumber, deadlineDate = null, earliestStartDate = null)
+      return createSchedule(prisonNumber = prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null)
     }
     // if they already have a schedule then do nothing.
   }

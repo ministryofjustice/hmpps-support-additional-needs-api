@@ -28,7 +28,7 @@ data class ReviewScheduleEntity(
   val prisonNumber: String,
 
   @Column
-  var deadlineDate: LocalDate? = null,
+  var deadlineDate: LocalDate,
 
   @Column
   @Enumerated(value = EnumType.STRING)

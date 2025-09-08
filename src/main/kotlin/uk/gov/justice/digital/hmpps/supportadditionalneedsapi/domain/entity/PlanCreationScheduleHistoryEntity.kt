@@ -31,7 +31,7 @@ data class PlanCreationScheduleHistoryEntity(
   val prisonNumber: String,
 
   @Column(name = "deadline_date")
-  val deadlineDate: LocalDate?,
+  val deadlineDate: LocalDate,
 
   @Column(name = "earliest_start_date")
   val earliestStartDate: LocalDate?,

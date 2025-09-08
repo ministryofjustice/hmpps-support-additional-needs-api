@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.12.1'
+  version: '0.12.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1428,6 +1428,7 @@ components:
       required:
         - reference
         - status
+        - deadlineDate
 
     ConditionResponse:
       title: ConditionResponse
@@ -1898,6 +1899,7 @@ components:
       required:
         - reference
         - status
+        - deadlineDate
 
     PlanActionStatus:
       title: PlanActionStatus
