@@ -49,7 +49,7 @@ class CreateTestSetupTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     stubForBankHoliday()
     val prisonNumber = randomValidPrisonNumber()
-    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber))
+    stubGetCurious2LearnerAssessments(prisonNumber, createTestALNAssessment(prisonNumber, assessmentDate = LocalDate.of(2025, 1, 28)))
 
     // When
     webTestClient.post()

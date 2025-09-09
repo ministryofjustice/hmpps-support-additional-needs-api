@@ -1,15 +1,10 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.messaging
 
 import org.assertj.core.api.Assertions
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
@@ -17,10 +12,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
 import java.util.*
 
@@ -261,66 +253,5 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
 
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
-  }
-
-  private fun createALNAssessmentMessage(
-    prisonNumber: String,
-    curiousReference: UUID,
-    hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
-  ) {
-    stubGetCurious2LearnerAssessments(
-      prisonNumber,
-      createTestALNAssessment(prisonNumber, hasNeed = hasNeed, assessmentDate = assessmentDate),
-    )
-    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
-      prisonNumber = prisonNumber,
-      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
-      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
-      description = "ASSESSMENT_COMPLETED",
-    )
-    sendCuriousALNMessage(sqsMessage)
-
-    // Then
-    // wait until the queue is drained / message is processed
-    await untilCallTo {
-      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
-    } matches { it == 0 }
-    await untilCallTo {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      if (hasNeed) {
-        Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
-      } else {
-        Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
-      }
-      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
-      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(assessmentDate)
-    } matches { it != null }
-  }
-
-  fun createTestALNAssessment(
-    prisonNumber: String,
-    hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
-  ): String = """{
-  "v2": {
-    "assessments": {
-      "aln": [
-        {
-          "assessmentDate": "$assessmentDate",
-          "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
-          "establishmentId": "123",
-          "establishmentName": "WTI",
-          "hasPrisonerConsent": "Yes",
-          "stakeholderReferral": "yes"
-        }
-      ]
-    },
-    "prn": "$prisonNumber"
-  }
-}"""
-
-  private fun sendCuriousALNMessage(sqsMessage: SqsMessage) {
-    sendDomainEvent(sqsMessage)
   }
 }

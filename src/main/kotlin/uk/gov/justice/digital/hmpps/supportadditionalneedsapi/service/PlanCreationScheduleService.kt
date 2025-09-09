@@ -164,10 +164,10 @@ class PlanCreationScheduleService(
       }
   }
 
-  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
-    val isPES = fundingType.equals("PES", ignoreCase = true)
-    val earliestStart = if (isPES) startDate else null
-    val deadline = if (isPES) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
+  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, subjectToKPIRules: Boolean) {
+    val isKPI = fundingType.equals("PES", ignoreCase = true) && subjectToKPIRules
+    val earliestStart = if (isKPI) startDate else null
+    val deadline = if (isKPI) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
 
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart)
@@ -191,14 +191,14 @@ class PlanCreationScheduleService(
   @Transactional
   fun createOrUpdateDueToNeedChange(
     prisonNumber: String,
-    educationStartDate: LocalDate,
+    educationStartDate: LocalDate?,
     alnAssessmentDate: LocalDate?,
   ) {
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     if (existing == null) {
       // need to do another check in here to see if the ALN assessment was done before the education start
       // if it was then we need to create a schedule where the deadline/earliestStartDate date is based on the education start date
-      if (alnAssessmentDate != null) {
+      if (alnAssessmentDate != null && educationStartDate != null) {
         if (educationStartDate >= alnAssessmentDate) {
           return createSchedule(
             prisonNumber = prisonNumber,
@@ -211,7 +211,7 @@ class PlanCreationScheduleService(
     } else {
       // need to do check in here to see if the ALN assessment was done before the education start
       // if it was then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
-      if (alnAssessmentDate != null) {
+      if (alnAssessmentDate != null && educationStartDate != null) {
         if (educationStartDate >= alnAssessmentDate) {
           updateSchedule(
             prisonNumber = prisonNumber,

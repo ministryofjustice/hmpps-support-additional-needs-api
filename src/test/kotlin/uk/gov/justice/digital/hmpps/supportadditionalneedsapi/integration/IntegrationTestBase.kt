@@ -1,7 +1,11 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions
 import org.awaitility.Awaitility
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
@@ -17,6 +21,8 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -61,6 +67,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
@@ -69,6 +76,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedServic
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
+import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
 import java.time.LocalDate
 import java.util.*
@@ -355,5 +363,66 @@ abstract class IntegrationTestBase {
         ),
       ),
     )
+  }
+
+  fun createALNAssessmentMessage(
+    prisonNumber: String,
+    curiousReference: UUID = UUID.randomUUID(),
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ) {
+    stubGetCurious2LearnerAssessments(
+      prisonNumber,
+      createTestALNAssessment(prisonNumber, hasNeed = hasNeed, assessmentDate = assessmentDate),
+    )
+    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
+      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
+      description = "ASSESSMENT_COMPLETED",
+    )
+    sendCuriousALNMessage(sqsMessage)
+
+    // Then
+    // wait until the queue is drained / message is processed
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+    await untilCallTo {
+      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      if (hasNeed) {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
+      } else {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
+      }
+      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
+      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(assessmentDate)
+    } matches { it != null }
+  }
+
+  fun createTestALNAssessment(
+    prisonNumber: String,
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ): String = """{
+  "v2": {
+    "assessments": {
+      "aln": [
+        {
+          "assessmentDate": "$assessmentDate",
+          "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
+          "establishmentId": "123",
+          "establishmentName": "WTI",
+          "hasPrisonerConsent": "Yes",
+          "stakeholderReferral": "yes"
+        }
+      ]
+    },
+    "prn": "$prisonNumber"
+  }
+}"""
+
+  private fun sendCuriousALNMessage(sqsMessage: SqsMessage) {
+    sendDomainEvent(sqsMessage)
   }
 }
