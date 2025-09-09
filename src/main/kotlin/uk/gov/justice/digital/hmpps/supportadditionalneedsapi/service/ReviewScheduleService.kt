@@ -108,21 +108,34 @@ class ReviewScheduleService(
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
-    val startDatePlusFive = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
+    val startDatePlusFive =
+      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
     val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
   @Transactional
-  fun createOrUpdateDueToNeedChange(prisonNumber: String) {
+  fun createOrUpdateDueToNeedChange(
+    prisonNumber: String,
+    educationStartDate: LocalDate,
+    alnAssessmentDate: LocalDate?,
+  ) {
+    // If a SCHEDULED review already exists, do nothing.
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    if (existing == null || existing.status != ReviewScheduleStatus.SCHEDULED) {
-      createReviewSchedule(
-        prisonNumber = prisonNumber,
-        reviewDate = IN_THE_FUTURE_DATE,
-        prisonId = "N/A",
-      )
+    if (existing?.status == ReviewScheduleStatus.SCHEDULED) return
+
+    // If the ALN assessment was on/before the education start, base the deadline on the start date.
+    // Otherwise (or if no assessment), push it to the catch-all future date.
+    val reviewDate = when {
+      alnAssessmentDate == null -> IN_THE_FUTURE_DATE
+      !alnAssessmentDate.isAfter(educationStartDate) -> getDeadlineDate(educationStartDate)
+      else -> IN_THE_FUTURE_DATE
     }
-    // if they already have a schedule with the status SCHEDULED then do nothing.
+
+    createReviewSchedule(
+      prisonNumber = prisonNumber,
+      reviewDate = reviewDate,
+      prisonId = "N/A",
+    )
   }
 }

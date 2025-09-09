@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
@@ -74,13 +75,20 @@ import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
 
-@ExtendWith(HmppsAuthApiExtension::class, HmppsPrisonerSearchApiExtension::class, CuriousApiExtension::class, ManageUsersApiExtension::class, BankHolidaysApiExtension::class)
+@ExtendWith(
+  HmppsAuthApiExtension::class,
+  HmppsPrisonerSearchApiExtension::class,
+  CuriousApiExtension::class,
+  ManageUsersApiExtension::class,
+  BankHolidaysApiExtension::class,
+)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("test")
 @AutoConfigureWebTestClient(timeout = "PT15M")
 abstract class IntegrationTestBase {
 
   companion object {
+    val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
     private val localStackContainer = LocalStackContainer.instance
 
@@ -298,10 +306,20 @@ abstract class IntegrationTestBase {
     conditionRepository.save(condition)
   }
 
-  fun prisonerInEducation(prisonNumber: String) {
+  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now()) {
     val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
     educationRepository.save(educationEntity)
+    val educationEnrolmentEntity = EducationEnrolmentEntity(
+      prisonNumber = prisonNumber,
+      qualificationCode = "123",
+      fundingType = "PES",
+      endDate = null,
+      learningStartDate = learningStartDate,
+      establishmentId = "1234",
+    )
+    educationEnrolmentRepository.save(educationEnrolmentEntity)
   }
+
   fun anElSPExists(prisonNumber: String) {
     val elsp = elspPlanMapper.toEntity(
       prisonNumber,

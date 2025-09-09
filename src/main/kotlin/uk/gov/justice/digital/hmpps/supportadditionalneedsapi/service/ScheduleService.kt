@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.Addition
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation.Reason.TEMPORARY_ABSENCE_RETURN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReceivedAdditionalInformation.Reason.TRANSFERRED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
+import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}
 
@@ -86,7 +87,7 @@ class ScheduleService(
   }
 
   @Transactional
-  fun processNeedChange(prisonNumber: String, hasNeed: Boolean) {
+  fun processNeedChange(prisonNumber: String, hasNeed: Boolean, alnAssessmentDate: LocalDate? = null) {
     log.info { "Processing needs change for $prisonNumber" }
     // If the person no longer has a need exempt any schedules
     if (!hasNeed) {
@@ -104,15 +105,18 @@ class ScheduleService(
       log.debug { "Prisoner $prisonNumber was in education." }
     }
 
+    // Will always be in education at this point
+    val educationStartDate = educationService.getEducationStartDate(prisonNumber)
+
     // if the doesn't have a plan or plan creation schedule:
     // does the person already have an ELSP?
     val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
     if (plan == null) {
       log.debug { "$prisonNumber doesn't have a plan - try to create a plan creation schedule." }
-      planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+      planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
     } else {
       log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
-      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
     }
   }
 }
