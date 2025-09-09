@@ -20,7 +20,8 @@ interface EducationEnrolmentRepository : JpaRepository<EducationEnrolmentEntity,
       from EducationEnrolmentEntity e
       where e.prisonNumber = :prisonNumber
         and e.endDate is null
+        and e.fundingType = 'PES'
     """,
   )
-  fun findEarliestLearningStartDateWithNoEndDate(prisonNumber: String): LocalDate
+  fun findEarliestLearningStartDateWithNoEndDate(prisonNumber: String): LocalDate?
 }

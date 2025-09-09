@@ -8,9 +8,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Edu
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_EDUCATION_TRIGGER
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -28,9 +31,11 @@ class EducationService(
   private val curiousApiClient: CuriousApiClient,
   private val educationEnrolmentRepository: EducationEnrolmentRepository,
   private val needService: NeedService,
+  private val alnScreenerRepository: AlnScreenerRepository,
   private val reviewScheduleService: ReviewScheduleService,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val elspPlanRepository: ElspPlanRepository,
+  private val alnAssessmentRepository: AlnAssessmentRepository,
 ) {
 
   /**
@@ -40,7 +45,7 @@ class EducationService(
    */
   fun inEducation(prisonNumber: String): Boolean = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.inEducation ?: false
 
-  fun getEducationStartDate(prisonNumber: String): LocalDate = educationEnrolmentRepository.findEarliestLearningStartDateWithNoEndDate(prisonNumber)
+  fun getNonPESEducationStartDate(prisonNumber: String): LocalDate? = educationEnrolmentRepository.findEarliestLearningStartDateWithNoEndDate(prisonNumber)
 
   /**
    * Create the education record. Currently, this is simply whether the person is in education with the
@@ -102,9 +107,11 @@ class EducationService(
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
           val startDate = enrolmentDiff.firstNewEnrolmentStart
           val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
+
           if (plan == null) {
+            val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
             // create the plan creation schedule
-            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType)
+            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, subjectToKPIRules)
           } else {
             // make an update to the review
             reviewScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType)
@@ -113,6 +120,31 @@ class EducationService(
         log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")
       }
     }
+  }
+
+  // Special rule only when the ALN screener has been processed but was after the education start date.
+  // The prisoner will be marked as has need when the education record is processed but shouldn't make the person
+  // in scope for KPI.
+  fun subjectToKPIRules(
+    prisonNumber: String,
+    enrolmentDiff: EnrolmentProcessingResults,
+  ): Boolean {
+    val needSources = needService.getNeedSources(prisonNumber)
+
+    // Special case: only ALN screener need
+    if (needSources.size == 1 && NeedSource.ALN_SCREENER in needSources) {
+      val screeningDate = alnAssessmentRepository
+        .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+        ?.screeningDate
+
+      val enrolmentStart = enrolmentDiff.firstNewEnrolmentStart
+      if (screeningDate != null && enrolmentStart != null) {
+        // Not subject to KPI if enrolment starts before the screening date
+        if (enrolmentStart < screeningDate) return false
+      }
+    }
+
+    return true
   }
 
   private fun findNewlyActiveEducationForStart(dto: EducationDTO, start: LocalDate): Education? = dto.educationData.firstOrNull { it.learningStartDate == start && it.learningActualEndDate == null }

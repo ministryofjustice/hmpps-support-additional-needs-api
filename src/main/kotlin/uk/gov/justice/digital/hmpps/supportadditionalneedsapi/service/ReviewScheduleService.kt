@@ -104,6 +104,8 @@ class ReviewScheduleService(
       reviewScheduleRepository.save(existing)
       eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
       log.info("Review schedule deadline date updated to $desired for $prisonNumber, days to add was configured as $REVIEW_DEADLINE_DAYS_TO_ADD days")
+    } else {
+      log.info("Review date was unchanged for $prisonNumber the current deadline date was $current and the proposed was $proposedDeadline, days to add was configured as $REVIEW_DEADLINE_DAYS_TO_ADD days")
     }
   }
 
@@ -117,7 +119,7 @@ class ReviewScheduleService(
   @Transactional
   fun createOrUpdateDueToNeedChange(
     prisonNumber: String,
-    educationStartDate: LocalDate,
+    educationStartDate: LocalDate?,
     alnAssessmentDate: LocalDate?,
   ) {
     // If a SCHEDULED review already exists, do nothing.
@@ -128,6 +130,7 @@ class ReviewScheduleService(
     // Otherwise (or if no assessment), push it to the catch-all future date.
     val reviewDate = when {
       alnAssessmentDate == null -> IN_THE_FUTURE_DATE
+      educationStartDate == null -> IN_THE_FUTURE_DATE
       !alnAssessmentDate.isAfter(educationStartDate) -> getDeadlineDate(educationStartDate)
       else -> IN_THE_FUTURE_DATE
     }

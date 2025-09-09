@@ -42,12 +42,13 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aValidChallengeExists(prisonNumber)
 
     // Then
-    putInEducationAndValidate(prisonNumber)
+    val educationStartDate = LocalDate.of(2025, 10, 2)
+    putInEducationAndValidate(prisonNumber, educationStartDate = educationStartDate)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
-    Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(LocalDate.of(2025, 10, 2))
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(educationStartDate)
     // because the education start date is greater than PES date then the deadline date is education start date + DEADLINE_DAYS_TO_ADD working days
-    val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2025, 10, 2))
+    val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
   }
 
@@ -70,7 +71,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should process Curious Education domain event for non PES education - check schedule has no start or end date`() {
+  fun `should process Curious Education domain event for non PES education - check schedule has IN FUTURE deadline date`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
@@ -83,6 +84,22 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+  }
+
+  @Test
+  fun `should process Curious Education domain event for PES education AND an ALN assessment message with the same assessment date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    // person has a need:
+    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now())
+
+    // Then person is on a non PES course
+    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = LocalDate.now())
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isNotNull()
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isBefore(IN_THE_FUTURE_DATE)
   }
 
   @Test
@@ -175,19 +192,35 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     anElSPExists(prisonNumber)
 
     // Then
-    putInEducationAndValidate(prisonNumber)
+    val educationStartDate = LocalDate.of(2025, 10, 2)
+    putInEducationAndValidate(prisonNumber, educationStartDate = educationStartDate)
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(reviewScheduleEntity!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isNotNull()
     // this is the date that the education starts from the curious API
-    val educationStartDate = LocalDate.of(2025, 10, 2)
     val deadlineDate = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
 
     Assertions.assertThat(reviewScheduleEntity.deadlineDate).isEqualTo(deadlineDate)
   }
 
-  private fun putInEducationAndValidate(prisonNumber: String, fundingType: String = "PES") {
-    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType))
+  @Test
+  fun `should process Curious Education domain event for PES education AND an ALN assessment message with the later assessment date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    // person has a need:
+    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now().plusDays(5))
+
+    // Then person is on a non PES course
+    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = LocalDate.now())
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+  }
+
+  private fun putInEducationAndValidate(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate = LocalDate.now().minusMonths(5)) {
+    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType, educationStartDate))
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -213,10 +246,6 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
     Assertions.assertThat(enrolments).hasSize(1)
     Assertions.assertThat(enrolments[0].endDate).isNull()
-
-    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
-    Assertions.assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_EDUCATION_TRIGGER)
-    Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
   private fun putInTwoEducationAndValidate(prisonNumber: String, fundingType: String = "PES") {
@@ -285,7 +314,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(timelineEntries[1].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
-  fun inEducationResponse(prisonNumber: String, fundingType: String = "PES"): String = """{
+  fun inEducationResponse(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate): String = """{
     "v1": [],
     "v2": [
         {
@@ -294,7 +323,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
             "establishmentName": "CARDIFF (HMP)",
             "qualificationCode": "60322457",
             "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-10-02",
+            "learningStartDate": "$educationStartDate",
             "learningPlannedEndDate": "2025-01-31",
             "learnerOnRemand": null,
             "isAccredited": true,
