@@ -11,6 +11,8 @@ import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
@@ -89,7 +91,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
 
     Assertions.assertThat(planCreationSchedule).isNotNull
     Assertions.assertThat(planCreationSchedule!!.deadlineDate)
-      .isEqualTo(deadlineDateBasedOnPESContractDate(learningStartDate))
+      .isEqualTo(planDeadlineDateBasedOnPESContractDate(learningStartDate))
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(learningStartDate)
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
@@ -105,43 +107,80 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now().minusDays(3))
+    createALNAssessmentMessage(
+      prisonNumber,
+      curiousReference,
+      hasNeed = true,
+      assessmentDate = LocalDate.now().minusDays(3),
+    )
 
     // Then
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
 
     Assertions.assertThat(planCreationSchedule).isNotNull
     Assertions.assertThat(planCreationSchedule!!.deadlineDate)
-      .isEqualTo(deadlineDateBasedOnPESContractDate(learningStartDate))
+      .isEqualTo(planDeadlineDateBasedOnPESContractDate(learningStartDate))
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(learningStartDate)
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
 
-  private fun deadlineDateBasedOnPESContractDate(learningStartDate: LocalDate): LocalDate {
-    if (LocalDate.now() < pesContractDate) {
-      return workingDayService.getNextWorkingDayNDaysFromDate(5, pesContractDate)
-    } else {
-      return workingDayService.getNextWorkingDayNDaysFromDate(5, learningStartDate)
-    }
+  private fun planDeadlineDateBasedOnPESContractDate(learningStartDate: LocalDate): LocalDate = if (LocalDate.now() < pesContractDate) {
+    workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, pesContractDate)
+  } else {
+    workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, learningStartDate)
   }
 
   @Test
-  fun `should process Curious ALN domain event, mark the person as having an ALN need and has plan create review schedule`() {
+  fun `should process Curious ALN domain event, mark the person as having an ALN need and has plan create review schedule with the non KPI date`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    prisonerInEducation(prisonNumber)
+    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = LocalDate.now())
     anElSPExists(prisonNumber)
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    createALNAssessmentMessage(
+      prisonNumber,
+      curiousReference,
+      hasNeed = true,
+      assessmentDate = LocalDate.now().plusDays(1),
+    )
 
     // Then
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
     Assertions.assertThat(reviewScheduleEntity).isNotNull
     Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+    Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should process Curious ALN domain event, mark the person as having an ALN need and has plan create review schedule with the KPI date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    val educationStartDate = LocalDate.now()
+    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = educationStartDate)
+    anElSPExists(prisonNumber)
+
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = educationStartDate)
+
+    // Then
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+
+    Assertions.assertThat(reviewScheduleEntity).isNotNull
+
+    // This date is going to be the latter of today + REVIEW_DEADLINE_DAYS_TO_ADD (working days) or
+    // pesContractDate + REVIEW_DEADLINE_DAYS_TO_ADD (working days)
+    val deadlineDate = maxOf(
+      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate),
+      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, pesContractDate),
+    )
+
+    Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(deadlineDate)
     Assertions.assertThat(reviewScheduleEntity.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
   }
 
@@ -163,21 +202,21 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should set up a review schedule as having a null deadline date`() {
+  fun `should set up a review schedule as having an non KPI deadline date`() {
     // This is an obscure scenario where somehow a person has an ELSP created but doesn't have a need.
     // maybe their need was temporary in the past.
     // Then they are in education and they have a need added.
-    // this should schedule a review BUT not set a deadline date.
+    // this should schedule a review BUT not will set the deadline date to be in the distant future
 
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    prisonerInEducation(prisonNumber)
+    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = LocalDate.now())
     anElSPExists(prisonNumber)
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now().plusDays(1))
 
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)

@@ -116,7 +116,7 @@ class ScheduleService(
       planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
     } else {
       log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
-      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber)
+      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
     }
   }
 }
