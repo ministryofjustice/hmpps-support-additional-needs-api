@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PrisonerOverviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PrisonerOverviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SentenceTypeMapper
@@ -84,7 +85,7 @@ class SearchService(
 
       // Needs plan (has needs and education, no deadline, and no plan yet)
       !overview.hasPlan &&
-        overview.deadlineDate == null
+        overview.planCreationDeadlineDate == Constants.IN_THE_FUTURE_DATE
       -> PlanStatus.NEEDS_PLAN
 
       // Review due soon (within 5 working days)

@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -86,6 +87,10 @@ class PlanActionStatusTest : IntegrationTestBase() {
     // needsPlan -> PRISONER_1
     prisonerInEducation(PRISONER_1.prisonerNumber)
     prisonerHasNeed(PRISONER_1.prisonerNumber)
+    aValidPlanCreationScheduleExists(
+      prisonNumber = PRISONER_1.prisonerNumber,
+      deadlineDate = IN_THE_FUTURE_DATE,
+    )
 
     // planDue -> PRISONER_2
     prisonerInEducation(PRISONER_2.prisonerNumber)
