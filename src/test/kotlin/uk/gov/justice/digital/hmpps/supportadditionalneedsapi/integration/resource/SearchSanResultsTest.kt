@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -41,6 +42,7 @@ class SearchSanResultsTest : IntegrationTestBase() {
     // PRISONER_1
     prisonerInEducation(PRISONER_1.prisonerNumber)
     prisonerHasNeed(PRISONER_1.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_1.prisonerNumber, deadlineDate = IN_THE_FUTURE_DATE)
 
     // PlanDue
     // PRISONER_2
