@@ -47,7 +47,8 @@ class ConditionService(
 
     val savedConditions = conditionRepository.saveAllAndFlush(conditions)
     // update schedules and send messages
-    scheduleService.processNeedChange(prisonNumber, true)
+    val prisonId = savedConditions.first().createdAtPrison
+    scheduleService.processNeedChange(prisonNumber, true, prisonId = prisonId)
     return ConditionListResponse(savedConditions.map { conditionMapper.toModel(it) })
   }
 

@@ -84,6 +84,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule).isNotNull
     Assertions.assertThat(planCreationSchedule!!.deadlineDate)
       .isEqualTo(planDeadlineDateBasedOnPESContractDate(learningStartDate))
+    Assertions.assertThat(planCreationSchedule.createdAtPrison).isEqualTo("KMI")
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(learningStartDate)
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }

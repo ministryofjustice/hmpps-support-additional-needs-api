@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.ALNAssessment
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER
@@ -90,6 +92,7 @@ class ALNScreenerService(
     }
 
     val hasNeed = latestAssessment.assessmentOutcome.equals(YES, ignoreCase = true)
+    val prisonId = getPrisonId(latestAssessment)
     log.info("Identified ALN need for $prisonNumber: hasNeed = $hasNeed")
 
     needService.recordAlnScreenerNeed(
@@ -105,11 +108,15 @@ class ALNScreenerService(
       val alnAssessmentDate: LocalDate? =
         if (hasNeed) latestAssessment.assessmentDate else null
       log.info("The ALN need update changed the overall need of $prisonNumber")
-      scheduleService.processNeedChange(prisonNumber, overallNeed, alnAssessmentDate)
+      scheduleService.processNeedChange(prisonNumber, overallNeed, alnAssessmentDate, prisonId = prisonId)
     } else {
       log.info("The ALN need update did not change the overall need of $prisonNumber")
     }
-
     log.info("Processed ALN assessment for $prisonNumber: $latestAssessment")
   }
+
+  // Attempt to get the prisonId from the assessment
+  private fun getPrisonId(latestAssessment: ALNAssessment): String = latestAssessment.establishmentId
+    ?.takeIf { it.length == 3 }
+    ?: DEFAULT_PRISON_ID
 }

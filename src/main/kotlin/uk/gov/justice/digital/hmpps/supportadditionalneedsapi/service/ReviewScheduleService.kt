@@ -40,11 +40,12 @@ class ReviewScheduleService(
   }
 
   @Transactional
-  fun exemptSchedule(prisonNumber: String, status: ReviewScheduleStatus) {
+  fun exemptSchedule(prisonNumber: String, status: ReviewScheduleStatus, prisonId: String) {
     reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
       ?.takeIf { it.status == ReviewScheduleStatus.SCHEDULED }
       ?.let {
         it.status = status
+        it.updatedAtPrison = prisonId
         reviewScheduleRepository.save(it)
         eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
       }
@@ -81,7 +82,7 @@ class ReviewScheduleService(
   }
 
   @Transactional
-  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String) {
+  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, prisonId: String) {
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     val proposedDeadline = getDeadlineDate(startDate)
 
@@ -90,7 +91,7 @@ class ReviewScheduleService(
       createReviewSchedule(
         prisonNumber = prisonNumber,
         reviewDate = proposedDeadline,
-        prisonId = "N/A",
+        prisonId = prisonId,
       )
       return
     }
@@ -121,6 +122,7 @@ class ReviewScheduleService(
     prisonNumber: String,
     educationStartDate: LocalDate?,
     alnAssessmentDate: LocalDate?,
+    prisonId: String,
   ) {
     // If a SCHEDULED review already exists, do nothing.
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
@@ -138,7 +140,7 @@ class ReviewScheduleService(
     createReviewSchedule(
       prisonNumber = prisonNumber,
       reviewDate = reviewDate,
-      prisonId = "N/A",
+      prisonId = prisonId,
     )
   }
 }

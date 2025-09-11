@@ -147,7 +147,7 @@ class PlanCreationScheduleServiceTest {
 
   @Test
   fun `createSchedule does nothing if not in education or no need`() {
-    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null)
+    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = "BXI")
 
     verify(planCreationScheduleRepository, never()).saveAndFlush(any())
   }
@@ -167,8 +167,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = LocalDate.now(),
-      createdAtPrison = "N/A",
-      updatedAtPrison = "N/A",
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
       earliestStartDate = null,
     )
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(existing)

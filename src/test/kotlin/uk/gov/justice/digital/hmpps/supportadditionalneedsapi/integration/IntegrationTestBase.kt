@@ -411,7 +411,7 @@ abstract class IntegrationTestBase {
         {
           "assessmentDate": "$assessmentDate",
           "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
-          "establishmentId": "123",
+          "establishmentId": "KMI",
           "establishmentName": "WTI",
           "hasPrisonerConsent": "Yes",
           "stakeholderReferral": "yes"

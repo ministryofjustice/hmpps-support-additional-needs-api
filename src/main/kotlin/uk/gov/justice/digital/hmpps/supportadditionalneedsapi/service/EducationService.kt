@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Education
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
@@ -97,8 +98,9 @@ class EducationService(
       if (!inEducation) {
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
-        planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
-        reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+        val prisonId = getPrisonIdForLatestInActiveEducation(educationDto)
+        planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = prisonId)
+        reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = prisonId)
       }
       if (needService.hasNeed(prisonNumber)) {
         // find out if this is a new enrolment
@@ -107,20 +109,34 @@ class EducationService(
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
           val startDate = enrolmentDiff.firstNewEnrolmentStart
           val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
+          val prisonId = getPrisonIdForLatestActiveEducation(educationDto)
 
           if (plan == null) {
             val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
             // create the plan creation schedule
-            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, subjectToKPIRules)
+            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, subjectToKPIRules, prisonId = prisonId)
           } else {
             // make an update to the review
-            reviewScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType)
+            reviewScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, prisonId = prisonId)
           }
         }
         log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")
       }
     }
   }
+
+  // Attempt to get the prisonId from the education returned from Curious
+  private fun getPrisonIdForLatestActiveEducation(educationDto: EducationDTO): String = educationDto.educationData
+    .firstOrNull { it.learningActualEndDate == null }
+    ?.establishmentId
+    ?.takeIf { it.length == 3 }
+    ?: DEFAULT_PRISON_ID
+
+  private fun getPrisonIdForLatestInActiveEducation(educationDto: EducationDTO): String = educationDto.educationData
+    .firstOrNull { it.learningActualEndDate != null }
+    ?.establishmentId
+    ?.takeIf { it.length == 3 }
+    ?: DEFAULT_PRISON_ID
 
   // Special rule only when the ALN screener has been processed but was after the education start date.
   // The prisoner will be marked as has need when the education record is processed but shouldn't make the person

@@ -5,6 +5,7 @@ import org.aspectj.lang.annotation.AfterReturning
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.TimelineRepository
 import java.util.*
@@ -52,7 +53,7 @@ class TimelineAspect(
 
   private fun resolvePrisonCode(argMap: Map<String, Any?>, fallbackItem: Any): String = argMap["prisonId"] as? String
     ?: extractField(fallbackItem, "prisonId")
-    ?: "N/A"
+    ?: DEFAULT_PRISON_ID
 
   private fun resolveAdditionalInfo(item: Any, timelineEvent: TimelineEvent): String = extractField(item, timelineEvent.additionalInfoField)
     ?.let { "${timelineEvent.additionalInfoPrefix}$it" }
