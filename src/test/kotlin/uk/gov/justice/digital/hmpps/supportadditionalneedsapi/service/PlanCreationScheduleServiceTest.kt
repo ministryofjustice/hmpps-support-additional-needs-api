@@ -14,7 +14,6 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource.ALN_SCREENER
@@ -168,8 +167,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = LocalDate.now(),
-      createdAtPrison = DEFAULT_PRISON_ID,
-      updatedAtPrison = DEFAULT_PRISON_ID,
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
       earliestStartDate = null,
     )
     whenever(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).thenReturn(existing)

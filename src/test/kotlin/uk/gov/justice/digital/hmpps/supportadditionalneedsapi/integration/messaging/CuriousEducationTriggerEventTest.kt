@@ -47,6 +47,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(educationStartDate)
+    Assertions.assertThat(planCreationSchedule.createdAtPrison).isEqualTo("CFI")
     // because the education start date is greater than PES date then the deadline date is education start date + DEADLINE_DAYS_TO_ADD working days
     val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
