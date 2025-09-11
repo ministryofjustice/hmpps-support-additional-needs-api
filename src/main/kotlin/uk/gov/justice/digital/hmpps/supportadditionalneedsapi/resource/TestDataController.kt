@@ -173,7 +173,7 @@ class TestDataController(
       }
     }
 
-    scheduleService.processNeedChange(prisonNumber, needService.hasNeed(prisonNumber))
+    scheduleService.processNeedChange(prisonNumber, needService.hasNeed(prisonNumber), prisonId = request.prisonId)
 
     return planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
   }

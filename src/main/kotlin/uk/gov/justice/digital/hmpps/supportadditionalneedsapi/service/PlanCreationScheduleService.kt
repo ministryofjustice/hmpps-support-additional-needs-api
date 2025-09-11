@@ -36,7 +36,7 @@ class PlanCreationScheduleService(
   private fun updateSchedule(
     schedule: PlanCreationScheduleEntity,
     newStatus: PlanCreationScheduleStatus,
-    prisonId: String = "N/A",
+    prisonId: String,
     deadlineDate: LocalDate,
     earliestStartDate: LocalDate?,
     prisonNumber: String,
@@ -51,7 +51,7 @@ class PlanCreationScheduleService(
 
   fun createSchedule(
     prisonNumber: String,
-    prisonId: String = "N/A",
+    prisonId: String,
     deadlineDate: LocalDate,
     earliestStartDate: LocalDate?,
   ) {
@@ -96,7 +96,7 @@ class PlanCreationScheduleService(
     status: PlanCreationScheduleStatus,
     exemptionReason: String? = null,
     exemptionDetail: String? = null,
-    updatedAtPrison: String = "N/A",
+    updatedAtPrison: String,
     clearDeadlineDate: Boolean = false,
   ) {
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -115,7 +115,7 @@ class PlanCreationScheduleService(
       status = status,
       exemptionReason = exemptionReason,
       exemptionDetail = exemptionDetail,
-      updatedAtPrison = updatedAtPrison,
+      prisonId = updatedAtPrison,
       clearDeadlineDate = clearDeadlineDate,
     )
   }
@@ -126,7 +126,7 @@ class PlanCreationScheduleService(
     status: PlanCreationScheduleStatus,
     exemptionReason: String? = null,
     exemptionDetail: String? = null,
-    updatedAtPrison: String = "N/A",
+    prisonId: String,
     clearDeadlineDate: Boolean = false,
   ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -135,7 +135,7 @@ class PlanCreationScheduleService(
         it.status = status
         it.exemptionReason = exemptionReason
         it.exemptionDetail = exemptionDetail
-        it.updatedAtPrison = updatedAtPrison
+        it.updatedAtPrison = prisonId
         if (clearDeadlineDate) {
           it.deadlineDate = IN_THE_FUTURE_DATE
         }
@@ -164,13 +164,13 @@ class PlanCreationScheduleService(
       }
   }
 
-  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, subjectToKPIRules: Boolean) {
+  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, subjectToKPIRules: Boolean, prisonId: String) {
     val isKPI = fundingType.equals("PES", ignoreCase = true) && subjectToKPIRules
     val earliestStart = if (isKPI) startDate else null
     val deadline = if (isKPI) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
 
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart)
+      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart, prisonId = prisonId)
 
     val alreadyCorrect =
       existing.status == PlanCreationScheduleStatus.SCHEDULED &&
@@ -185,6 +185,7 @@ class PlanCreationScheduleService(
       earliestStartDate = earliestStart,
       schedule = existing,
       newStatus = PlanCreationScheduleStatus.SCHEDULED,
+      prisonId = prisonId,
     )
   }
 
@@ -193,6 +194,7 @@ class PlanCreationScheduleService(
     prisonNumber: String,
     educationStartDate: LocalDate?,
     alnAssessmentDate: LocalDate?,
+    prisonId: String,
   ) {
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     if (existing == null) {
@@ -204,10 +206,11 @@ class PlanCreationScheduleService(
             prisonNumber = prisonNumber,
             deadlineDate = getDeadlineDate(educationStartDate),
             earliestStartDate = educationStartDate,
+            prisonId = prisonId,
           )
         }
       }
-      return createSchedule(prisonNumber = prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null)
+      return createSchedule(prisonNumber = prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = prisonId)
     } else {
       // need to do check in here to see if the ALN assessment was done before the education start
       // if it was then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
@@ -219,6 +222,7 @@ class PlanCreationScheduleService(
             newStatus = existing.status,
             earliestStartDate = educationStartDate,
             deadlineDate = getDeadlineDate(educationStartDate),
+            prisonId = prisonId,
           )
         }
       }

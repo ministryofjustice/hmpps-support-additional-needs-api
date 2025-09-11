@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -44,11 +45,11 @@ class ScheduleService(
   @Transactional
   fun processReleased(info: PrisonerReleasedAdditionalInformation) {
     if (info.releaseTriggeredByPrisonerDeath) {
-      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_DEATH)
-      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_DEATH)
+      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_DEATH, prisonId = info.prisonId)
+      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_DEATH, prisonId = info.prisonId)
     } else {
-      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_RELEASE)
-      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_RELEASE)
+      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_RELEASE, prisonId = info.prisonId)
+      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_RELEASE, prisonId = info.prisonId)
     }
   }
 
@@ -60,8 +61,9 @@ class ScheduleService(
   @Transactional
   fun processMerged(info: PrisonerMergedAdditionalInformation) {
     // exempt any schedules for the removed person:
-    planCreationScheduleService.exemptSchedule(info.removedNomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_MERGE)
-    reviewScheduleService.exemptSchedule(info.removedNomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_MERGE)
+    // merge events don't have a prison id so setting this  one to DEFAULT_PRISON_ID
+    planCreationScheduleService.exemptSchedule(info.removedNomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_MERGE, prisonId = DEFAULT_PRISON_ID)
+    reviewScheduleService.exemptSchedule(info.removedNomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_MERGE, prisonId = DEFAULT_PRISON_ID)
     log.info("processed {${info.reason.name}} event for ${info.nomsNumber}")
   }
 
@@ -70,8 +72,8 @@ class ScheduleService(
     // person has been un-enrolled in education.
     // Decision was made to also exempt the schedules here, even though we will also be receiving a
     // message from Curious to say that the person is exempt due to not being in education.
-    planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
-    reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
+    planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
+    reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
     // If the person is currently in education set them to not being in education any more
     // null curious reference since this wasn't from a curious message.
     val inEducation = educationService.inEducation(info.nomsNumber)
@@ -87,13 +89,13 @@ class ScheduleService(
   }
 
   @Transactional
-  fun processNeedChange(prisonNumber: String, hasNeed: Boolean, alnAssessmentDate: LocalDate? = null) {
+  fun processNeedChange(prisonNumber: String, hasNeed: Boolean, alnAssessmentDate: LocalDate? = null, prisonId: String) {
     log.info { "Processing needs change for $prisonNumber" }
     // If the person no longer has a need exempt any schedules
     if (!hasNeed) {
       log.debug { "Prisoner $prisonNumber has no need exempt schedules." }
-      planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NO_NEED)
-      reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NO_NEED)
+      planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NO_NEED, prisonId = prisonId)
+      reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NO_NEED, prisonId = prisonId)
       return
     }
 
@@ -114,10 +116,10 @@ class ScheduleService(
     val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
     if (plan == null) {
       log.debug { "$prisonNumber doesn't have a plan - try to create a plan creation schedule." }
-      planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
+      planCreationScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate, prisonId = prisonId)
     } else {
       log.debug { "$prisonNumber did have a plan - try to create a review schedule." }
-      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate)
+      reviewScheduleService.createOrUpdateDueToNeedChange(prisonNumber = prisonNumber, educationStartDate = educationStartDate, alnAssessmentDate = alnAssessmentDate, prisonId = prisonId)
     }
   }
 }

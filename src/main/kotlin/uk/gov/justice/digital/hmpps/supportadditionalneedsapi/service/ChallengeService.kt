@@ -73,7 +73,8 @@ class ChallengeService(
     val savedChallenges = challengeRepository.saveAllAndFlush(challenges)
 
     // update schedules and send messages
-    scheduleService.processNeedChange(prisonNumber, true)
+    val prisonId = savedChallenges.first().createdAtPrison
+    scheduleService.processNeedChange(prisonNumber, true, prisonId = prisonId)
     return ChallengeListResponse(savedChallenges.map { challengeMapper.toModel(it) })
   }
 
