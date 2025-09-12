@@ -63,9 +63,8 @@ class NeedServiceTest {
   fun `recordLddScreenerNeed saves LDD assessment`() {
     val prisonNumber = randomValidPrisonNumber()
     val hasNeed = false
-    val curiousRef = UUID.randomUUID()
 
-    needService.recordLddScreenerNeed(prisonNumber, hasNeed, curiousRef)
+    needService.recordLddScreenerNeed(prisonNumber, hasNeed)
 
     verify(lddAssessmentRepository).save(
       any<LddAssessmentEntity>(),

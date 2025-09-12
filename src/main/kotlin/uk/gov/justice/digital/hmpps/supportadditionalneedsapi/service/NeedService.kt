@@ -47,13 +47,20 @@ class NeedService(
    * to our database.
    */
   @Transactional
-  fun recordLddScreenerNeed(prisonNumber: String, hasNeed: Boolean, curiousReference: UUID) {
-    lddAssessmentRepository.save(
-      LddAssessmentEntity(
-        hasNeed = hasNeed,
-        prisonNumber = prisonNumber,
-      ),
-    )
+  fun recordLddScreenerNeed(prisonNumber: String, hasNeed: Boolean) {
+    val existing = lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+
+    if (existing != null) {
+      existing.hasNeed = hasNeed
+      lddAssessmentRepository.save(existing)
+    } else {
+      lddAssessmentRepository.save(
+        LddAssessmentEntity(
+          prisonNumber = prisonNumber,
+          hasNeed = hasNeed,
+        ),
+      )
+    }
   }
 
   /**

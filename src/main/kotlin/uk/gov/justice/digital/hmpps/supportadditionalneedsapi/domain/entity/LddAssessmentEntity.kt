@@ -19,5 +19,5 @@ data class LddAssessmentEntity(
   val prisonNumber: String,
 
   @Column(nullable = false)
-  val hasNeed: Boolean = false,
+  var hasNeed: Boolean = false,
 ) : BaseAuditableEntity()
