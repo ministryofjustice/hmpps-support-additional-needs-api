@@ -86,7 +86,7 @@ class TestDataController(
         needService.recordAlnScreenerNeed(prisonNumber, true, curiousRef, LocalDate.now())
       }
       if (lddNeed) {
-        needService.recordLddScreenerNeed(prisonNumber, true, curiousRef)
+        needService.recordLddScreenerNeed(prisonNumber, true)
       }
       if (conditionSelfDeclared) {
         conditionService.createConditions(
