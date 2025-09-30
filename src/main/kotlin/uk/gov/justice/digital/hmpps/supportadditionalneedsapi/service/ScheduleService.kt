@@ -44,12 +44,15 @@ class ScheduleService(
    */
   @Transactional
   fun processReleased(info: PrisonerReleasedAdditionalInformation) {
+    log.info("prisoner ${info.nomsNumber} processing release message with reason ${info.reason}")
     if (info.releaseTriggeredByPrisonerDeath) {
       planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_DEATH, prisonId = info.prisonId)
       reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_DEATH, prisonId = info.prisonId)
-    } else {
+    } else if (info.actualRelease) {
       planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_RELEASE, prisonId = info.prisonId)
       reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_RELEASE, prisonId = info.prisonId)
+    } else {
+      log.info("prisoner ${info.nomsNumber} release message ignored due to reason ${info.reason}")
     }
   }
 

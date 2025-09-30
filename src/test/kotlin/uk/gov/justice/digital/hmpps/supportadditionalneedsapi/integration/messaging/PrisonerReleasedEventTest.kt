@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidPriso
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation.Reason.RELEASED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -62,6 +63,7 @@ class PrisonerReleasedEventTest : IntegrationTestBase() {
       eventType = EventType.PRISONER_RELEASED_FROM_PRISON,
       additionalInformation = aValidPrisonerReleasedAdditionalInformation(
         prisonNumber = prisonNumber,
+        reason = RELEASED,
       ),
     )
 
