@@ -11,6 +11,9 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidPriso
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation.Reason.RELEASED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.PrisonerReleasedAdditionalInformation.Reason.TEMPORARY_ABSENCE_RELEASE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -38,6 +41,25 @@ class PrisonerReleasedEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should process prisoner temp release event and not change the schedule status`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    aValidPlanCreationScheduleExists(prisonNumber)
+
+    // When
+    sendPrisonerReleaseMessage(prisonNumber, reason = TEMPORARY_ABSENCE_RELEASE)
+
+    // Then
+    // wait until the queue is drained / message is processed
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
   fun `should process prisoner release event setting review schedule to exempt due to prisoner release`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
@@ -56,12 +78,13 @@ class PrisonerReleasedEventTest : IntegrationTestBase() {
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_RELEASE)
   }
 
-  private fun sendPrisonerReleaseMessage(prisonNumber: String) {
+  private fun sendPrisonerReleaseMessage(prisonNumber: String, reason: PrisonerReleasedAdditionalInformation.Reason = RELEASED) {
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
       prisonNumber = prisonNumber,
       eventType = EventType.PRISONER_RELEASED_FROM_PRISON,
       additionalInformation = aValidPrisonerReleasedAdditionalInformation(
         prisonNumber = prisonNumber,
+        reason = reason,
       ),
     )
 

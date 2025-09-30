@@ -56,6 +56,7 @@ sealed interface AdditionalInformation {
   ) : AdditionalInformation {
 
     val releaseTriggeredByPrisonerDeath: Boolean = nomisMovementReasonCode == "DEC"
+    val actualRelease: Boolean = reason == Reason.RELEASED
 
     enum class Reason {
       TEMPORARY_ABSENCE_RELEASE,
