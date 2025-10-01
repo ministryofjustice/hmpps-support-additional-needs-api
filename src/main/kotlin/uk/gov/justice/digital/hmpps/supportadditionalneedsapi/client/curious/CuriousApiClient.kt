@@ -47,7 +47,7 @@ class CuriousApiClient(
    */
   fun getEducation(prisonNumber: String): EducationDTO = try {
     curiousApiWebClient.get()
-      .uri("/learnerQualifications/v2/{prisonNumber}", prisonNumber)
+      .uri("/learnerQualifications/v2/{prisonNumber}?size=1000", prisonNumber)
       .headers {
         it.contentType = MediaType.APPLICATION_JSON
       }
