@@ -104,7 +104,7 @@ class EducationService(
       }
       if (needService.hasNeed(prisonNumber)) {
         // find out if this is a new enrolment
-        if (enrolmentDiff.createdCount > 0) {
+        if (enrolmentDiff.createdCount > 0 || enrolmentDiff.reopenedCount > 0) {
           // does the person have an ELSP?
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
           val startDate = enrolmentDiff.firstNewEnrolmentStart
@@ -208,31 +208,47 @@ class EducationService(
         .toSet()
 
     // get the SAN open education list and create a list of keys
-    val openInDb = educationEnrolmentRepository.findAllByPrisonNumberAndEndDateIsNull(prisonNumber)
-    val openByKey =
-      openInDb.associateBy { EnrolmentKey(it.establishmentId, it.qualificationCode, it.learningStartDate) }
+    val allInDb = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
+    val allByKey = allInDb.associateBy { EnrolmentKey(it.establishmentId, it.qualificationCode, it.learningStartDate) }
+
+    val openByKey = allInDb
+      .asSequence()
+      .filter { it.endDate == null }
+      .associateBy { EnrolmentKey(it.establishmentId, it.qualificationCode, it.learningStartDate) }
     val openKeysInDb = openByKey.keys
 
-    // work out which ones have no ended
-    val newKeys = activeKeysFromCurious - openKeysInDb
+    // work out which ones have no end date
+    val newOrReopenedKeys = activeKeysFromCurious - openKeysInDb
     val endedKeys = openKeysInDb - activeKeysFromCurious
 
-    // create new enrolment records
-    val createdEntities = mutableListOf<EducationEnrolmentEntity>()
-    newKeys.forEach { key ->
-      val src = allCuriousByKey.getValue(key) // safe: key came from Curious
-      val entity = EducationEnrolmentEntity(
-        prisonNumber = prisonNumber,
-        establishmentId = key.establishmentId,
-        qualificationCode = key.qualificationCode,
-        learningStartDate = key.start,
-        plannedEndDate = src.learningPlannedEndDate,
-        fundingType = src.fundingType,
-        completionStatus = src.completionStatus,
-        endDate = null,
-        lastCuriousReference = curiousRef,
-      )
-      createdEntities += educationEnrolmentRepository.save(entity)
+    // create new enrolment records or update existing if they have changed
+    val createdOrUpdatedEntities = mutableListOf<EducationEnrolmentEntity>()
+    var reopenedCount = 0
+    var createdCount = 0
+    newOrReopenedKeys.forEach { key ->
+      val src = allCuriousByKey.getValue(key) // key from Curious
+
+      val existingOrClosed = allByKey[key] // could be open or closed
+      if (existingOrClosed?.endDate != null) {
+        existingOrClosed.endDate = null
+        existingOrClosed.lastCuriousReference = curiousRef
+        createdOrUpdatedEntities += educationEnrolmentRepository.save(existingOrClosed)
+        reopenedCount++
+      } else {
+        val entity = EducationEnrolmentEntity(
+          prisonNumber = prisonNumber,
+          establishmentId = key.establishmentId,
+          qualificationCode = key.qualificationCode,
+          learningStartDate = key.start,
+          plannedEndDate = src.learningPlannedEndDate,
+          fundingType = src.fundingType,
+          completionStatus = src.completionStatus,
+          endDate = null,
+          lastCuriousReference = curiousRef,
+        )
+        createdOrUpdatedEntities += educationEnrolmentRepository.save(entity)
+        createdCount++
+      }
     }
 
     // end any enrolments in SAN
@@ -254,26 +270,28 @@ class EducationService(
     val hasActiveEnrolmentsAfter =
       educationEnrolmentRepository.findAllByPrisonNumberAndEndDateIsNull(prisonNumber).isNotEmpty()
 
-    val firstStart = createdEntities
+    val firstStart = createdOrUpdatedEntities
       .minByOrNull { it.learningStartDate }
       ?.learningStartDate
 
     val result = EnrolmentProcessingResults(
-      createdCount = createdEntities.size,
+      createdCount = createdCount,
       closedCount = endedCount,
-      anyChanges = createdEntities.isNotEmpty() || endedCount > 0,
+      anyChanges = createdCount > 0 || endedCount > 0 || reopenedCount > 0,
       hasActiveEnrolments = hasActiveEnrolmentsAfter,
       firstNewEnrolmentStart = firstStart,
+      reopenedCount = reopenedCount,
     )
 
     log.info(
-      "Enrolment updated for $prisonNumber - created=${result.createdCount}, " +
+      "Enrolment updated for $prisonNumber - created=${result.createdCount}, reopened=${result.reopenedCount}, " +
         "closed=${result.closedCount}, activeNow=${result.hasActiveEnrolments}",
     )
     return result
   }
 
   data class EnrolmentProcessingResults(
+    val reopenedCount: Int,
     val createdCount: Int,
     val closedCount: Int,
     val anyChanges: Boolean,
