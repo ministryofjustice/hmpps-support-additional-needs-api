@@ -47,7 +47,7 @@ class PlanActionStatusServiceTest {
   private lateinit var instantMapper: InstantMapper
 
   @Test
-  fun `should return action status with deadlines`() {
+  fun `should return action status with deadlines given plan status supports deadlines`() {
     // Given
 
     val planCreationDeadline = LocalDate.now().minusMonths(1)
@@ -84,7 +84,7 @@ class PlanActionStatusServiceTest {
   }
 
   @Test
-  fun `should return action status with deadlines and mapped exemption reason`() {
+  fun `should return action status with mapped exemption reason and without deadlines given plan status does not support deadlines`() {
     // Given
 
     val planCreationDeadline = LocalDate.now().minusMonths(1)
@@ -135,8 +135,8 @@ class PlanActionStatusServiceTest {
 
     // Then
     assertThat(result.status).isEqualTo(status)
-    assertThat(result.planCreationDeadlineDate).isEqualTo(planCreationDeadline)
-    assertThat(result.reviewDeadlineDate).isEqualTo(reviewDeadline)
+    assertThat(result.planCreationDeadlineDate).isNull()
+    assertThat(result.reviewDeadlineDate).isNull()
     assertThat(result.exemptionDetail).isEqualTo(exemptionDetail)
     assertThat(result.exemptionReason).isEqualTo(PlanCreationScheduleExemptionReason.forValue(exemptionReasonString))
     assertThat(result.exemptionRecordedBy).isEqualTo(expectedUserDisplayName)

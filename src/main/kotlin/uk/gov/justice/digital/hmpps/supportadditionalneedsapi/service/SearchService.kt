@@ -33,6 +33,7 @@ class SearchService(
     // Map the final results
     val persons = prisonerSearchPrisoners.map { prisoner ->
       val overview = prisonerOverviewResults[prisoner.prisonerNumber]
+      val planStatus = determinePlanStatus(overview)
       Person(
         forename = prisoner.firstName,
         surname = prisoner.lastName,
@@ -43,8 +44,8 @@ class SearchService(
         sentenceType = SentenceTypeMapper.fromPrisonerSearchApiToModel(prisoner.legalStatus),
         inEducation = overview?.inEducation ?: false,
         hasAdditionalNeed = overview?.hasNeed ?: false,
-        deadlineDate = overview?.deadlineDate,
-        planStatus = determinePlanStatus(overview),
+        deadlineDate = deadlineDateIfSupportedByPlanStatus(planStatus, overview?.deadlineDate),
+        planStatus = planStatus,
       )
     }
 
