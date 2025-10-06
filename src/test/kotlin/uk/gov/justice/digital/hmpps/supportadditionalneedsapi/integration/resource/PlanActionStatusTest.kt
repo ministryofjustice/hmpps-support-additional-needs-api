@@ -36,6 +36,8 @@ class PlanActionStatusTest : IntegrationTestBase() {
     val PRISONER_9: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_10: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_11: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
+
+    val today = LocalDate.now()
   }
 
   @BeforeAll
@@ -49,25 +51,27 @@ class PlanActionStatusTest : IntegrationTestBase() {
     setUpData()
   }
 
-  @ParameterizedTest(name = "{index} → {0} should have status {1}")
-  @MethodSource("prisonerStatusCases")
-  fun `returns expected plan action status`(prisoner: Prisoner, expected: PlanStatus) {
+  @ParameterizedTest(name = "{index} → {0} should have status {1}, plan creation deadline date {2} and review deadline date {3}")
+  @MethodSource("prisonerTestCases")
+  fun `returns expected plan action status and deadline dates`(prisoner: Prisoner, expectedStatus: PlanStatus, expectedPlanCreationDeadlineDate: LocalDate?, expectedReviewDeadlineDate: LocalDate?) {
     val body = fetch(prisoner)
-    assertEquals(expected, body.status)
+    assertEquals(expectedStatus, body.status)
+    assertEquals(expectedPlanCreationDeadlineDate, body.planCreationDeadlineDate)
+    assertEquals(expectedReviewDeadlineDate, body.reviewDeadlineDate)
   }
 
-  private fun prisonerStatusCases(): Stream<Arguments> = Stream.of(
-    Arguments.of(PRISONER_1, PlanStatus.NEEDS_PLAN),
-    Arguments.of(PRISONER_2, PlanStatus.PLAN_DUE),
-    Arguments.of(PRISONER_3, PlanStatus.REVIEW_DUE),
-    Arguments.of(PRISONER_4, PlanStatus.ACTIVE_PLAN),
-    Arguments.of(PRISONER_5, PlanStatus.PLAN_OVERDUE),
-    Arguments.of(PRISONER_6, PlanStatus.REVIEW_OVERDUE),
-    Arguments.of(PRISONER_7, PlanStatus.INACTIVE_PLAN),
-    Arguments.of(PRISONER_8, PlanStatus.PLAN_DECLINED),
-    Arguments.of(PRISONER_9, PlanStatus.NO_PLAN),
-    Arguments.of(PRISONER_10, PlanStatus.NO_PLAN),
-    Arguments.of(PRISONER_11, PlanStatus.NO_PLAN),
+  private fun prisonerTestCases(): Stream<Arguments> = Stream.of(
+    Arguments.of(PRISONER_1, PlanStatus.NEEDS_PLAN, null, null),
+    Arguments.of(PRISONER_2, PlanStatus.PLAN_DUE, today.plusDays(1), null),
+    Arguments.of(PRISONER_3, PlanStatus.REVIEW_DUE, null, today.plusDays(1)),
+    Arguments.of(PRISONER_4, PlanStatus.ACTIVE_PLAN, null, today.plusWeeks(2)),
+    Arguments.of(PRISONER_5, PlanStatus.PLAN_OVERDUE, today.minusDays(5), null),
+    Arguments.of(PRISONER_6, PlanStatus.REVIEW_OVERDUE, null, today.minusDays(5)),
+    Arguments.of(PRISONER_7, PlanStatus.INACTIVE_PLAN, null, null),
+    Arguments.of(PRISONER_8, PlanStatus.PLAN_DECLINED, null, null),
+    Arguments.of(PRISONER_9, PlanStatus.NO_PLAN, null, null),
+    Arguments.of(PRISONER_10, PlanStatus.NO_PLAN, null, null),
+    Arguments.of(PRISONER_11, PlanStatus.NO_PLAN, null, null),
   )
 
   // --- Helpers ----------------------------------------------------------------------------------
@@ -82,8 +86,6 @@ class PlanActionStatusTest : IntegrationTestBase() {
     .responseBody!!
 
   private fun setUpData() {
-    val today = LocalDate.now()
-
     // needsPlan -> PRISONER_1
     prisonerInEducation(PRISONER_1.prisonerNumber)
     prisonerHasNeed(PRISONER_1.prisonerNumber)

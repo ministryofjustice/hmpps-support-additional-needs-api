@@ -29,9 +29,8 @@ class PlanActionStatusService(
 
     return PlanActionStatus(
       status = status,
-      planCreationDeadlineDate = prisonerOverview?.planCreationDeadlineDate,
-      reviewDeadlineDate = prisonerOverview?.reviewDeadlineDate,
-
+      planCreationDeadlineDate = deadlineDateIfSupportedByPlanStatus(status, prisonerOverview?.planCreationDeadlineDate),
+      reviewDeadlineDate = deadlineDateIfSupportedByPlanStatus(status, prisonerOverview?.reviewDeadlineDate),
       // Exemption fields only populated when the plan has been declined
       exemptionDetail = if (isDeclined) planCreationSchedule?.exemptionDetail else null,
       exemptionReason = if (isDeclined) {

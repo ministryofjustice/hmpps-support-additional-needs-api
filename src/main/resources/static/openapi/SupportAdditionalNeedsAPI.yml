@@ -960,7 +960,9 @@ components:
         deadlineDate:
           type: string
           format: date
-          description: Either the plan creation,or review deadline date.
+          description: |
+            Either the plan creation,or review deadline date.  
+            Only returned when the planStatus is PLAN_OVERDUE, PLAN_DUE, REVIEW_OVERDUE, REVIEW_DUE, ACTIVE_PLAN.
           example: "2035-11-01"
 
       required:
@@ -1909,13 +1911,15 @@ components:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the plan creation is due.
+            An ISO-8601 date representing date that the plan creation is due.  
+            Only returned when the status is PLAN_OVERDUE, PLAN_DUE, REVIEW_OVERDUE, REVIEW_DUE, ACTIVE_PLAN.
           example: '2023-11-19'
         reviewDeadlineDate:
           type: string
           format: date
           description: |
-            An ISO-8601 date representing date that the next plan review is due.
+            An ISO-8601 date representing date that the next plan review is due.  
+            Only returned when the status is PLAN_OVERDUE, PLAN_DUE, REVIEW_OVERDUE, REVIEW_DUE, ACTIVE_PLAN.
           example: '2023-11-19'
         status:
           $ref: '#/components/schemas/PlanStatus'
