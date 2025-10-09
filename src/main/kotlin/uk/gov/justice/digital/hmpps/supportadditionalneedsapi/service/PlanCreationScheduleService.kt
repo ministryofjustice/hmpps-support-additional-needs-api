@@ -102,10 +102,15 @@ class PlanCreationScheduleService(
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
       ?: throw PlanCreationScheduleNotFoundException(prisonNumber)
 
-    if (schedule.status != PlanCreationScheduleStatus.SCHEDULED) {
+    val validStatuses = listOf(
+      PlanCreationScheduleStatus.SCHEDULED,
+      PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
+    )
+
+    if (schedule.status !in validStatuses) {
       throw PlanCreationScheduleStateException(
         prisonNumber,
-        PlanCreationScheduleStatus.SCHEDULED,
+        validStatuses,
         schedule.status,
       )
     }
@@ -155,7 +160,7 @@ class PlanCreationScheduleService(
   // decide to create a plan despite previously not wanting to.
   fun completeSchedule(prisonNumber: String, prisonId: String) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
       ?.let {
         it.status = PlanCreationScheduleStatus.COMPLETED
         it.updatedAtPrison = prisonId
