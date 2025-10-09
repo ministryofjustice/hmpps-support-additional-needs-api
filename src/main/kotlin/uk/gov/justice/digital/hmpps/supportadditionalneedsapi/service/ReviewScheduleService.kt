@@ -42,7 +42,7 @@ class ReviewScheduleService(
   @Transactional
   fun exemptSchedule(prisonNumber: String, status: ReviewScheduleStatus, prisonId: String) {
     reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      ?.takeIf { it.status == ReviewScheduleStatus.SCHEDULED }
+      ?.takeIf { it.status == ReviewScheduleStatus.SCHEDULED || it.status == ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER }
       ?.let {
         it.status = status
         it.updatedAtPrison = prisonId
