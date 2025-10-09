@@ -130,7 +130,7 @@ class PlanCreationScheduleService(
     clearDeadlineDate: Boolean = false,
   ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
+      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
       ?.let {
         it.status = status
         it.exemptionReason = exemptionReason
