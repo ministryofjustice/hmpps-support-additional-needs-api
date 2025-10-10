@@ -64,6 +64,10 @@ generic-service:
     hmpps-support-additional-needs-domain-events-sqs-dl-instance-output:
       HMPPS_SQS_QUEUES_SUPPORTADDITIONALNEEDS_DLQ_NAME: "sqs_queue_name"
 
+    digital-prison-reporting:
+      DPR_USER: "DPR_USER"
+      DPR_PASSWORD: "DPR_PASSWORD"
+
   allowlist:
     groups:
       - internal
