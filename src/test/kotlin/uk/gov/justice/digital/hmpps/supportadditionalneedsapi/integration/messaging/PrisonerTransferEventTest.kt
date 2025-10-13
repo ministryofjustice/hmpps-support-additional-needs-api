@@ -23,6 +23,8 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
   fun `should process prisoner transfer event and change the status of the plan creation schedule to EXEMPT_PRISONER_TRANSFER`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "BXI")
     aValidPlanCreationScheduleExists(prisonNumber)
     prisonerInEducation(prisonNumber)
 
@@ -46,6 +48,8 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
   fun `should process prisoner transfer event and change the status of the review schedule to EXEMPT_PRISONER_TRANSFER`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "BXI")
     aValidReviewScheduleExists(prisonNumber)
     prisonerInEducation(prisonNumber)
 

@@ -85,6 +85,7 @@ class CreateTestSetupTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     stubForBankHoliday()
     val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, "PES"))
 
     // When

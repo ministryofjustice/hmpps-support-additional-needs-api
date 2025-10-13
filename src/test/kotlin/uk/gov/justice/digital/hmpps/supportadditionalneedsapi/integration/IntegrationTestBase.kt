@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.LegalStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
@@ -266,6 +267,25 @@ abstract class IntegrationTestBase {
       ).build(),
   ).get()
 
+  fun aPrisonerExists(prisonNumber: String, prisonId: String = "BXI") {
+    stubGetPrisonerFromPrisonerSearchApi(
+      prisonNumber,
+      Prisoner(
+        prisonerNumber = prisonNumber,
+        legalStatus = LegalStatus.SENTENCED,
+        releaseDate = LocalDate.now().plusYears(5),
+        prisonId = prisonId,
+        isIndeterminateSentence = false,
+        isRecall = false,
+        lastName = "smith",
+        firstName = "bob",
+        dateOfBirth = LocalDate.now().minusYears(22),
+        cellLocation = "12b",
+        releaseType = "",
+      ),
+    )
+  }
+
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
@@ -327,7 +347,7 @@ abstract class IntegrationTestBase {
       fundingType = "PES",
       endDate = null,
       learningStartDate = learningStartDate,
-      establishmentId = "1234",
+      establishmentId = "BXI",
     )
     educationEnrolmentRepository.save(educationEnrolmentEntity)
   }

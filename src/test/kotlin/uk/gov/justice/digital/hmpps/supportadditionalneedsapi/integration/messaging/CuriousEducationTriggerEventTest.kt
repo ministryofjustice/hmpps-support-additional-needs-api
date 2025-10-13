@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmpps
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
@@ -38,6 +39,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
@@ -54,10 +56,27 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should process Curious Education domain event and NOT mark the person as being in education as courses are in different prison`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "BXI")
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
+
+    // Then
+    val educationStartDate = LocalDate.of(2025, 10, 2)
+    processEducationAndValidatePrisonerNotInEducation(prisonNumber, educationStartDate = educationStartDate)
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule).isNull()
+  }
+
+  @Test
   fun `should process Curious Education domain event with two educations and mark the person as being in education`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
@@ -76,6 +95,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
@@ -92,6 +112,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now())
 
@@ -108,6 +129,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
     putInEducationAndValidate(prisonNumber)
@@ -122,6 +144,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
     putInEducationAndValidate(prisonNumber, educationStartDate = LocalDate.of(2025, 1, 1))
@@ -136,8 +159,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   @Test
   fun `should process Curious Education domain event and mark the person as out of education when the person had refused a plan`() {
     // Given
-    val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
     aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
@@ -151,8 +175,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   @Test
   fun `should process Curious Education domain event and mark the person as out of education and Exempt the planCreationSchedule`() {
     // Given
-    val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
@@ -168,8 +193,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   @Test
   fun `should process Curious Education domain event and mark the person as out of education and Exempt the reviewSchedule`() {
     // Given
-    val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
+    val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     aValidReviewScheduleExists(prisonNumber)
     // has no need
 
@@ -183,9 +209,51 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `ensure education enrollments from other prisons are end dated`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    val educationEnrolmentOne = EducationEnrolmentEntity(
+      prisonNumber = prisonNumber,
+      establishmentId = "BXI",
+      qualificationCode = "4321",
+      learningStartDate = LocalDate.now().minusMonths(1),
+      plannedEndDate = LocalDate.now().plusMonths(1),
+      fundingType = "Previous contract",
+      completionStatus = null,
+      endDate = null,
+      lastCuriousReference = null,
+    )
+    val educationEnrolmentTwo = EducationEnrolmentEntity(
+      prisonNumber = prisonNumber,
+      establishmentId = "BXI",
+      qualificationCode = "1234",
+      learningStartDate = LocalDate.now().minusMonths(1),
+      plannedEndDate = LocalDate.now().plusMonths(1),
+      fundingType = "Previous contract",
+      completionStatus = null,
+      endDate = null,
+      lastCuriousReference = null,
+    )
+    educationEnrolmentRepository.saveAll(listOf(educationEnrolmentOne, educationEnrolmentTwo))
+
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
+    stubGetTokenFromHmppsAuth()
+    aValidReviewScheduleExists(prisonNumber)
+
+    putInEducationAndValidate(prisonNumber, expectedNumberOfEnrolments = 3)
+    endEducationAndValidate(prisonNumber, expectedNumberOfEnrolments = 3)
+
+    // Then all the enrollments should be end dated
+    educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber).forEach {
+      Assertions.assertThat(it.endDate).isNotNull()
+    }
+  }
+
+  @Test
   fun `already has a review schedule put on another education course and review schedule will be the sooner of the two dates`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.of(2025, 7, 1))
     // person has a need:
@@ -203,6 +271,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   fun `should process Curious Education domain event and due to already having an ELSP should create a review`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     // person has a need:
     aValidChallengeExists(prisonNumber)
@@ -224,6 +293,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   fun `should process Curious Education domain event for PES education AND an ALN assessment message with the later assessment date`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     // person has a need:
     createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now().plusDays(5))
@@ -236,7 +306,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
   }
 
-  private fun putInEducationAndValidate(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate = LocalDate.now().minusMonths(5)) {
+  private fun processEducationAndValidatePrisonerNotInEducation(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate = LocalDate.now().minusMonths(5)) {
     stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType, educationStartDate))
     // When
     val curiousReference = UUID.randomUUID()
@@ -255,14 +325,40 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     } matches { it == 0 }
     await untilCallTo {
       val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(education!!.inEducation).isTrue()
-      Assertions.assertThat(education.curiousReference).isEqualTo(curiousReference)
+      Assertions.assertThat(education).isNull()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved
     val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
-    Assertions.assertThat(enrolments).hasSize(1)
-    Assertions.assertThat(enrolments[0].endDate).isNull()
+    Assertions.assertThat(enrolments).hasSize(0)
+  }
+
+  private fun putInEducationAndValidate(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate = LocalDate.now().minusMonths(5), expectedNumberOfEnrolments: Int = 1) {
+    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType, educationStartDate))
+    // When
+    val curiousReference = UUID.randomUUID()
+    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_STATUS_UPDATE,
+      additionalInformation = aValidEducationStatusUpdateAdditionalInformation(curiousReference),
+      description = "EDUCATION_STARTED",
+    )
+    sendCuriousEducationMessage(sqsMessage)
+
+    // Then
+    // wait until the queue is drained / message is processed
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+    await untilCallTo {
+      val enrolmentCount = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber).size
+      Assertions.assertThat(enrolmentCount).isEqualTo(expectedNumberOfEnrolments)
+    } matches { it != null }
+
+    // also check the education enrolment(s) have been saved
+    val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
+    Assertions.assertThat(enrolments).hasSize(expectedNumberOfEnrolments)
+    Assertions.assertThat(enrolments[expectedNumberOfEnrolments - 1].endDate).isNull()
   }
 
   private fun putInTwoEducationAndValidate(prisonNumber: String, fundingType: String = "PES") {
@@ -298,7 +394,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
 
-  private fun endEducationAndValidate(prisonNumber: String) {
+  private fun endEducationAndValidate(prisonNumber: String, expectedNumberOfEnrolments: Int = 1) {
     stubGetCurious2OutEducation(prisonNumber, endedEducationResponse(prisonNumber))
     // When
     val curiousReference = UUID.randomUUID()
@@ -306,7 +402,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       prisonNumber = prisonNumber,
       eventType = EventType.EDUCATION_STATUS_UPDATE,
       additionalInformation = aValidEducationStatusUpdateAdditionalInformation(curiousReference),
-      description = "EDUCATION_COMPLETED",
+      description = "EDUCATION_STOPPED",
     )
     sendCuriousEducationMessage(sqsMessage)
 
@@ -323,8 +419,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
 
     // also check the education enrolment(s) have been saved
     val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
-    Assertions.assertThat(enrolments).hasSize(1)
-    Assertions.assertThat(enrolments[0].endDate).isNotNull()
+    Assertions.assertThat(enrolments).hasSize(expectedNumberOfEnrolments)
+    Assertions.assertThat(enrolments[expectedNumberOfEnrolments - 1].endDate).isNotNull()
 
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
     Assertions.assertThat(timelineEntries[1].event).isEqualTo(TimelineEventType.CURIOUS_EDUCATION_TRIGGER)
@@ -451,12 +547,12 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     ]
 }"""
 
-  fun inEducationResponseWithTwoEducations(prisonNumber: String, fundingType: String = "PES"): String = """{
+  fun inEducationResponseWithTwoEducations(prisonNumber: String, fundingType: String = "PES", establishmentId: String = "CFI"): String = """{
     "v1": [],
     "v2": [
         {
             "prn": "$prisonNumber",
-            "establishmentId": "CFI",
+            "establishmentId": "$establishmentId",
             "establishmentName": "CARDIFF (HMP)",
             "qualificationCode": "1231231",
             "qualificationName": "Award in Cycle Maintenance",
@@ -479,7 +575,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
         },
         {
             "prn": "$prisonNumber",
-            "establishmentId": "CFI",
+            "establishmentId": "$establishmentId",
             "establishmentName": "CARDIFF (HMP)",
             "qualificationCode": "60322457",
             "qualificationName": "Award in Cycle Maintenance",
