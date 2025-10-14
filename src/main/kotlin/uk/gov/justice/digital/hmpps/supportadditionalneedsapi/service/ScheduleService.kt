@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.PrisonerSearchApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
@@ -24,6 +25,7 @@ class ScheduleService(
   val reviewScheduleService: ReviewScheduleService,
   val educationService: EducationService,
   val elspPlanRepository: ElspPlanRepository,
+  val prisonerSearchApiClient: PrisonerSearchApiClient,
 ) {
 
   @Transactional
@@ -75,12 +77,19 @@ class ScheduleService(
     // person has been un-enrolled in education.
     // Decision was made to also exempt the schedules here, even though we will also be receiving a
     // message from Curious to say that the person is exempt due to not being in education.
-    planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
-    reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
-    // If the person is currently in education set them to not being in education any more
-    // null curious reference since this wasn't from a curious message.
-    val inEducation = educationService.inEducation(info.nomsNumber)
-    if (inEducation) {
+
+    // It is possible due to message ordering issues that they may already be in education at
+    // the new prison
+    // In this instance do not exempt the schedule.
+
+    val currentEstablishment = prisonerSearchApiClient.getPrisoner(info.nomsNumber).prisonId ?: "N/A"
+    educationService.endNonCurrentEducationEnrollments(info.nomsNumber, currentEstablishment)
+
+    val inEducation = educationService.hasActiveEducationEnrollment(info.nomsNumber)
+    if (!inEducation) {
+      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
+      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
+
       log.info("Setting ${info.nomsNumber} to no longer in education due to transfer message.")
       educationService.recordEducationRecord(
         prisonNumber = info.nomsNumber,
@@ -103,7 +112,7 @@ class ScheduleService(
     }
 
     // Has a need but not in education do nothing
-    if (!educationService.inEducation(prisonNumber)) {
+    if (!educationService.hasActiveEducationEnrollment(prisonNumber)) {
       log.debug { "Prisoner $prisonNumber has a need but is not in education no action." }
       return
     } else {

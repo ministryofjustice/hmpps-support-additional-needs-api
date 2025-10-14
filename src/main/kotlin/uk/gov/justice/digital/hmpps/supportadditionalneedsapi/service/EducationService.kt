@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Education
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.PrisonerSearchApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
@@ -14,7 +15,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Plan
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_EDUCATION_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -30,21 +30,16 @@ private val log = KotlinLogging.logger {}
 class EducationService(
   private val educationRepository: EducationRepository,
   private val curiousApiClient: CuriousApiClient,
+  private val prisonerSearchApiClient: PrisonerSearchApiClient,
   private val educationEnrolmentRepository: EducationEnrolmentRepository,
   private val needService: NeedService,
-  private val alnScreenerRepository: AlnScreenerRepository,
   private val reviewScheduleService: ReviewScheduleService,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val elspPlanRepository: ElspPlanRepository,
   private val alnAssessmentRepository: AlnAssessmentRepository,
 ) {
 
-  /**
-   * Establish whether this person is currently in eduction.
-   * This is managed by curious, but we will process messages from curious maintaining a cache
-   * of the persons current education status.
-   */
-  fun inEducation(prisonNumber: String): Boolean = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.inEducation ?: false
+  fun hasActiveEducationEnrollment(prisonNumber: String): Boolean = educationEnrolmentRepository.existsWithNoEndDate(prisonNumber)
 
   fun getNonPESEducationStartDate(prisonNumber: String): LocalDate? = educationEnrolmentRepository.findEarliestLearningStartDateWithNoEndDate(prisonNumber)
 
@@ -75,6 +70,12 @@ class EducationService(
     info: EducationStatusUpdateAdditionalInformation,
     inboundEvent: InboundEvent,
   ) {
+    val currentEstablishment = getCurrentLocation(prisonNumber)
+    log.info { "Current establishment: $currentEstablishment for $prisonNumber" }
+    log.info { "Education update - ${inboundEvent.description} for $prisonNumber" }
+    if (inboundEvent.description == "EDUCATION_STOPPED") {
+      endNonCurrentEducationEnrollments(prisonNumber, currentEstablishment)
+    }
     log.info(
       "processing education status update event: {${inboundEvent.description}} for ${inboundEvent.prisonNumber()} \n " +
         "Detail URL: ${inboundEvent.detailUrl}" +
@@ -84,11 +85,15 @@ class EducationService(
     val educationDto = curiousApiClient.getEducation(prisonNumber = prisonNumber)
     log.info("retrieved current education info for $prisonNumber : $educationDto")
 
+    val filteredEducationDto = educationDto.copy(
+      educationData = educationDto.educationData.filter { it.establishmentId == currentEstablishment },
+    )
+
     // save the education record if it has changed.
-    val inEducation = recordOverallEducationStatus(educationDto, prisonNumber, info)
+    val inEducation = recordOverallEducationStatus(filteredEducationDto, prisonNumber, info)
     // Record the education enrolment if any have changed
     val enrolmentDiff = updateSanEnrolments(
-      educationDto = educationDto,
+      educationDto = filteredEducationDto,
       prisonNumber = prisonNumber,
       curiousRef = info.curiousExternalReference,
     )
@@ -98,9 +103,17 @@ class EducationService(
       if (!inEducation) {
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
-        val prisonId = getPrisonIdForLatestInActiveEducation(educationDto)
-        planCreationScheduleService.exemptSchedule(prisonNumber, PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = prisonId)
-        reviewScheduleService.exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = prisonId)
+        val prisonId = getPrisonIdForLatestInActiveEducation(filteredEducationDto)
+        planCreationScheduleService.exemptSchedule(
+          prisonNumber,
+          PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+          prisonId = prisonId,
+        )
+        reviewScheduleService.exemptSchedule(
+          prisonNumber,
+          ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+          prisonId = prisonId,
+        )
       }
       if (needService.hasNeed(prisonNumber)) {
         // find out if this is a new enrolment
@@ -108,22 +121,43 @@ class EducationService(
           // does the person have an ELSP?
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
           val startDate = enrolmentDiff.firstNewEnrolmentStart
-          val newEducation = findNewlyActiveEducationForStart(educationDto, startDate!!)
-          val prisonId = getPrisonIdForLatestActiveEducation(educationDto)
+          val newEducation = findNewlyActiveEducationForStart(filteredEducationDto, startDate!!)
+          val prisonId = getPrisonIdForLatestActiveEducation(filteredEducationDto)
 
           if (plan == null) {
             val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
             // create the plan creation schedule
-            planCreationScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, subjectToKPIRules, prisonId = prisonId)
+            planCreationScheduleService.createOrUpdateDueToEducationUpdate(
+              prisonNumber,
+              startDate,
+              newEducation!!.fundingType,
+              subjectToKPIRules,
+              prisonId = prisonId,
+            )
           } else {
             // make an update to the review
-            reviewScheduleService.createOrUpdateDueToEducationUpdate(prisonNumber, startDate, newEducation!!.fundingType, prisonId = prisonId)
+            reviewScheduleService.createOrUpdateDueToEducationUpdate(
+              prisonNumber,
+              startDate,
+              newEducation!!.fundingType,
+              prisonId = prisonId,
+            )
           }
         }
         log.info("education was changed and the person had a need so updating schedules as appropriate for $prisonNumber")
       }
     }
   }
+
+  fun endNonCurrentEducationEnrollments(prisonNumber: String, currentEstablishment: String) {
+    // close all education records for all establishments that are not the same as the current establishment
+    log.info("Ending current education enrollments for $prisonNumber that are not currently in establishment $currentEstablishment")
+    val educationEnrollments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
+    educationEnrollments.filter { it.establishmentId != currentEstablishment }.forEach { it.endDate = LocalDate.now() }
+    educationEnrolmentRepository.saveAll(educationEnrollments)
+  }
+
+  private fun getCurrentLocation(prisonNumber: String): String = prisonerSearchApiClient.getPrisoner(prisonNumber).prisonId ?: "N/A"
 
   // Attempt to get the prisonId from the education returned from Curious
   private fun getPrisonIdForLatestActiveEducation(educationDto: EducationDTO): String = educationDto.educationData
@@ -174,7 +208,7 @@ class EducationService(
     info: EducationStatusUpdateAdditionalInformation,
   ): Boolean {
     val currentlyInEducation = educationDto.educationData.any { it.isActive() }
-    val previouslyInEducation = inEducation(prisonNumber)
+    val previouslyInEducation = hasActiveEducationEnrollment(prisonNumber)
 
     if (currentlyInEducation != previouslyInEducation) {
       recordEducationRecord(
