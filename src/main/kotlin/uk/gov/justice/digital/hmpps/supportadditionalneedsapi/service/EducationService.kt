@@ -151,6 +151,7 @@ class EducationService(
 
   fun endNonCurrentEducationEnrollments(prisonNumber: String, currentEstablishment: String) {
     // close all education records for all establishments that are not the same as the current establishment
+    log.info("Ending current education enrollments for $prisonNumber that are not currently in establishment $currentEstablishment")
     val educationEnrollments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
     educationEnrollments.filter { it.establishmentId != currentEstablishment }.forEach { it.endDate = LocalDate.now() }
     educationEnrolmentRepository.saveAll(educationEnrollments)

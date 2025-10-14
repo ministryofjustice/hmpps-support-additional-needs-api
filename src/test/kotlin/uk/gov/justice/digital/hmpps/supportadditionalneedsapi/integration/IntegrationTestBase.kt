@@ -338,7 +338,7 @@ abstract class IntegrationTestBase {
     conditionRepository.save(condition)
   }
 
-  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now()) {
+  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now(), establishmentId: String = "BXI") {
     val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
     educationRepository.save(educationEntity)
     val educationEnrolmentEntity = EducationEnrolmentEntity(
@@ -347,7 +347,7 @@ abstract class IntegrationTestBase {
       fundingType = "PES",
       endDate = null,
       learningStartDate = learningStartDate,
-      establishmentId = "BXI",
+      establishmentId = establishmentId,
     )
     educationEnrolmentRepository.save(educationEnrolmentEntity)
   }

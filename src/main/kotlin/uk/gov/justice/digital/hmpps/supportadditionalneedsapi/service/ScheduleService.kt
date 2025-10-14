@@ -77,16 +77,19 @@ class ScheduleService(
     // person has been un-enrolled in education.
     // Decision was made to also exempt the schedules here, even though we will also be receiving a
     // message from Curious to say that the person is exempt due to not being in education.
-    planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
-    reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
 
-    // If the person is currently in education set them to not being in education any more
-    // null curious reference since this wasn't from a curious message.
+    // It is possible due to message ordering issues that they may already be in education at
+    // the new prison
+    // In this instance do not exempt the schedule.
+
     val currentEstablishment = prisonerSearchApiClient.getPrisoner(info.nomsNumber).prisonId ?: "N/A"
     educationService.endNonCurrentEducationEnrollments(info.nomsNumber, currentEstablishment)
 
     val inEducation = educationService.hasActiveEducationEnrollment(info.nomsNumber)
-    if (inEducation) {
+    if (!inEducation) {
+      planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
+      reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
+
       log.info("Setting ${info.nomsNumber} to no longer in education due to transfer message.")
       educationService.recordEducationRecord(
         prisonNumber = info.nomsNumber,
