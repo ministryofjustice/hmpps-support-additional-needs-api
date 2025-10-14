@@ -9,7 +9,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 
 @Service
-class TestDataService(
+class DomainEventService(
   private val objectMapper: ObjectMapper,
   private val hmppsQueueService: HmppsQueueService,
 ) {
