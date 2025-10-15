@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Cond
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -310,7 +311,7 @@ abstract class IntegrationTestBase {
     reference: UUID = UUID.randomUUID(),
     status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
     deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
-  ) {
+  ): ReviewScheduleEntity {
     val reviewScheduleEntity =
       ReviewScheduleEntity(
         prisonNumber = prisonNumber,
@@ -320,7 +321,7 @@ abstract class IntegrationTestBase {
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
       )
-    reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
+    return reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
   }
 
   fun prisonerHasNeed(prisonNumber: String) {
@@ -372,6 +373,19 @@ abstract class IntegrationTestBase {
     )
 
     elspPlanRepository.save(elsp)
+  }
+
+  fun anElSPReviewExists(prisonNumber: String, reviewScheduleReference: UUID): ElspReviewEntity {
+    val review = ElspReviewEntity(
+      prisonNumber = prisonNumber,
+      prisonerDeclinedFeedback = false,
+      prisonerFeedback = "prisonerFeedback",
+      reviewerFeedback = "reviewerFeedback",
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      reviewScheduleReference = reviewScheduleReference,
+    )
+    return elspReviewRepository.save(review)
   }
 
   fun aValidChallengeExists(prisonNumber: String) {
