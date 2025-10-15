@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -10,12 +11,14 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.given
 import org.mockito.kotlin.then
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotCompleteReviewWithNoSchedule
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspReviewMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportPlanReviewRequest
@@ -40,6 +43,9 @@ class EducationSupportPlanReviewServiceTest {
 
   @Mock
   private lateinit var elspReviewRepository: ElspReviewRepository
+
+  @Mock
+  private lateinit var elspReviewMapper: ElspReviewMapper
 
   @Test
   fun `should throw PlanNotFoundException if prisoner has no plan`() {
@@ -104,6 +110,55 @@ class EducationSupportPlanReviewServiceTest {
       eq(reviewSchedule),
     )
   }
+
+  @Test
+  fun `getReviews should throw PlanNotFoundException if prisoner has no plan`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    given(educationSupportPlanService.hasPlan(prisonNumber)).willReturn(false)
+
+    // When / Then
+    assertThatThrownBy { service.getReviews(prisonNumber) }
+      .isInstanceOf(PlanNotFoundException::class.java)
+  }
+
+  @Test
+  fun `getReviews should return an empty list if there is no reviews`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    given(educationSupportPlanService.hasPlan(prisonNumber)).willReturn(true)
+    given(elspReviewRepository.findAllByPrisonNumber(prisonNumber)).willReturn(listOf())
+
+    // When / Then
+    val reviewsResponse = service.getReviews(prisonNumber)
+    // Then
+    assertThat(reviewsResponse.reviews).isEmpty()
+  }
+
+  @Test
+  fun `getReviews should return an reviews if there are reviews`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    given(educationSupportPlanService.hasPlan(prisonNumber)).willReturn(true)
+
+    given(elspReviewRepository.findAllByPrisonNumber(prisonNumber)).willReturn(listOf(aValidReviewEntity(prisonNumber), aValidReviewEntity(prisonNumber)))
+
+    // When / Then
+    val reviewsResponse = service.getReviews(prisonNumber)
+    // Then
+    assertThat(reviewsResponse.reviews).hasSize(2)
+  }
+
+  private fun aValidReviewEntity(prisonNumber: String): ElspReviewEntity = ElspReviewEntity(
+    reference = UUID.randomUUID(),
+    prisonNumber = prisonNumber,
+    prisonerDeclinedFeedback = false,
+    prisonerFeedback = "prisonerFeedback",
+    reviewerFeedback = "reviewerFeedback",
+    createdAtPrison = "BXI",
+    updatedAtPrison = "BXI",
+    reviewScheduleReference = UUID.randomUUID(),
+  )
 
   private fun aValidSupportPlanReviewRequest(nextReviewDate: LocalDate = LocalDate.now().plusMonths(1)): SupportPlanReviewRequest = SupportPlanReviewRequest(
     nextReviewDate = nextReviewDate,
