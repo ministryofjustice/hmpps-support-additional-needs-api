@@ -126,6 +126,25 @@ paths:
           description: Attempted to create a support plan review where there is no active review schedule
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
+    get:
+      summary: Get Education Support Plan Reviews
+      description: |
+        Gets a list of ELSP reviews
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Support Plan
+      operationId: get-education-support-plan-reviews
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPlanReviews'
+          description: Returned successfully
+        '404':
+          $ref: '#/components/responses/404Error'
+          description: Education Support plan did not exist
 
   '/profile/{prisonNumber}/plan-action-status':
     parameters:
@@ -1820,6 +1839,22 @@ components:
       required:
         - planCreationSchedules
 
+    PlanCreationReviewsResponse:
+      title: PlanCreationReviewsResponse
+      description: A list of plan creation reviews for a prisoner.
+      type: object
+      properties:
+        reviews:
+          type: array
+          description: A List containing zero or more EducationSupportPlanReviewResponse.
+          items:
+            $ref: '#/components/schemas/EducationSupportPlanReviewResponse'
+      required:
+        - reviews
+
+
+
+
     PlanCreationScheduleResponse:
       title: PlanCreationScheduleResponse
       type: object
@@ -2039,6 +2074,39 @@ components:
       required:
         - hasCurrentEhcp
         - individualSupport
+
+    EducationSupportPlanReviewResponse:
+      title: EducationSupportPlanReviewResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: A person's Education Support Plan Review
+      properties:
+        reviewCreatedBy:
+          description: Optional details of who created the Review. If not present the review was created by the createdBy/createdByDisplayName fields.
+          $ref: '#/components/schemas/ReviewContributor'
+        otherContributors:
+          description: Optional list of other people involved in the creation of the review.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewContributor'
+        prisonerDeclinedFeedback:
+          type: boolean
+          description: Whether or not the prisoner took part in the review.
+          example: true
+        prisonerFeedback:
+          type: string
+          description: Details of any feedback from the prisoner.
+          example: My support needs have been fully met by the course provider.
+        reviewerFeedback:
+          type: string
+          description: Details of any feedback from the reviewer.
+          example: As noted by the Mr Smith, his support needs have been fully met.
+      required:
+        - prisonerFeedback
+        - reviewerFeedback
+        - prisonerDeclinedFeedback
+
     CreateSupportStrategiesRequest:
       title: SupportStrategiesListRequest
       type: object
@@ -2373,6 +2441,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PlanCreationSchedulesResponse'
+
+    GetPlanReviews:
+      description: Response body containing the a the plan reviews.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlanCreationReviewsResponse'
 
     PlanActionStatusResponse:
       description: Response body containing the Education Support Plan action status.
