@@ -128,3 +128,6 @@ service:
   base-url: ${SERVICE_BASE_URL}
 
 pes_contract_date: ${PES_CONTRACT_DATE}
+
+review:
+  reviewDeadlineDaysToAdd: ${REVIEW_DEADLINE_DAYS_TO_ADD:23}

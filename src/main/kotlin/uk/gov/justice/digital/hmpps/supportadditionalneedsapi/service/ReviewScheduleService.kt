@@ -5,7 +5,7 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
@@ -28,6 +28,7 @@ class ReviewScheduleService(
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val workingDayService: WorkingDayService,
   private val reviewRepository: ElspReviewRepository,
+  private val reviewConfig: ReviewConfig,
 ) {
 
   fun getSchedules(prisonNumber: String): ReviewSchedulesResponse {
@@ -104,16 +105,16 @@ class ReviewScheduleService(
       existing.deadlineDate = desired
       reviewScheduleRepository.save(existing)
       eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
-      log.info("Review schedule deadline date updated to $desired for $prisonNumber, days to add was configured as $REVIEW_DEADLINE_DAYS_TO_ADD days")
+      log.info("Review schedule deadline date updated to $desired for $prisonNumber, days to add was configured as $reviewConfig.reviewDeadlineDaysToAdd days")
     } else {
-      log.info("Review date was unchanged for $prisonNumber the current deadline date was $current and the proposed was $proposedDeadline, days to add was configured as $REVIEW_DEADLINE_DAYS_TO_ADD days")
+      log.info("Review date was unchanged for $prisonNumber the current deadline date was $current and the proposed was $proposedDeadline, days to add was configured as $reviewConfig.reviewDeadlineDaysToAdd days")
     }
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
     val startDatePlusFive =
-      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate)
-    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, pesContractDate)
+      workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, educationStartDate)
+    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 
