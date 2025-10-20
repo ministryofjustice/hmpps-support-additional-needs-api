@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration
 
 @ConfigurationProperties(prefix = "review")
 data class ReviewConfig(
-  var reviewDeadlineDaysToAdd: Long = 5,
+  var reviewDeadlineDaysToAdd: Long,
 )
 
 @Configuration
