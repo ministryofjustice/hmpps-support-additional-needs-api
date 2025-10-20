@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -204,6 +205,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var hmppsQueueService: HmppsQueueService
+
+  @Autowired
+  lateinit var reviewConfig: ReviewConfig
 
   val domainEventQueue by lazy {
     hmppsQueueService.findByQueueId("supportadditionalneeds")

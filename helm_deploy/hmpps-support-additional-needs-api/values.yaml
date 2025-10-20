@@ -34,6 +34,7 @@ generic-service:
     PES_CONTRACT_DATE: "2025-10-01"
     HMPPS_SQS_ENABLED: true
     ENABLE_TEST_ENDPOINTS: false
+    REVIEW_DEADLINE_DAYS_TO_ADD: 5
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:

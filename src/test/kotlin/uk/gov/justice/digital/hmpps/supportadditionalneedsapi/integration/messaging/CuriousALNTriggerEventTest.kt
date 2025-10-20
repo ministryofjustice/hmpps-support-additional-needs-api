@@ -7,7 +7,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.REVIEW_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
@@ -169,8 +168,8 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // This date is going to be the latter of today + REVIEW_DEADLINE_DAYS_TO_ADD (working days) or
     // pesContractDate + REVIEW_DEADLINE_DAYS_TO_ADD (working days)
     val deadlineDate = maxOf(
-      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, educationStartDate),
-      workingDayService.getNextWorkingDayNDaysFromDate(REVIEW_DEADLINE_DAYS_TO_ADD, pesContractDate),
+      workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, educationStartDate),
+      workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, pesContractDate),
     )
 
     Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(deadlineDate)
