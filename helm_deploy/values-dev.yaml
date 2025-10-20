@@ -1,4 +1,4 @@
-  ---
+"  ---
 # Per environment values which override defaults in hmpps-support-additional-needs-api/values.yaml
 
 generic-service:
@@ -25,10 +25,11 @@ generic-service:
     BANK_HOLIDAYS_API_URL: https://www.gov.uk
     ENABLE_TEST_ENDPOINTS: true
     PES_CONTRACT_DATE: "2025-08-01"
-    REVIEW_DEADLINE_DAYS_TO_ADD: 5
+    REVIEW_DEADLINE_DAYS_TO_ADD: "5"
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
   alertSeverity: hmpps-support-additional-needs-dev
   businessHoursOnly: true
+"
