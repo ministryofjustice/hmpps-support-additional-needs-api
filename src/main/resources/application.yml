@@ -130,4 +130,4 @@ service:
 pes_contract_date: ${PES_CONTRACT_DATE}
 
 review:
-  reviewDeadlineDaysToAdd: ${REVIEW_DEADLINE_DAYS_TO_ADD:23}
+  reviewDeadlineDaysToAdd: ${REVIEW_DEADLINE_DAYS_TO_ADD:5}
