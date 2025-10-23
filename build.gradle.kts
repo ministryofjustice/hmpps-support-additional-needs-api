@@ -32,7 +32,7 @@ val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.3"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "2.8.13"
-val hmppsSqsVersion = "5.5.0"
+val hmppsSqsVersion = "5.6.0"
 val awaitilityVersion = "4.3.0"
 
 dependencies {
