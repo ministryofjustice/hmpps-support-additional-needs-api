@@ -39,6 +39,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Refe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
@@ -405,6 +406,39 @@ abstract class IntegrationTestBase {
           updatedAtPrison = "BXI",
           symptoms = "symptoms",
           howIdentified = setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL),
+        ),
+      ),
+    )
+  }
+
+  fun aValidConditionExists(prisonNumber: String) {
+    val conditionType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
+      ?: throw IllegalStateException("Reference data not found")
+    conditionRepository.saveAll(
+      listOf(
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          conditionType = conditionType,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          source = Source.SELF_DECLARED,
+        ),
+      ),
+    )
+  }
+
+  fun aValidStrengthExists(prisonNumber: String) {
+    val strengthType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+    strengthRepository.saveAll(
+      listOf(
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = strengthType,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          symptoms = "StrengthSymptoms",
+          howIdentified = setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
         ),
       ),
     )

@@ -69,6 +69,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     anElSPExists(prisonNumber)
     aValidChallengeExists(prisonNumber)
+    aValidStrengthExists(prisonNumber)
+    aValidConditionExists(prisonNumber)
 
     // Then
     val response = webTestClient.get()
@@ -82,8 +84,9 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
     val content = objectMapper.convertValue(actual!!.content, SupportAdditionalNeedsContent::class.java)
-    println(content)
-    content.educationSupportPlan?.let { p ->
+
+    assertThat(content.educationSupportPlans.size).isEqualTo(1)
+    content.educationSupportPlans.first().let { p ->
       assertThat(p.hasCurrentEhcp).isEqualTo("Yes")
       assertThat(p.individualSupport).isEqualTo("support")
       assertThat(p.teachingAdjustments).isEqualTo("teachingAdjustments")
@@ -102,6 +105,24 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(c.active).isEqualTo("Yes")
       assertThat(c.symptoms).isEqualTo("symptoms")
       assertThat(c.howIdentified).isEqualTo("colleague info, other screening tool")
+    }
+
+    assertThat(content.strengths.size).isEqualTo(1)
+
+    content.strengths.first().let { c ->
+      assertThat(c.fromALNScreener).isEqualTo("No")
+      assertThat(c.strengthType).isEqualTo("Memory")
+      assertThat(c.active).isEqualTo("Yes")
+      assertThat(c.symptoms).isEqualTo("StrengthSymptoms")
+      assertThat(c.howIdentified).isEqualTo("wider prison, conversations")
+    }
+
+    assertThat(content.conditions.size).isEqualTo(1)
+
+    content.conditions.first().let { c ->
+      assertThat(c.conditionType).isEqualTo("Attention Deficit Hyperactivity Disorder (ADHD / ADD)")
+      assertThat(c.active).isEqualTo("Yes")
+      assertThat(c.source).isEqualTo("self declared")
     }
   }
 }
