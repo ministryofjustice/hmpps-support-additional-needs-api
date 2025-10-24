@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 data class SupportAdditionalNeedsContent(
   val educationSupportPlans: List<EducationSupportPlanReport>,
+  val reviews: List<ReviewReport>,
   val challenges: List<ChallengeReport>,
   val strengths: List<StrengthReport>,
   val conditions: List<ConditionReport>,
@@ -13,5 +14,6 @@ data class SupportAdditionalNeedsContent(
     strengths.isNotEmpty() ||
     conditions.isNotEmpty() ||
     planCreationSchedules.isNotEmpty() ||
-    reviewSchedules.isNotEmpty() // add the other elements as they come on board
+    reviewSchedules.isNotEmpty() ||
+    reviews.isNotEmpty() // add the other elements as they come on board
 }
