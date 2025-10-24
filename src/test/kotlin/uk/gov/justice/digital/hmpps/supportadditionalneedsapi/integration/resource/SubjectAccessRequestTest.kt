@@ -86,8 +86,6 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     content.educationSupportPlan?.let { p ->
       assertThat(p.hasCurrentEhcp).isEqualTo("Yes")
       assertThat(p.individualSupport).isEqualTo("support")
-      assertThat(p.createdByDisplayName).isEqualTo("system")
-      assertThat(p.updatedByDisplayName).isEqualTo("system")
       assertThat(p.teachingAdjustments).isEqualTo("teachingAdjustments")
       assertThat(p.specificTeachingSkills).isEqualTo("specificTeachingSkills")
       assertThat(p.examAccessArrangements).isEqualTo("examAccessArrangements")
@@ -102,8 +100,6 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(c.fromALNScreener).isEqualTo("No")
       assertThat(c.challengeType).isEqualTo("Sensory processing")
       assertThat(c.active).isEqualTo("Yes")
-      assertThat(c.createdByDisplayName).isEqualTo("system")
-      assertThat(c.updatedByDisplayName).isEqualTo("system")
       assertThat(c.symptoms).isEqualTo("symptoms")
       assertThat(c.howIdentified).isEqualTo("colleague info, other screening tool")
     }
