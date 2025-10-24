@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar.SupportAdditionalNeedsContent
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
+import java.time.LocalDate
 
 class SubjectAccessRequestTest : IntegrationTestBase() {
   companion object {
@@ -71,6 +73,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidChallengeExists(prisonNumber)
     aValidStrengthExists(prisonNumber)
     aValidConditionExists(prisonNumber)
+    aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.COMPLETED)
+    aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
 
     // Then
     val response = webTestClient.get()
@@ -123,6 +127,22 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(c.conditionType).isEqualTo("Attention Deficit Hyperactivity Disorder (ADHD / ADD)")
       assertThat(c.active).isEqualTo("Yes")
       assertThat(c.source).isEqualTo("self declared")
+    }
+
+    assertThat(content.planCreationSchedules.size).isEqualTo(1)
+
+    content.planCreationSchedules.first().let { c ->
+      assertThat(c.status).isEqualTo("completed")
+      assertThat(c.deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+      assertThat(c.version).isEqualTo(0)
+    }
+
+    assertThat(content.reviewSchedules.size).isEqualTo(1)
+
+    content.reviewSchedules.first().let { c ->
+      assertThat(c.status).isEqualTo("scheduled")
+      assertThat(c.deadlineDate).isEqualTo(LocalDate.now().plusMonths(1))
+      assertThat(c.version).isEqualTo(0)
     }
   }
 }
