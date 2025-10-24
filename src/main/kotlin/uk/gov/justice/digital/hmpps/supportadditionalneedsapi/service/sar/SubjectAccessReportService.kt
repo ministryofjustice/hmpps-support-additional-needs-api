@@ -2,9 +2,11 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
@@ -26,6 +28,7 @@ class SubjectAccessReportService(
   private val strengthService: StrengthService,
   private val conditionService: ConditionService,
   private val elspPlanHistoryRepository: ElspPlanHistoryRepository,
+  private val elspReviewHistoryRepository: ElspReviewHistoryRepository,
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
 ) : HmppsPrisonSubjectAccessRequestService {
@@ -45,6 +48,7 @@ class SubjectAccessReportService(
 
     // get raw data for the date range
     val educationSupportPlans = getEducationSupportPlans(prn, fromDateInstance, toDateInstance)
+    val reviews = getReviews(prn, fromDateInstance, toDateInstance)
     val challenges = getChallenges(prn, fromDateInstance, toDateInstance)
     val strengths = getStrengths(prn, fromDateInstance, toDateInstance)
     val conditions = getConditions(prn, fromDateInstance, toDateInstance)
@@ -54,6 +58,7 @@ class SubjectAccessReportService(
     // convert the raw data into SAR report
     val sanContent = SupportAdditionalNeedsContent(
       educationSupportPlans = educationSupportPlans.map { it.toReportModel() },
+      reviews = reviews.map { it.toReportModel() },
       challenges = challenges.map { it.toReportModel() },
       strengths = strengths.map { it.toReportModel() },
       conditions = conditions.map { it.toReportModel() },
@@ -74,6 +79,13 @@ class SubjectAccessReportService(
     fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,
   ): List<ElspPlanHistoryEntity> = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber = prn)
+    .filter { it.updatedAt.inRange(fromDateInstance, toDateInstance) }
+
+  private fun getReviews(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<ElspReviewHistoryEntity> = elspReviewHistoryRepository.findAllByPrisonNumber(prisonNumber = prn)
     .filter { it.updatedAt.inRange(fromDateInstance, toDateInstance) }
 
   private fun getPlanCreationSchedules(

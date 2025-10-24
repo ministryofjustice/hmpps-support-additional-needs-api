@@ -74,7 +74,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidStrengthExists(prisonNumber)
     aValidConditionExists(prisonNumber)
     aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.COMPLETED)
-    aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
+    val reviewScheduleEntity = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
+    aValidReviewExists(prisonNumber, reviewScheduleEntity.reference)
 
     // Then
     val response = webTestClient.get()
@@ -143,6 +144,15 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(c.status).isEqualTo("scheduled")
       assertThat(c.deadlineDate).isEqualTo(LocalDate.now().plusMonths(1))
       assertThat(c.version).isEqualTo(0)
+    }
+
+    assertThat(content.reviews.size).isEqualTo(1)
+
+    content.reviews.first().let { c ->
+      assertThat(c.prisonerFeedback).isEqualTo("prisoner feedback")
+      assertThat(c.reviewerFeedback).isEqualTo("reviewer feedback")
+      assertThat(c.prisonerDeclinedFeedback).isEqualTo("No")
+      assertThat(c.reviewCreatedByJobRole).isEqualTo("Role")
     }
   }
 }

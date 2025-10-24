@@ -411,6 +411,26 @@ abstract class IntegrationTestBase {
     )
   }
 
+  fun aValidReviewExists(prisonNumber: String, reviewScheduleReference: UUID) {
+    elspReviewRepository.saveAll(
+      listOf(
+        ElspReviewEntity(
+          prisonNumber = prisonNumber,
+          reviewCreatedByName = "Bob Smith",
+          reviewCreatedByJobRole = "Role",
+          prisonerDeclinedFeedback = false,
+          prisonerFeedback = "prisoner feedback",
+          reviewerFeedback = "reviewer feedback",
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          otherContributors = mutableListOf(),
+          reviewScheduleReference = reviewScheduleReference,
+
+        ),
+      ),
+    )
+  }
+
   fun aValidConditionExists(prisonNumber: String) {
     val conditionType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
       ?: throw IllegalStateException("Reference data not found")
