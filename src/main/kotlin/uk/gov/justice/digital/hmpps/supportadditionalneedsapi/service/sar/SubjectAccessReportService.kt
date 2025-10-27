@@ -9,9 +9,11 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
@@ -31,6 +33,7 @@ class SubjectAccessReportService(
   private val elspReviewHistoryRepository: ElspReviewHistoryRepository,
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
+  private val alnScreenerService: ALNScreenerService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -54,6 +57,7 @@ class SubjectAccessReportService(
     val conditions = getConditions(prn, fromDateInstance, toDateInstance)
     val planCreationSchedules = getPlanCreationSchedules(prn, fromDateInstance, toDateInstance)
     val reviewSchedules = getReviewSchedules(prn, fromDateInstance, toDateInstance)
+    val alnScreeners = getAlnScreeners(prn, fromDateInstance, toDateInstance)
 
     // convert the raw data into SAR report
     val sanContent = SupportAdditionalNeedsContent(
@@ -64,6 +68,7 @@ class SubjectAccessReportService(
       conditions = conditions.map { it.toReportModel() },
       planCreationSchedules = planCreationSchedules.map { it.toReportModel() },
       reviewSchedules = reviewSchedules.map { it.toReportModel() },
+      alnScreeners = alnScreeners.map { it.toReportModel() },
     )
 
     // return if any data is in the report
@@ -128,6 +133,13 @@ class SubjectAccessReportService(
     .getConditions(prisonNumber = prn)
     .conditions
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+
+  private fun getAlnScreeners(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<ALNScreenerResponse> = alnScreenerService.getScreeners(prisonNumber = prn).screeners
+    .filter { it.updatedAt.inRange(fromDateInstance, toDateInstance) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&

@@ -8,6 +8,7 @@ data class SupportAdditionalNeedsContent(
   val conditions: List<ConditionReport>,
   val planCreationSchedules: List<PlanCreationScheduleReport>,
   val reviewSchedules: List<ReviewScheduleReport>,
+  val alnScreeners: List<AlnScreenerReport>,
 ) {
   fun hasContent(): Boolean = educationSupportPlans.isNotEmpty() ||
     challenges.isNotEmpty() ||
@@ -15,5 +16,6 @@ data class SupportAdditionalNeedsContent(
     conditions.isNotEmpty() ||
     planCreationSchedules.isNotEmpty() ||
     reviewSchedules.isNotEmpty() ||
-    reviews.isNotEmpty() // add the other elements as they come on board
+    reviews.isNotEmpty() ||
+    alnScreeners.isNotEmpty()
 }

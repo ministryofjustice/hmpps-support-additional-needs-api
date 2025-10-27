@@ -76,6 +76,9 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidPlanCreationScheduleExists(prisonNumber, status = PlanCreationScheduleStatus.COMPLETED)
     val reviewScheduleEntity = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
     aValidReviewExists(prisonNumber, reviewScheduleEntity.reference)
+    val screener = aValidAlnScreenerExists(prisonNumber)
+    aValidChallengeExists(prisonNumber, screenerId = screener.id)
+    aValidStrengthExists(prisonNumber, screenerId = screener.id)
 
     // Then
     val response = webTestClient.get()
@@ -153,6 +156,29 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(c.reviewerFeedback).isEqualTo("reviewer feedback")
       assertThat(c.prisonerDeclinedFeedback).isEqualTo("No")
       assertThat(c.reviewCreatedByJobRole).isEqualTo("Role")
+    }
+
+    assertThat(content.alnScreeners.size).isEqualTo(1)
+    content.alnScreeners.first().let { c ->
+      assertThat(c.screeningDate).isEqualTo(LocalDate.now())
+      assertThat(c.alnStrengths.size).isEqualTo(1)
+      assertThat(c.alnChallenges.size).isEqualTo(1)
+
+      c.alnChallenges.first().let { alnChallenge ->
+        assertThat(alnChallenge.fromALNScreener).isEqualTo("Yes")
+        assertThat(alnChallenge.challengeType).isEqualTo("Sensory processing")
+        assertThat(alnChallenge.active).isEqualTo("Yes")
+        assertThat(alnChallenge.symptoms).isEqualTo("symptoms")
+        assertThat(alnChallenge.howIdentified).isEqualTo("colleague info, other screening tool")
+      }
+
+      c.alnStrengths.first().let { alnStrength ->
+        assertThat(alnStrength.fromALNScreener).isEqualTo("Yes")
+        assertThat(alnStrength.strengthType).isEqualTo("Memory")
+        assertThat(alnStrength.active).isEqualTo("Yes")
+        assertThat(alnStrength.symptoms).isEqualTo("StrengthSymptoms")
+        assertThat(alnStrength.howIdentified).isEqualTo("wider prison, conversations")
+      }
     }
   }
 }

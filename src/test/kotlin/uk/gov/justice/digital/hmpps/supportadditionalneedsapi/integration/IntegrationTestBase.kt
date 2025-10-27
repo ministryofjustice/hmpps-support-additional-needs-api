@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -394,7 +395,18 @@ abstract class IntegrationTestBase {
     return elspReviewRepository.save(review)
   }
 
-  fun aValidChallengeExists(prisonNumber: String) {
+  fun aValidAlnScreenerExists(prisonNumber: String): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
+    ALNScreenerEntity(
+      prisonNumber,
+      screeningDate = LocalDate.now(),
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      hasChallenges = true,
+      hasStrengths = true,
+    ),
+  )
+
+  fun aValidChallengeExists(prisonNumber: String, screenerId: UUID? = null) {
     val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
       ?: throw IllegalStateException("Reference data not found")
     challengeRepository.saveAll(
@@ -406,6 +418,7 @@ abstract class IntegrationTestBase {
           updatedAtPrison = "BXI",
           symptoms = "symptoms",
           howIdentified = setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL),
+          alnScreenerId = screenerId,
         ),
       ),
     )
@@ -447,7 +460,7 @@ abstract class IntegrationTestBase {
     )
   }
 
-  fun aValidStrengthExists(prisonNumber: String) {
+  fun aValidStrengthExists(prisonNumber: String, screenerId: UUID? = null) {
     val strengthType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
       ?: throw IllegalStateException("Reference data not found")
     strengthRepository.saveAll(
@@ -459,6 +472,7 @@ abstract class IntegrationTestBase {
           updatedAtPrison = "BXI",
           symptoms = "StrengthSymptoms",
           howIdentified = setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
+          alnScreenerId = screenerId,
         ),
       ),
     )
