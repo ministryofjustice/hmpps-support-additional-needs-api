@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.0'
+  version: '0.13.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -2122,12 +2122,15 @@ components:
       title: UpdateSupportStrategyRequest
       type: object
       properties:
-        active:
-          type: boolean
+        detail:
+          type: string
+          description: Optional further explanation or description of this strategy
+          minLength: 1
+          pattern: '.*\S.*'
         prisonId:
           $ref: '#/components/schemas/PrisonId'
       required:
-        - active
+        - detail
         - prisonId
 
     SupportStrategyRequest:
