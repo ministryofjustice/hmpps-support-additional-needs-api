@@ -35,7 +35,7 @@ generic-service:
     HMPPS_SQS_ENABLED: true
     ENABLE_TEST_ENDPOINTS: false
     REVIEW_DEADLINE_DAYS_TO_ADD: 5
-    HMPPS_SAR_ADDITIONALACCESSROLE: ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO
+    HMPPS_SAR_ADDITIONALACCESSROLE: ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
