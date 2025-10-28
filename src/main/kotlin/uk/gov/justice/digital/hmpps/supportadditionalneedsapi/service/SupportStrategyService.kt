@@ -62,7 +62,7 @@ class SupportStrategyService(
     val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(prisonNumber, supportStrategyReference)
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
 
-    supportStrategy.active = request.active
+    supportStrategy.detail = request.detail
     supportStrategy.updatedAtPrison = request.prisonId
 
     return supportStrategyMapper.toModel(supportStrategyRepository.save(supportStrategy))

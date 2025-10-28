@@ -21,7 +21,7 @@ data class SupportStrategyEntity(
   val supportStrategyType: ReferenceDataEntity,
 
   @Column
-  val detail: String? = null,
+  var detail: String? = null,
 
   @Column(nullable = false)
   var active: Boolean = true,
