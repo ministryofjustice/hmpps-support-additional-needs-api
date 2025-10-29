@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.4'
+  version: '0.13.6'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -675,6 +675,21 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific support strategy to update
+    get:
+      summary: Retrieves a support strategy.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      responses:
+        '200':
+          $ref: '#/components/responses/SupportStrategy'
+        '400':
+          $ref: '#/components/responses/404Error'
+      operationId: get-support-strategy
     put:
       summary: Updates a single support strategy by UUID.
       description: |

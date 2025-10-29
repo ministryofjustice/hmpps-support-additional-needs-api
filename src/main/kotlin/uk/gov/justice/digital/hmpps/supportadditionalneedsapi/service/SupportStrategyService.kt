@@ -37,7 +37,10 @@ class SupportStrategyService(
     additionalInfoPrefix = "SupportStrategyType:",
     additionalInfoField = "strategyTypeCode",
   )
-  fun createSupportStrategies(prisonNumber: String, request: CreateSupportStrategiesRequest): SupportStrategyListResponse {
+  fun createSupportStrategies(
+    prisonNumber: String,
+    request: CreateSupportStrategiesRequest,
+  ): SupportStrategyListResponse {
     val typeEntities = resolveSupportStrategyTypes(request)
 
     val supportStrategyEntities = typeEntities.map { (supportStrategyType, requestItem) ->
@@ -49,7 +52,8 @@ class SupportStrategyService(
   }
 
   private fun resolveSupportStrategyTypes(request: CreateSupportStrategiesRequest): List<Pair<ReferenceDataEntity, SupportStrategyRequest>> = request.supportStrategies.map { supportStrategiesRequest ->
-    val code = requireNotNull(supportStrategiesRequest.supportStrategyTypeCode) { "Support Strategy Request type code must not be null" }
+    val code =
+      requireNotNull(supportStrategiesRequest.supportStrategyTypeCode) { "Support Strategy Request type code must not be null" }
     val type = referenceDataRepository.validateReferenceData(ReferenceDataKey(Domain.SUPPORT_STRATEGY, code))
     type to supportStrategiesRequest
   }
@@ -59,12 +63,27 @@ class SupportStrategyService(
     supportStrategyReference: UUID,
     request: UpdateSupportStrategyRequest,
   ): SupportStrategyResponse {
-    val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(prisonNumber, supportStrategyReference)
+    val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
+      prisonNumber,
+      supportStrategyReference,
+    )
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
 
     supportStrategy.detail = request.detail
     supportStrategy.updatedAtPrison = request.prisonId
 
     return supportStrategyMapper.toModel(supportStrategyRepository.save(supportStrategy))
+  }
+
+  fun getSupportStrategy(
+    prisonNumber: String,
+    supportStrategyReference: UUID,
+  ): SupportStrategyResponse {
+    val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
+      prisonNumber,
+      supportStrategyReference,
+    )
+      ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
+    return supportStrategyMapper.toModel(supportStrategy)
   }
 }
