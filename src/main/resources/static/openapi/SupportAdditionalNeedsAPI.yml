@@ -1638,14 +1638,23 @@ components:
       description: |
         request object to update a condition.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the condition is active
+        source:
+          $ref: '#/components/schemas/Source'
+        conditionName:
+          type: string
+          description: more granular information about the condition
+          example: (for Mental Health) Social Anxiety
+        conditionDetails:
+          type: string
+          description: additional detail about the condition
+          minLength: 1
+          pattern: '.*\S.*'
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the condition was updated at
       required:
-        - active
+        - source
+        - conditionDetails
         - prisonId
 
     ChallengeRequest:
