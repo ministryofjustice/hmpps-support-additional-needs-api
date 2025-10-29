@@ -25,6 +25,6 @@ interface EducationSupportPlansDueForCreationRepository : JpaRepository<PlanCrea
   )
   fun findEducationSupportPlansDueForCreation(
     @Param("fromDate") fromDate: LocalDate,
-    @Param("toDate") toDate: LocalDate
+    @Param("toDate") toDate: LocalDate,
   ): List<PlanCreationScheduleEntity>
 }

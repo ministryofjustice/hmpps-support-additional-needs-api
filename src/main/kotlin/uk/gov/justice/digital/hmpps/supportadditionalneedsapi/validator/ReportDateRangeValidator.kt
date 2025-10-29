@@ -29,14 +29,14 @@ class ReportDateRangeValidator : ConstraintValidator<ValidDateRange, Array<Any>>
     // Expect parameters to be: [controller instance, fromDate, toDate]
     // The first LocalDate should be fromDate, the second should be toDate
     val dates = parameters.filterIsInstance<LocalDate>()
-    
+
     if (dates.size < 2) {
       return true // missing params handled elsewhere
     }
-    
+
     val fromDate = dates[0]
     val toDate = dates[1]
-    
+
     return ChronoUnit.DAYS.between(fromDate, toDate) <= maxDays
   }
 }

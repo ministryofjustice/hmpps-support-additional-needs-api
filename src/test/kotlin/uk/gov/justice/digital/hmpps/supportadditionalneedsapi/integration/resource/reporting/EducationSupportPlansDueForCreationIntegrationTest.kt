@@ -37,7 +37,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       val prisonNumber1 = randomValidPrisonNumber()
       val prisonNumber2 = randomValidPrisonNumber()
       val prisonNumber3 = randomValidPrisonNumber()
-      
+
       // Plan within range, included prison
       val plan1 = createPlanCreationSchedule(
         prisonNumber = prisonNumber1,
@@ -45,7 +45,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // Plan within range, included prison
       val plan2 = createPlanCreationSchedule(
         prisonNumber = prisonNumber2,
@@ -53,7 +53,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "HMP",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // Plan outside range (before)
       createPlanCreationSchedule(
         prisonNumber = prisonNumber3,
@@ -61,7 +61,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -83,11 +83,11 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
       assertThat(lines.filter { it.isNotBlank() }).hasSize(3) // header + 2 data rows
-      
+
       // Check that both prison numbers are in the CSV
       assertThat(csvContent).contains(prisonNumber1)
       assertThat(csvContent).contains(prisonNumber2)
@@ -98,14 +98,14 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
     fun `should return CSV with plans exactly on the boundary dates`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
-      
+
       val plan = createPlanCreationSchedule(
         prisonNumber = prisonNumber,
         deadlineDate = TODAY,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -127,7 +127,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines.filter { it.isNotBlank() }).hasSize(2) // header + 1 data row
       assertThat(csvContent).contains(prisonNumber)
@@ -143,9 +143,9 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       val excludedPrisons = listOf(
         "ACI", "DGI", "FWI", "FBI", "PBI", "RHI", "WNI", "BWI", "BZI", "PRI",
         "UKI", "WYI", "ASI", "PFI", "UPI", "SWI", "PYI", "CFI", "CKI", "FYI",
-        "FEI", "LGI", "MKI"
+        "FEI", "LGI", "MKI",
       )
-      
+
       // Create a plan for each excluded prison
       excludedPrisons.forEach { prisonCode ->
         createPlanCreationSchedule(
@@ -155,7 +155,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
           status = PlanCreationScheduleStatus.SCHEDULED,
         )
       }
-      
+
       // Create one plan for an included prison
       val includedPrisonNumber = randomValidPrisonNumber()
       val includedPlan = createPlanCreationSchedule(
@@ -164,7 +164,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -186,12 +186,12 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines.filter { it.isNotBlank() }).hasSize(2) // header + 1 data row
       assertThat(csvContent).contains(includedPrisonNumber)
       assertThat(csvContent).contains(includedPlan.reference.toString())
-      
+
       // Should not contain any of the excluded prison codes
       excludedPrisons.forEach { code ->
         assertThat(csvContent).doesNotContain(",$code,")
@@ -210,28 +210,28 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       val todayPlan = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = TODAY,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       val nextWeekPlan = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = NEXT_WEEK,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       val nextMonthPlan = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = NEXT_MONTH,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When - Query for only TODAY to NEXT_WEEK
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -253,17 +253,17 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then - Should include only today and next week plans, not yesterday or next month
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines().filter { it.isNotBlank() }
       assertThat(lines).hasSize(3) // header + 2 data rows
-      
+
       // Check that the correct plans are included/excluded
       assertThat(csvContent).doesNotContain(yesterdayPlan.prisonNumber) // Before range
       assertThat(csvContent).contains(todayPlan.prisonNumber) // Start of range
       assertThat(csvContent).contains(nextWeekPlan.prisonNumber) // End of range
       assertThat(csvContent).doesNotContain(nextMonthPlan.prisonNumber) // After range
     }
-    
+
     @Test
     fun `should return CSV with only headers when no plans match criteria`() {
       // Given
@@ -273,7 +273,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -295,7 +295,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
       assertThat(lines.filter { it.isNotBlank() }).hasSize(1) // only header
@@ -310,7 +310,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -332,7 +332,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines.filter { it.isNotBlank() }).hasSize(1) // only header
     }
@@ -349,7 +349,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
         PlanCreationScheduleStatus.EXEMPT_SYSTEM_TECHNICAL_ISSUE,
         PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
       )
-      
+
       val createdPlans = statuses.map { status ->
         createPlanCreationSchedule(
           prisonNumber = randomValidPrisonNumber(),
@@ -358,7 +358,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
           status = status,
         )
       }
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -380,10 +380,10 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines()
       assertThat(lines.filter { it.isNotBlank() }).hasSize(statuses.size + 1) // header + data rows
-      
+
       // Check all statuses are present
       statuses.forEach { status ->
         assertThat(csvContent).contains(status.name)
@@ -598,28 +598,28 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Given
       val earlierDate = TODAY
       val laterDate = TOMORROW
-      
+
       val plan1 = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = laterDate,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       val plan2 = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = earlierDate,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       val plan3 = createPlanCreationSchedule(
         prisonNumber = randomValidPrisonNumber(),
         deadlineDate = earlierDate,
         createdAtPrison = "MDI",
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -641,21 +641,21 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       val lines = csvContent!!.lines().filter { it.isNotBlank() }
       assertThat(lines).hasSize(4) // header + 3 data rows
-      
+
       // Extract dates from CSV lines (skip header)
       val dataLines = lines.drop(1)
       val dates = dataLines.map { line ->
         line.split(",")[3] // deadline_date is the 4th field
       }
-      
+
       // Check that dates are sorted
       assertThat(dates).isSorted()
     }
   }
-  
+
   @Nested
   inner class SpecialCharacterHandling {
     @Test
@@ -665,14 +665,14 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       val validPrisonNumber = randomValidPrisonNumber()
       val prisonWithComma = "M,I"
       val prisonWithQuote = "H\"P"
-      
+
       val plan = createPlanCreationSchedule(
         prisonNumber = validPrisonNumber,
         deadlineDate = TODAY,
         createdAtPrison = prisonWithComma,
         status = PlanCreationScheduleStatus.SCHEDULED,
       )
-      
+
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
@@ -694,16 +694,16 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val csvContent = response.responseBody
       assertThat(csvContent).isNotNull
-      
+
       // Parse CSV properly to verify escaping works
       val lines = csvContent!!.lines()
       assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
-      
+
       // The CSV should contain the special characters properly escaped
       // Jackson CSV should wrap fields with special chars in quotes
       assertThat(csvContent).contains("\"M,I\"")
       assertThat(csvContent).contains(validPrisonNumber)
-      
+
       // Verify the CSV is still parseable
       assertThat(lines.filter { it.isNotBlank() }).hasSize(2)
     }
