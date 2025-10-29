@@ -43,4 +43,11 @@ class StrengthController(private val strengthService: StrengthService) {
     @PathVariable strengthReference: UUID,
     @Valid @RequestBody request: UpdateStrengthRequest,
   ): StrengthResponse = strengthService.updateStrength(prisonNumber, strengthReference, request)
+
+  @GetMapping("/{strengthReference}")
+  @PreAuthorize(HAS_VIEW_ELSP)
+  fun getStrength(
+    @PathVariable prisonNumber: String,
+    @PathVariable strengthReference: UUID,
+  ): StrengthResponse = strengthService.getStrength(prisonNumber, strengthReference)
 }
