@@ -223,6 +223,22 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific condition to update
+    get:
+      summary: Retrieves a condition by reference.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Condition
+      responses:
+        '200':
+          $ref: '#/components/responses/Condition'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-condition
     put:
       summary: Updates a single condition by UUID.
       description: |
