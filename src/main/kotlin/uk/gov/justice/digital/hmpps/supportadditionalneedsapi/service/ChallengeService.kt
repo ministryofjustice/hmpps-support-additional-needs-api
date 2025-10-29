@@ -128,7 +128,9 @@ class ChallengeService(
     challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
 
-    challenge.active = request.active
+    challenge.symptoms = request.symptoms
+    challenge.howIdentified = challengeMapper.toEntity(request.howIdentified)
+    challenge.howIdentifiedOther = request.howIdentifiedOther
     challenge.updatedAtPrison = request.prisonId
 
     return challengeMapper.toModel(challengeRepository.save(challenge))

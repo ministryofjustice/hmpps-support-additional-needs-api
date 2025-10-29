@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.2'
+  version: '0.13.3'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1707,14 +1707,26 @@ components:
       description: |
         request object to update a challenge.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the challenge is active
+        symptoms:
+          type: string
+          description: Details about the symptoms of this challenge
+          example: John struggles to read text on white background.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this challenge was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this challenge was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John could read better on a cream background.
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the challenge was updated at
       required:
-        - active
+        - symptoms
+        - howIdentified
         - prisonId
     StrengthRequest:
       title: StrengthRequest

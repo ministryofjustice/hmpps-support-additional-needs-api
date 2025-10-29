@@ -28,14 +28,14 @@ data class ChallengeEntity(
   val challengeType: ReferenceDataEntity,
 
   @Column
-  val symptoms: String? = null,
+  var symptoms: String? = null,
 
   @Column
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   var howIdentified: Set<IdentificationSource> = emptySet(),
 
   @Column
-  val howIdentifiedOther: String? = null,
+  var howIdentifiedOther: String? = null,
 
   @Column(nullable = false)
   var active: Boolean = true,
