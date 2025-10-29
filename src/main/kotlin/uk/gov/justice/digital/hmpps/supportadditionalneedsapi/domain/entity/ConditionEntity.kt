@@ -19,17 +19,17 @@ data class ConditionEntity(
 
   @Column
   @Enumerated(value = EnumType.STRING)
-  val source: Source,
+  var source: Source,
 
   @ManyToOne(optional = false)
   @JoinColumn(name = "condition_type_id", referencedColumnName = "id")
   val conditionType: ReferenceDataEntity,
 
   @Column
-  val conditionName: String? = null,
+  var conditionName: String? = null,
 
   @Column
-  val conditionDetails: String? = null,
+  var conditionDetails: String? = null,
 
   @Column(nullable = false)
   var active: Boolean = true,

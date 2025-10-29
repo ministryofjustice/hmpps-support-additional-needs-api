@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.Integr
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source.CONFIRMED_DIAGNOSIS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.util.*
@@ -61,7 +62,7 @@ class UpdateConditionsTest : IntegrationTestBase() {
     )
 
     val condition = conditions.find { it.conditionType.code == "ADHD" } ?: throw IllegalStateException("condition not found")
-    val updateConditionRequest = UpdateConditionRequest(active = false, prisonId = "FKL")
+    val updateConditionRequest = UpdateConditionRequest(source = CONFIRMED_DIAGNOSIS, conditionDetails = "updated condition details", prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -81,7 +82,8 @@ class UpdateConditionsTest : IntegrationTestBase() {
       conditionRepository.findAllByPrisonNumber(prisonNumber).find { it.conditionType.code == "ADHD" }
         ?: throw IllegalStateException("condition not found")
 
-    assertThat(updatedCondition.active).isEqualTo(false)
+    assertThat(updatedCondition.conditionDetails).isEqualTo("updated condition details")
+    assertThat(updatedCondition.source).isEqualTo(Source.CONFIRMED_DIAGNOSIS)
     assertThat(updatedCondition.updatedAtPrison).isEqualTo("FKL")
   }
 
@@ -92,7 +94,7 @@ class UpdateConditionsTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateConditionRequest = UpdateConditionRequest(active = false, prisonId = "FKL")
+    val updateConditionRequest = UpdateConditionRequest(source = CONFIRMED_DIAGNOSIS, conditionDetails = "updated condition details", prisonId = "FKL")
 
     val ref = UUID.randomUUID().toString()
     // When
