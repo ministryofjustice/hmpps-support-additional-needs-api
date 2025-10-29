@@ -655,6 +655,59 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(dates).isSorted()
     }
   }
+  
+  @Nested
+  inner class SpecialCharacterHandling {
+    @Test
+    fun `should properly escape special characters in CSV output`() {
+      // Given - Create a plan with special characters that could break CSV formatting
+      // Using valid prison number format but with prison codes that contain special chars
+      val validPrisonNumber = randomValidPrisonNumber()
+      val prisonWithComma = "M,I"
+      val prisonWithQuote = "H\"P"
+      
+      val plan = createPlanCreationSchedule(
+        prisonNumber = validPrisonNumber,
+        deadlineDate = TODAY,
+        createdAtPrison = prisonWithComma,
+        status = PlanCreationScheduleStatus.SCHEDULED,
+      )
+      
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(URI_TEMPLATE)
+            .queryParam("fromDate", TODAY.toString())
+            .queryParam("toDate", TODAY.toString())
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentType("text/csv")
+        .expectBody(String::class.java)
+        .returnResult()
+
+      // Then
+      val csvContent = response.responseBody
+      assertThat(csvContent).isNotNull
+      
+      // Parse CSV properly to verify escaping works
+      val lines = csvContent!!.lines()
+      assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
+      
+      // The CSV should contain the special characters properly escaped
+      // Jackson CSV should wrap fields with special chars in quotes
+      assertThat(csvContent).contains("\"M,I\"")
+      assertThat(csvContent).contains(validPrisonNumber)
+      
+      // Verify the CSV is still parseable
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(2)
+    }
+  }
 
   private fun createPlanCreationSchedule(
     prisonNumber: String,
