@@ -122,4 +122,15 @@ class StrengthService(
 
     return strengthMapper.toModel(strengthRepository.save(strength))
   }
+
+  fun getStrength(
+    prisonNumber: String,
+    strengthReference: UUID,
+  ): StrengthResponse {
+    val
+    strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+      ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
+
+    return strengthMapper.toModel(strength)
+  }
 }
