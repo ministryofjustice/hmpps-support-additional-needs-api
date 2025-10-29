@@ -305,8 +305,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/Challenge'
-        '400':
-          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
       operationId: get-challenge
     put:
       summary: Updates a single challenge by UUID.
