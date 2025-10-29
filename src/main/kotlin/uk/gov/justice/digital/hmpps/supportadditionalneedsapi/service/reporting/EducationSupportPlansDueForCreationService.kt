@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.reporting
 
+import com.fasterxml.jackson.dataformat.csv.CsvMapper
+import com.fasterxml.jackson.module.kotlin.KotlinModule
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting.EducationSupportPlansDueForCreationRepository
@@ -32,20 +34,33 @@ class EducationSupportPlansDueForCreationService(
   }
 
   private fun generateCsv(plans: List<uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity>): String {
-    val csvBuilder = StringBuilder()
-    
-    // CSV Header
-    csvBuilder.append("reference,prison_number,created_at_prison,deadline_date,status\n")
-    
-    // CSV Data
-    plans.forEach { plan ->
-      csvBuilder.append("${plan.reference},")
-      csvBuilder.append("${plan.prisonNumber},")
-      csvBuilder.append("${plan.createdAtPrison},")
-      csvBuilder.append("${plan.deadlineDate},")
-      csvBuilder.append("${plan.status.name}\n")
+    val csvMapper = CsvMapper().apply {
+      registerModule(KotlinModule.Builder().build())
     }
     
-    return csvBuilder.toString()
+    // Define the column order explicitly
+    val schema = csvMapper.schemaFor(PlanCsvRecord::class.java)
+      .withHeader()
+      .sortedBy("reference", "prison_number", "created_at_prison", "deadline_date", "status")
+    
+    val records = plans.map {
+      PlanCsvRecord(
+        reference = it.reference.toString(),
+        prison_number = it.prisonNumber,
+        created_at_prison = it.createdAtPrison,
+        deadline_date = it.deadlineDate.toString(),
+        status = it.status.name
+      )
+    }
+    
+    return csvMapper.writer(schema).writeValueAsString(records)
   }
+  
+  data class PlanCsvRecord(
+    val reference: String,
+    val prison_number: String,
+    val created_at_prison: String,
+    val deadline_date: String,
+    val status: String
+  )
 }
