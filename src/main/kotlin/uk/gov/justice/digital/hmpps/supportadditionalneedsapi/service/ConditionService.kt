@@ -66,7 +66,9 @@ class ConditionService(
     val condition = conditionRepository.getConditionEntityByPrisonNumberAndReference(prisonNumber, conditionReference)
       ?: throw ConditionNotFoundException(prisonNumber, conditionReference)
 
-    condition.active = request.active
+    condition.conditionDetails = request.conditionDetails
+    condition.conditionName = request.conditionName
+    condition.source = conditionMapper.toEntity(request.source)
     condition.updatedAtPrison = request.prisonId
 
     return conditionMapper.toModel(conditionRepository.save(condition))
