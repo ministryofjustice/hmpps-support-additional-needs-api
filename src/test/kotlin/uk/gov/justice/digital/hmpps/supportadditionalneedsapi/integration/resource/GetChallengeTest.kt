@@ -17,7 +17,7 @@ class GetChallengeTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get list of non screener challenges for a given prisoner`() {
+  fun `Get a challenges for a given prisoner by reference`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
@@ -50,7 +50,7 @@ class GetChallengeTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Return error when no challenges exist for prisoner`() {
+  fun `Return error when no challenge exist for prisoner by reference`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
