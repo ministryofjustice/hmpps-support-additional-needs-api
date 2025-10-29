@@ -32,14 +32,13 @@ class EducationSupportPlansDueForCreationController(
     @NotNull(message = "fromDate is required")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     fromDate: LocalDate,
-
     @RequestParam
     @NotNull(message = "toDate is required")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     toDate: LocalDate,
   ): ResponseEntity<String> {
     val csvData = educationSupportPlansDueForCreationService.getEducationSupportPlansDueForCreationAsCsv(fromDate, toDate)
-    
+
     return ResponseEntity.ok()
       .header(HttpHeaders.CONTENT_TYPE, "text/csv")
       .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"education-support-plans-due-for-creation.csv\"")
