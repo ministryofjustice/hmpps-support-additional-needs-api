@@ -43,4 +43,11 @@ class ConditionController(private val conditionService: ConditionService) {
     @PathVariable conditionReference: UUID,
     @Valid @RequestBody request: UpdateConditionRequest,
   ): ConditionResponse = conditionService.updateCondition(prisonNumber, conditionReference, request)
+
+  @GetMapping("/{conditionReference}")
+  @PreAuthorize(HAS_VIEW_ELSP)
+  fun getCondition(
+    @PathVariable prisonNumber: String,
+    @PathVariable conditionReference: UUID,
+  ): ConditionResponse = conditionService.getCondition(prisonNumber, conditionReference)
 }
