@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.1'
+  version: '0.13.2'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -293,6 +293,22 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific challenge to update
+    get:
+      summary: Retrieves a challenge by reference.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Challenge
+      responses:
+        '200':
+          $ref: '#/components/responses/Challenge'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-challenge
     put:
       summary: Updates a single challenge by UUID.
       description: |
