@@ -129,7 +129,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines()
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(2) // header + 1 data row
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(2)
       assertThat(csvContent).contains(prisonNumber)
       assertThat(csvContent).contains(plan.reference.toString())
     }
@@ -188,7 +188,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines()
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(2) // header + 1 data row
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(2)
       assertThat(csvContent).contains(includedPrisonNumber)
       assertThat(csvContent).contains(includedPlan.reference.toString())
 
@@ -255,7 +255,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines().filter { it.isNotBlank() }
-      assertThat(lines).hasSize(3) // header + 2 data rows
+      assertThat(lines).hasSize(3)
 
       // Check that the correct plans are included/excluded
       assertThat(csvContent).doesNotContain(yesterdayPlan.prisonNumber) // Before range
@@ -298,7 +298,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
 
       val lines = csvContent!!.lines()
       assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(1) // only header
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(1)
     }
 
     @Test
@@ -334,7 +334,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines()
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(1) // only header
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(1)
     }
   }
 
@@ -382,7 +382,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines()
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(statuses.size + 1) // header + data rows
+      assertThat(lines.filter { it.isNotBlank() }).hasSize(statuses.size + 1)
 
       // Check all statuses are present
       statuses.forEach { status ->
@@ -643,12 +643,12 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).isNotNull
 
       val lines = csvContent!!.lines().filter { it.isNotBlank() }
-      assertThat(lines).hasSize(4) // header + 3 data rows
+      assertThat(lines).hasSize(4)
 
-      // Extract dates from CSV lines (skip header)
+      // Extract dates from CSV lines
       val dataLines = lines.drop(1)
       val dates = dataLines.map { line ->
-        line.split(",")[3] // deadline_date is the 4th field
+        line.split(",")[3]
       }
 
       // Check that dates are sorted
