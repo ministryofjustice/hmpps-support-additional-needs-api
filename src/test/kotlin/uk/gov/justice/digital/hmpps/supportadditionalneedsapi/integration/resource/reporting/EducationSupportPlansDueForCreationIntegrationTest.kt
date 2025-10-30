@@ -94,7 +94,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).contains(prisonNumber2)
       assertThat(csvContent).doesNotContain(prisonNumber3)
     }
-    
+
     @Test
     fun `should return CSV when requested with format parameter`() {
       // Given

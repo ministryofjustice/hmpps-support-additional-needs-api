@@ -15,7 +15,7 @@ class ContentNegotiationConfig : WebMvcConfigurer {
       .favorParameter(true)
       .parameterName("format")
       .ignoreAcceptHeader(false)
-      .defaultContentType(MediaType("text", "csv")) // Default to CSV for backward compatibility
+      .defaultContentType(MediaType.APPLICATION_JSON) // Default to JSON for most endpoints
       .mediaType("json", MediaType.APPLICATION_JSON)
       .mediaType("csv", MediaType("text", "csv"))
   }
