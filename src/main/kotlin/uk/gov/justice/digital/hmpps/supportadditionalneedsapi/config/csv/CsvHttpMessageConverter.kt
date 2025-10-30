@@ -134,7 +134,6 @@ class CsvHttpMessageConverter :
     log.debug { "Building CSV schema for ${clazz.simpleName}" }
     val builder = CsvSchema.builder()
 
-    // Verify class has CsvSerializable annotation for better design
     if (!clazz.hasAnnotation<CsvSerializable>()) {
       log.debug { "Class ${clazz.simpleName} does not have @CsvSerializable annotation, proceeding with reflection" }
     }

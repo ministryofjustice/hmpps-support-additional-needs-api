@@ -80,7 +80,6 @@ class CsvHttpMessageConverterTest {
     val lines = result.lines()
 
     assertThat(lines).hasSize(3)
-    // CSV mapper may order columns differently - check content exists
     assertThat(lines[0]).contains("id", "name", "age")
     assertThat(lines[1]).contains("id1", "Alice", "25")
     assertThat(lines[2]).contains("id2", "Bob", "30")
@@ -112,7 +111,6 @@ class CsvHttpMessageConverterTest {
     val lines = result.lines()
 
     assertThat(lines).hasSize(2)
-    // CSV mapper may order columns differently - check content exists
     assertThat(lines[0]).contains("id", "name", "age")
     assertThat(lines[1]).contains("id1", "Alice", "25")
   }
@@ -169,7 +167,6 @@ class CsvHttpMessageConverterTest {
 
   @Test
   fun `write should handle IOException gracefully`() {
-    // Create an OutputStream that throws IOException when writing
     val failingStream = object : OutputStream() {
       override fun write(b: Int): Unit = throw IOException("Simulated IO Error")
     }

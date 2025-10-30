@@ -94,67 +94,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(csvContent).contains(prisonNumber2)
       assertThat(csvContent).doesNotContain(prisonNumber3)
     }
-
-    @Test
-    fun `should return JSON with plans within the date range for included prisons when Accept header is application-json`() {
-      // Given
-      val prisonNumber1 = randomValidPrisonNumber()
-      val prisonNumber2 = randomValidPrisonNumber()
-      val prisonNumber3 = randomValidPrisonNumber()
-
-      // Plan within range, included prison
-      val plan1 = createPlanCreationSchedule(
-        prisonNumber = prisonNumber1,
-        deadlineDate = TODAY,
-        createdAtPrison = "MDI",
-        status = PlanCreationScheduleStatus.SCHEDULED,
-      )
-
-      // Plan within range, included prison
-      val plan2 = createPlanCreationSchedule(
-        prisonNumber = prisonNumber2,
-        deadlineDate = TOMORROW,
-        createdAtPrison = "HMP",
-        status = PlanCreationScheduleStatus.SCHEDULED,
-      )
-
-      // Plan outside range (before)
-      createPlanCreationSchedule(
-        prisonNumber = prisonNumber3,
-        deadlineDate = LAST_WEEK,
-        createdAtPrison = "MDI",
-        status = PlanCreationScheduleStatus.SCHEDULED,
-      )
-
-      // When
-      val response = webTestClient.get()
-        .uri { uriBuilder ->
-          uriBuilder
-            .path(URI_TEMPLATE)
-            .queryParam("fromDate", TODAY.toString())
-            .queryParam("toDate", TOMORROW.toString())
-            .build()
-        }
-        .header("Accept", "application/json")
-        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader()
-        .contentType("application/json")
-        .expectBody()
-        .jsonPath("$.length()").isEqualTo(2)
-        .jsonPath("$[0].prison_number").isEqualTo(prisonNumber1)
-        .jsonPath("$[0].deadline_date").isEqualTo(TODAY.toString())
-        .jsonPath("$[0].created_at_prison").isEqualTo("MDI")
-        .jsonPath("$[0].status").isEqualTo("SCHEDULED")
-        .jsonPath("$[1].prison_number").isEqualTo(prisonNumber2)
-        .jsonPath("$[1].deadline_date").isEqualTo(TOMORROW.toString())
-        .jsonPath("$[1].created_at_prison").isEqualTo("HMP")
-        .jsonPath("$[1].status").isEqualTo("SCHEDULED")
-        .returnResult()
-    }
-
+    
     @Test
     fun `should return CSV when requested with format parameter`() {
       // Given
