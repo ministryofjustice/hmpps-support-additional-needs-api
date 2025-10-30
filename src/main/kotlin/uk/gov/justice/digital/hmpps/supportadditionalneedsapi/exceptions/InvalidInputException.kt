@@ -38,6 +38,6 @@ class CannotCompleteReviewWithNoSchedule(prisonNumber: String) : RuntimeExceptio
 
 class PlanCreationScheduleStateException(
   prisonNumber: String,
-  status: PlanCreationScheduleStatus,
+  statuses: List<PlanCreationScheduleStatus>,
   existingStatus: PlanCreationScheduleStatus,
-) : RuntimeException("Plan creation schedule status must be [$status] but was [$existingStatus] for prisoner [$prisonNumber]")
+) : RuntimeException("Plan creation schedule status must be one of [$statuses] but was [$existingStatus] for prisoner [$prisonNumber]")

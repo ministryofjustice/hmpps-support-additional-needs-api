@@ -43,7 +43,7 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
     )
 
     val strategy = strategies.first()
-    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(active = false, prisonId = "FKL")
+    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail = "updated detail", prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -63,8 +63,50 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
       supportStrategyRepository.findAllByPrisonNumber(prisonNumber).find { it.supportStrategyType.code == "PROCESSING_SPEED" }
         ?: throw IllegalStateException("support strategy not found")
 
-    assertThat(updatedStrategy.active).isEqualTo(false)
+    assertThat(updatedStrategy.detail).isEqualTo("updated detail")
     assertThat(updatedStrategy.updatedAtPrison).isEqualTo("FKL")
+  }
+
+  @Test
+  fun `update a support strategy for a given prisoner no detail`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    val strategies = supportStrategyRepository.saveAll(
+      listOf(
+        SupportStrategyEntity(
+          prisonNumber = prisonNumber,
+          supportStrategyType = processingSpeed,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          detail = "Needs quiet space to focus",
+          active = true,
+        ),
+      ),
+    )
+
+    val strategy = strategies.first()
+    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail = "  ", prisonId = "FKL")
+
+    // When
+    val response = webTestClient.put()
+      .uri(URI_TEMPLATE, prisonNumber, strategy.reference)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(updateSupportStrategyRequest)
+      .exchange()
+      .expectStatus()
+      .is4xxClientError
+      .returnResult(ErrorResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .hasStatus(HttpStatus.BAD_REQUEST.value())
   }
 
   @Test
@@ -74,7 +116,7 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateRequest = UpdateSupportStrategyRequest(active = false, prisonId = "FKL")
+    val updateRequest = UpdateSupportStrategyRequest(detail = "updated detail", prisonId = "FKL")
     val ref = UUID.randomUUID().toString()
 
     // When

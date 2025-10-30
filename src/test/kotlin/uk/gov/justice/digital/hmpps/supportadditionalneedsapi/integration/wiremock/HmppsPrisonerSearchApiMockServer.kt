@@ -47,7 +47,7 @@ class HmppsPrisonerSearchApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetPrisoner(prisonNumber: String, response: Prisoner) {
     stubFor(
-      get(urlPathMatching("/prisoner-search/prisoner/$prisonNumber"))
+      get(urlPathMatching("/prisoner/$prisonNumber"))
         .willReturn(
           responseDefinition()
             .withStatus(200)

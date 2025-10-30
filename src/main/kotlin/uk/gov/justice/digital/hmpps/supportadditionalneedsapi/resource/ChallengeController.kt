@@ -36,6 +36,13 @@ class ChallengeController(private val challengeService: ChallengeService) {
     @PathVariable prisonNumber: String,
   ): ChallengeListResponse = challengeService.getChallenges(prisonNumber)
 
+  @PreAuthorize(HAS_VIEW_ELSP)
+  @GetMapping("/{challengeReference}")
+  fun getChallenge(
+    @PathVariable prisonNumber: String,
+    @PathVariable challengeReference: UUID,
+  ): ChallengeResponse = challengeService.getChallenge(prisonNumber, challengeReference)
+
   @PutMapping("/{challengeReference}")
   @PreAuthorize(HAS_EDIT_ELSP)
   fun updateChallenge(

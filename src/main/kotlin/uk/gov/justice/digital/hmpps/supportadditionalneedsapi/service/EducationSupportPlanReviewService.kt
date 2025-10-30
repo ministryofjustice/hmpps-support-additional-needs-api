@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotCompleteReviewWithNoSchedule
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspReviewMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanReviewsResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportPlanReviewRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
@@ -23,6 +25,7 @@ class EducationSupportPlanReviewService(
   private val reviewScheduleRepository: ReviewScheduleRepository,
   private val reviewScheduleService: ReviewScheduleService,
   private val elspReviewRepository: ElspReviewRepository,
+  private val elspReviewMapper: ElspReviewMapper,
 ) {
 
   @Transactional
@@ -84,5 +87,13 @@ class EducationSupportPlanReviewService(
       }
       elspReviewRepository.save(review)
     }
+  }
+
+  fun getReviews(prisonNumber: String): PlanReviewsResponse {
+    if (!educationSupportPlanService.hasPlan(prisonNumber)) {
+      throw PlanNotFoundException(prisonNumber)
+    }
+    val reviews = elspReviewRepository.findAllByPrisonNumber(prisonNumber)
+    return PlanReviewsResponse(reviews.map { elspReviewMapper.toModel(it) })
   }
 }

@@ -117,9 +117,22 @@ class StrengthService(
     strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
-    strength.active = request.active
+    strength.symptoms = request.symptoms
+    strength.howIdentified = strengthMapper.toEntity(request.howIdentified)
+    strength.howIdentifiedOther = request.howIdentifiedOther
     strength.updatedAtPrison = request.prisonId
 
     return strengthMapper.toModel(strengthRepository.save(strength))
+  }
+
+  fun getStrength(
+    prisonNumber: String,
+    strengthReference: UUID,
+  ): StrengthResponse {
+    val
+    strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+      ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
+
+    return strengthMapper.toModel(strength)
   }
 }

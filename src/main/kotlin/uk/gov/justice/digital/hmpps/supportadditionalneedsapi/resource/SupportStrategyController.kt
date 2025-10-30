@@ -46,4 +46,11 @@ class SupportStrategyController(
     @PathVariable supportStrategyReference: UUID,
     @Valid @RequestBody request: UpdateSupportStrategyRequest,
   ): SupportStrategyResponse = supportStrategyService.updateSupportStrategy(prisonNumber, supportStrategyReference, request)
+
+  @GetMapping("/{supportStrategyReference}")
+  @PreAuthorize(HAS_VIEW_ELSP)
+  fun getSupportStrategy(
+    @PathVariable prisonNumber: String,
+    @PathVariable supportStrategyReference: UUID,
+  ): SupportStrategyResponse = supportStrategyService.getSupportStrategy(prisonNumber, supportStrategyReference)
 }

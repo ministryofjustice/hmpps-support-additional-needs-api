@@ -5,41 +5,15 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.EducationNeedRequest
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
 
-class CreateTestSetupTest : IntegrationTestBase() {
+class AdminToolsTest : IntegrationTestBase() {
   companion object {
     private const val URI_TEMPLATE = "/profile/{prisonNumber}"
-  }
-
-  @Test
-  fun `Set up data for a prisoner`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    stubForBankHoliday()
-    val prisonNumber = randomValidPrisonNumber()
-    val educationNeedRequest = createEducationNeedRequest()
-
-    // When
-    val response = webTestClient.post()
-      .uri("$URI_TEMPLATE/set-up-data", prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(educationNeedRequest)
-      .exchange()
-      .expectStatus()
-      .isCreated
-      .returnResult(PlanCreationScheduleEntity::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
   }
 
   @Test
@@ -85,6 +59,7 @@ class CreateTestSetupTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     stubForBankHoliday()
     val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, "PES"))
 
     // When
@@ -113,18 +88,6 @@ class CreateTestSetupTest : IntegrationTestBase() {
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
     assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_EDUCATION_TRIGGER)
   }
-
-  private fun createEducationNeedRequest(): EducationNeedRequest = EducationNeedRequest(
-    prisonId = "BXI",
-    alnNeed = true,
-    lddNeed = true,
-    conditionSelfDeclared = true,
-    conditionConfirmed = true,
-    challengeNotALN = true,
-    strengthNotALN = true,
-    inEducation = true,
-    alnScreener = true,
-  )
 }
 
 fun inEducationResponse(prisonNumber: String, fundingType: String = "PES"): String = """{
@@ -154,22 +117,4 @@ fun inEducationResponse(prisonNumber: String, fundingType: String = "PES"): Stri
             "withdrawalReviewed": false
         }
     ]
-}"""
-
-fun createTestALNAssessment(prisonNumber: String, hasNeed: Boolean = true): String = """{
-  "v2": {
-    "assessments": {
-      "aln": [
-        {
-          "assessmentDate": "2025-01-28",
-          "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
-          "establishmentId": "123",
-          "establishmentName": "WTI",
-          "hasPrisonerConsent": "Yes",
-          "stakeholderReferral": "yes"
-        }
-      ]
-    },
-    "prn": "$prisonNumber"
-  }
 }"""

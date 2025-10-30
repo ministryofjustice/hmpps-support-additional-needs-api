@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.12.2'
+  version: '0.13.7'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -126,6 +126,25 @@ paths:
           description: Attempted to create a support plan review where there is no active review schedule
       requestBody:
         $ref: '#/components/requestBodies/CreateEducationSupportPlanReview'
+    get:
+      summary: Get Education Support Plan Reviews
+      description: |
+        Gets a list of ELSP reviews
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Support Plan
+      operationId: get-education-support-plan-reviews
+      responses:
+        '200':
+          $ref: '#/components/responses/GetPlanReviews'
+          description: Returned successfully
+        '404':
+          $ref: '#/components/responses/404Error'
+          description: Education Support plan did not exist
 
   '/profile/{prisonNumber}/plan-action-status':
     parameters:
@@ -204,6 +223,22 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific condition to update
+    get:
+      summary: Retrieves a condition by reference.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Condition
+      responses:
+        '200':
+          $ref: '#/components/responses/Condition'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-condition
     put:
       summary: Updates a single condition by UUID.
       description: |
@@ -274,6 +309,22 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific challenge to update
+    get:
+      summary: Retrieves a challenge by reference.
+      description: |
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Challenge
+      responses:
+        '200':
+          $ref: '#/components/responses/Challenge'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-challenge
     put:
       summary: Updates a single challenge by UUID.
       description: |
@@ -392,6 +443,21 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific strength to update
+    get:
+      summary: Retrieves a strength by reference.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Strength
+      responses:
+        '200':
+          $ref: '#/components/responses/Strength'
+        '404':
+          $ref: '#/components/responses/404Error'
+      operationId: get-strength
     put:
       summary: Updates a single strength by UUID.
       description: |
@@ -625,6 +691,21 @@ paths:
           type: string
           format: uuid
         description: UUID of the specific support strategy to update
+    get:
+      summary: Retrieves a support strategy.
+      description: |
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      responses:
+        '200':
+          $ref: '#/components/responses/SupportStrategy'
+        '400':
+          $ref: '#/components/responses/404Error'
+      operationId: get-support-strategy
     put:
       summary: Updates a single support strategy by UUID.
       description: |
@@ -1619,14 +1700,23 @@ components:
       description: |
         request object to update a condition.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the condition is active
+        source:
+          $ref: '#/components/schemas/Source'
+        conditionName:
+          type: string
+          description: more granular information about the condition
+          example: (for Mental Health) Social Anxiety
+        conditionDetails:
+          type: string
+          description: additional detail about the condition
+          minLength: 1
+          pattern: '.*\S.*'
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the condition was updated at
       required:
-        - active
+        - source
+        - conditionDetails
         - prisonId
 
     ChallengeRequest:
@@ -1663,14 +1753,26 @@ components:
       description: |
         request object to update a challenge.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the challenge is active
+        symptoms:
+          type: string
+          description: Details about the symptoms of this challenge
+          example: John struggles to read text on white background.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this challenge was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this challenge was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John could read better on a cream background.
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the challenge was updated at
       required:
-        - active
+        - symptoms
+        - howIdentified
         - prisonId
     StrengthRequest:
       title: StrengthRequest
@@ -1686,7 +1788,7 @@ components:
         symptoms:
           type: string
           description: Optional details about the symptoms of this strength
-          example: John struggles is great at reading.
+          example: John is great at reading.
         howIdentified:
           type: array
           items:
@@ -1707,14 +1809,26 @@ components:
       description: |
         request object to update a strength.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the strength is active
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this strength
+          example: John is great at reading.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this strength was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this strength was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John was great at reading.
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the strength was updated at
       required:
-        - active
+        - symptoms
+        - howIdentified
         - prisonId
 
     UpdatePlanCreationStatusRequest:
@@ -1819,6 +1933,22 @@ components:
             $ref: '#/components/schemas/PlanCreationScheduleResponse'
       required:
         - planCreationSchedules
+
+    PlanReviewsResponse:
+      title: PlanCreationReviewsResponse
+      description: A list of plan creation reviews for a prisoner.
+      type: object
+      properties:
+        reviews:
+          type: array
+          description: A List containing zero or more EducationSupportPlanReviewResponse.
+          items:
+            $ref: '#/components/schemas/EducationSupportPlanReviewResponse'
+      required:
+        - reviews
+
+
+
 
     PlanCreationScheduleResponse:
       title: PlanCreationScheduleResponse
@@ -2039,6 +2169,39 @@ components:
       required:
         - hasCurrentEhcp
         - individualSupport
+
+    EducationSupportPlanReviewResponse:
+      title: EducationSupportPlanReviewResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: A person's Education Support Plan Review
+      properties:
+        reviewCreatedBy:
+          description: Optional details of who created the Review. If not present the review was created by the createdBy/createdByDisplayName fields.
+          $ref: '#/components/schemas/ReviewContributor'
+        otherContributors:
+          description: Optional list of other people involved in the creation of the review.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewContributor'
+        prisonerDeclinedFeedback:
+          type: boolean
+          description: Whether or not the prisoner took part in the review.
+          example: true
+        prisonerFeedback:
+          type: string
+          description: Details of any feedback from the prisoner.
+          example: My support needs have been fully met by the course provider.
+        reviewerFeedback:
+          type: string
+          description: Details of any feedback from the reviewer.
+          example: As noted by the Mr Smith, his support needs have been fully met.
+      required:
+        - prisonerFeedback
+        - reviewerFeedback
+        - prisonerDeclinedFeedback
+
     CreateSupportStrategiesRequest:
       title: SupportStrategiesListRequest
       type: object
@@ -2054,12 +2217,15 @@ components:
       title: UpdateSupportStrategyRequest
       type: object
       properties:
-        active:
-          type: boolean
+        detail:
+          type: string
+          description: Optional further explanation or description of this strategy
+          minLength: 1
+          pattern: '.*\S.*'
         prisonId:
           $ref: '#/components/schemas/PrisonId'
       required:
-        - active
+        - detail
         - prisonId
 
     SupportStrategyRequest:
@@ -2373,6 +2539,23 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/PlanCreationSchedulesResponse'
+
+    GetPlanReviews:
+      description: Response body containing the a the plan reviews.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PlanReviewsResponse'
 
     PlanActionStatusResponse:
       description: Response body containing the Education Support Plan action status.

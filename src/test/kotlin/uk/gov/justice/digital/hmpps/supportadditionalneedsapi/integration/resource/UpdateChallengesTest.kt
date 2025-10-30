@@ -5,11 +5,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource.OTHER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.util.*
@@ -49,7 +51,7 @@ class UpdateChallengesTest : IntegrationTestBase() {
     )
 
     val challenge = challenges.find { it.challengeType.code == "MEMORY" } ?: throw IllegalStateException("challenge not found")
-    val updateChallengeRequest = UpdateChallengeRequest(active = false, prisonId = "FKL")
+    val updateChallengeRequest = UpdateChallengeRequest(symptoms = "updated symptoms", howIdentified = listOf(IdentificationSource.OTHER), howIdentifiedOther = "how identified other", prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -69,7 +71,9 @@ class UpdateChallengesTest : IntegrationTestBase() {
       challengeRepository.findAllByPrisonNumber(prisonNumber).find { it.challengeType.code == "MEMORY" }
         ?: throw IllegalStateException("challenge not found")
 
-    assertThat(updatedChallenge.active).isEqualTo(false)
+    assertThat(updatedChallenge.symptoms).isEqualTo("updated symptoms")
+    assertThat(updatedChallenge.howIdentified).isEqualTo(linkedSetOf(OTHER))
+    assertThat(updatedChallenge.howIdentifiedOther).isEqualTo("how identified other")
     assertThat(updatedChallenge.updatedAtPrison).isEqualTo("FKL")
   }
 
@@ -80,7 +84,7 @@ class UpdateChallengesTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateChallengeRequest = UpdateChallengeRequest(active = false, prisonId = "FKL")
+    val updateChallengeRequest = UpdateChallengeRequest(symptoms = "", howIdentified = listOf(IdentificationSource.OTHER), prisonId = "FKL")
 
     val ref = UUID.randomUUID().toString()
     // When

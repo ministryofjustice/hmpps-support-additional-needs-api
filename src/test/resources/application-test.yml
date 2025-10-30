@@ -60,3 +60,6 @@ service:
 pes_contract_date: "2025-10-01"
 
 ENABLE_TEST_ENDPOINTS: true
+
+DPR_USER: DPR_USER
+DPR_PASSWORD: DPR_PASSWORD

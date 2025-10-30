@@ -38,6 +38,7 @@ class EducationSupportPlansDueForCreationService(
       registerModule(KotlinModule.Builder().build())
     }
 
+    // Define the column order explicitly
     val schema = csvMapper.schemaFor(PlanCsvRecord::class.java)
       .withHeader()
       .sortedBy("reference", "prison_number", "created_at_prison", "deadline_date", "status")

@@ -20,14 +20,19 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.LegalStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.common.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -35,6 +40,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Refe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
@@ -203,6 +209,9 @@ abstract class IntegrationTestBase {
   @Autowired
   lateinit var hmppsQueueService: HmppsQueueService
 
+  @Autowired
+  lateinit var reviewConfig: ReviewConfig
+
   val domainEventQueue by lazy {
     hmppsQueueService.findByQueueId("supportadditionalneeds")
       ?: throw MissingQueueException("HmppsQueue supportadditionalneeds not found")
@@ -266,6 +275,25 @@ abstract class IntegrationTestBase {
       ).build(),
   ).get()
 
+  fun aPrisonerExists(prisonNumber: String, prisonId: String = "BXI") {
+    stubGetPrisonerFromPrisonerSearchApi(
+      prisonNumber,
+      Prisoner(
+        prisonerNumber = prisonNumber,
+        legalStatus = LegalStatus.SENTENCED,
+        releaseDate = LocalDate.now().plusYears(5),
+        prisonId = prisonId,
+        isIndeterminateSentence = false,
+        isRecall = false,
+        lastName = "smith",
+        firstName = "bob",
+        dateOfBirth = LocalDate.now().minusYears(22),
+        cellLocation = "12b",
+        releaseType = "",
+      ),
+    )
+  }
+
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
@@ -290,7 +318,7 @@ abstract class IntegrationTestBase {
     reference: UUID = UUID.randomUUID(),
     status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
     deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
-  ) {
+  ): ReviewScheduleEntity {
     val reviewScheduleEntity =
       ReviewScheduleEntity(
         prisonNumber = prisonNumber,
@@ -300,7 +328,7 @@ abstract class IntegrationTestBase {
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
       )
-    reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
+    return reviewScheduleRepository.saveAndFlush(reviewScheduleEntity)
   }
 
   fun prisonerHasNeed(prisonNumber: String) {
@@ -318,7 +346,7 @@ abstract class IntegrationTestBase {
     conditionRepository.save(condition)
   }
 
-  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now()) {
+  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now(), establishmentId: String = "BXI") {
     val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
     educationRepository.save(educationEntity)
     val educationEnrolmentEntity = EducationEnrolmentEntity(
@@ -327,7 +355,7 @@ abstract class IntegrationTestBase {
       fundingType = "PES",
       endDate = null,
       learningStartDate = learningStartDate,
-      establishmentId = "1234",
+      establishmentId = establishmentId,
     )
     educationEnrolmentRepository.save(educationEnrolmentEntity)
   }
@@ -354,7 +382,31 @@ abstract class IntegrationTestBase {
     elspPlanRepository.save(elsp)
   }
 
-  fun aValidChallengeExists(prisonNumber: String) {
+  fun anElSPReviewExists(prisonNumber: String, reviewScheduleReference: UUID): ElspReviewEntity {
+    val review = ElspReviewEntity(
+      prisonNumber = prisonNumber,
+      prisonerDeclinedFeedback = false,
+      prisonerFeedback = "prisonerFeedback",
+      reviewerFeedback = "reviewerFeedback",
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      reviewScheduleReference = reviewScheduleReference,
+    )
+    return elspReviewRepository.save(review)
+  }
+
+  fun aValidAlnScreenerExists(prisonNumber: String): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
+    ALNScreenerEntity(
+      prisonNumber,
+      screeningDate = LocalDate.now(),
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      hasChallenges = true,
+      hasStrengths = true,
+    ),
+  )
+
+  fun aValidChallengeExists(prisonNumber: String, screenerId: UUID? = null) {
     val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
       ?: throw IllegalStateException("Reference data not found")
     challengeRepository.saveAll(
@@ -364,6 +416,63 @@ abstract class IntegrationTestBase {
           challengeType = sensory,
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
+          symptoms = "symptoms",
+          howIdentified = setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL),
+          alnScreenerId = screenerId,
+        ),
+      ),
+    )
+  }
+
+  fun aValidReviewExists(prisonNumber: String, reviewScheduleReference: UUID) {
+    elspReviewRepository.saveAll(
+      listOf(
+        ElspReviewEntity(
+          prisonNumber = prisonNumber,
+          reviewCreatedByName = "Bob Smith",
+          reviewCreatedByJobRole = "Role",
+          prisonerDeclinedFeedback = false,
+          prisonerFeedback = "prisoner feedback",
+          reviewerFeedback = "reviewer feedback",
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          otherContributors = mutableListOf(),
+          reviewScheduleReference = reviewScheduleReference,
+
+        ),
+      ),
+    )
+  }
+
+  fun aValidConditionExists(prisonNumber: String) {
+    val conditionType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
+      ?: throw IllegalStateException("Reference data not found")
+    conditionRepository.saveAll(
+      listOf(
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          conditionType = conditionType,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          source = Source.SELF_DECLARED,
+        ),
+      ),
+    )
+  }
+
+  fun aValidStrengthExists(prisonNumber: String, screenerId: UUID? = null) {
+    val strengthType = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+    strengthRepository.saveAll(
+      listOf(
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = strengthType,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          symptoms = "StrengthSymptoms",
+          howIdentified = setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
+          alnScreenerId = screenerId,
         ),
       ),
     )

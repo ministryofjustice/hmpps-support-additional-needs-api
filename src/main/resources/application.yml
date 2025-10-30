@@ -69,6 +69,10 @@ spring:
     password: ${spring.datasource.password}
     validateMigrationNaming: true
     locations: classpath:/db/migration/common,classpath:/db/migration/prod,classpath:/db/postgres/common,classpath:/db/postgres/prod
+    placeholders:
+      dpr_user: ${DPR_USER}
+      dpr_password: ${DPR_PASSWORD}
+
   http:
     codecs:
       max-in-memory-size: 10MB
@@ -124,3 +128,6 @@ service:
   base-url: ${SERVICE_BASE_URL}
 
 pes_contract_date: ${PES_CONTRACT_DATE}
+
+review:
+  reviewDeadlineDaysToAdd: ${REVIEW_DEADLINE_DAYS_TO_ADD:5}

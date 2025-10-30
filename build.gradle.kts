@@ -5,10 +5,10 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.2"
-  kotlin("plugin.spring") version "2.2.20"
-  kotlin("plugin.jpa") version "2.2.20"
-  id("org.openapi.generator") version "7.16.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
+  kotlin("plugin.spring") version "2.2.21"
+  kotlin("plugin.jpa") version "2.2.21"
+  id("org.openapi.generator") version "7.17.0"
 
   `java-test-fixtures`
 }
@@ -32,11 +32,11 @@ val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.3"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "2.8.13"
-val hmppsSqsVersion = "5.4.11"
+val hmppsSqsVersion = "5.6.1"
 val awaitilityVersion = "4.3.0"
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.8.1")
   implementation("io.hypersistence:hypersistence-utils-hibernate-63:3.11.0")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -53,9 +53,9 @@ dependencies {
 
   // Test dependencies
   testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.7.0")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.8.1")
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.34") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")

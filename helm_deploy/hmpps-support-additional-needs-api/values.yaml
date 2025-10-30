@@ -34,6 +34,8 @@ generic-service:
     PES_CONTRACT_DATE: "2025-10-01"
     HMPPS_SQS_ENABLED: true
     ENABLE_TEST_ENDPOINTS: false
+    REVIEW_DEADLINE_DAYS_TO_ADD: 5
+    HMPPS_SAR_ADDITIONALACCESSROLE: ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
@@ -63,6 +65,10 @@ generic-service:
       HMPPS_SQS_QUEUES_SUPPORTADDITIONALNEEDS_QUEUE_NAME: "sqs_queue_name"
     hmpps-support-additional-needs-domain-events-sqs-dl-instance-output:
       HMPPS_SQS_QUEUES_SUPPORTADDITIONALNEEDS_DLQ_NAME: "sqs_queue_name"
+
+    digital-prison-reporting:
+      DPR_USER: "DPR_USER"
+      DPR_PASSWORD: "DPR_PASSWORD"
 
   allowlist:
     groups:
