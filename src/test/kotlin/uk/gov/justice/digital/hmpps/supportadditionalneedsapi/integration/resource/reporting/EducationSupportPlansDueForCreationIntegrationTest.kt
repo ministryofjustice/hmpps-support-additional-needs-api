@@ -159,7 +159,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
     fun `should return CSV when requested with format parameter`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
-      
+
       val plan = createPlanCreationSchedule(
         prisonNumber = prisonNumber,
         deadlineDate = TODAY,

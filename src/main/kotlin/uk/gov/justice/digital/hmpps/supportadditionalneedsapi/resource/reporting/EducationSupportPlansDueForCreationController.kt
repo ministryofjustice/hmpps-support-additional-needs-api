@@ -37,12 +37,12 @@ class EducationSupportPlansDueForCreationController(
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     toDate: LocalDate?,
     @RequestHeader(value = HttpHeaders.ACCEPT, required = false, defaultValue = "text/csv")
-    acceptHeader: String
+    acceptHeader: String,
   ): ResponseEntity<List<PlanCsvRecord>> {
     val effectiveToDate = toDate ?: LocalDate.now()
     val effectiveFromDate = fromDate ?: effectiveToDate.minusDays(14)
     val plans = educationSupportPlansDueForCreationService.getEducationSupportPlansDueForCreation(effectiveFromDate, effectiveToDate)
-    
+
     // Add Content-Disposition header for CSV downloads
     return if (acceptHeader.contains("csv")) {
       ResponseEntity.ok()

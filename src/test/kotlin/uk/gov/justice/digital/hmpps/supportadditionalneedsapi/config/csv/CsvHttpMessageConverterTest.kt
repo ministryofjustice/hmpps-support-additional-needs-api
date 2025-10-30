@@ -60,9 +60,9 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should output empty string for empty collection`() {
     val emptyList = emptyList<TestCsvRecord>()
-    
+
     converter.write(emptyList, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8)
     assertThat(result).isEmpty()
   }
@@ -71,14 +71,14 @@ class CsvHttpMessageConverterTest {
   fun `write should output CSV with headers for collection`() {
     val records = listOf(
       TestCsvRecord("id1", "Alice", 25),
-      TestCsvRecord("id2", "Bob", 30)
+      TestCsvRecord("id2", "Bob", 30),
     )
-    
+
     converter.write(records, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8).trim()
     val lines = result.lines()
-    
+
     assertThat(lines).hasSize(3)
     // CSV mapper may order columns differently - check content exists
     assertThat(lines[0]).contains("id", "name", "age")
@@ -89,14 +89,14 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should respect JsonPropertyOrder annotation`() {
     val records = listOf(
-      TestCsvRecordWithOrder("id1", "Alice", 25)
+      TestCsvRecordWithOrder("id1", "Alice", 25),
     )
-    
+
     converter.write(records, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8).trim()
     val lines = result.lines()
-    
+
     assertThat(lines).hasSize(2)
     assertThat(lines[0]).isEqualTo("name,age,id")
     assertThat(lines[1]).isEqualTo("Alice,25,id1")
@@ -105,12 +105,12 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should output CSV for single CsvSerializable object`() {
     val record = TestCsvRecord("id1", "Alice", 25)
-    
+
     converter.write(record, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8).trim()
     val lines = result.lines()
-    
+
     assertThat(lines).hasSize(2)
     // CSV mapper may order columns differently - check content exists
     assertThat(lines[0]).contains("id", "name", "age")
@@ -120,7 +120,7 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should throw exception for non-CsvSerializable single object`() {
     val nonSerializable = NonCsvSerializable("test")
-    
+
     assertThatThrownBy {
       converter.write(nonSerializable, MediaType.parseMediaType("text/csv"), outputMessage)
     }.isInstanceOf(HttpMessageNotWritableException::class.java)
@@ -130,7 +130,7 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should throw exception for collection with null elements`() {
     val listWithNull = listOf<TestCsvRecord?>(null)
-    
+
     assertThatThrownBy {
       converter.write(listWithNull, MediaType.parseMediaType("text/csv"), outputMessage)
     }.isInstanceOf(HttpMessageNotWritableException::class.java)
@@ -141,12 +141,12 @@ class CsvHttpMessageConverterTest {
   fun `write should handle collection of non-CsvSerializable with warning`() {
     val records = listOf(
       NonCsvSerializable("test1"),
-      NonCsvSerializable("test2")
+      NonCsvSerializable("test2"),
     )
-    
+
     // Should still write CSV, but with warning logged
     converter.write(records, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8)
     assertThat(result).isNotEmpty()
   }
@@ -154,14 +154,14 @@ class CsvHttpMessageConverterTest {
   @Test
   fun `write should use JsonProperty annotations for column names`() {
     val records = listOf(
-      TestCsvRecordSnakeCase("id1", "Alice Smith", 25)
+      TestCsvRecordSnakeCase("id1", "Alice Smith", 25),
     )
-    
+
     converter.write(records, MediaType.parseMediaType("text/csv"), outputMessage)
-    
+
     val result = outputStream.toString(StandardCharsets.UTF_8).trim()
     val lines = result.lines()
-    
+
     assertThat(lines).hasSize(2)
     assertThat(lines[0]).contains("record_id", "full_name", "person_age")
     assertThat(lines[1]).contains("id1", "Alice Smith", "25")
@@ -171,18 +171,16 @@ class CsvHttpMessageConverterTest {
   fun `write should handle IOException gracefully`() {
     // Create an OutputStream that throws IOException when writing
     val failingStream = object : OutputStream() {
-      override fun write(b: Int) {
-        throw IOException("Simulated IO Error")
-      }
+      override fun write(b: Int): Unit = throw IOException("Simulated IO Error")
     }
-    
+
     val failingOutputMessage = object : HttpOutputMessage {
       override fun getBody(): OutputStream = failingStream
       override fun getHeaders(): HttpHeaders = HttpHeaders()
     }
-    
+
     val records = listOf(TestCsvRecord("id1", "Alice", 25))
-    
+
     assertThatThrownBy {
       converter.write(records, MediaType.parseMediaType("text/csv"), failingOutputMessage)
     }.isInstanceOf(IOException::class.java)
@@ -197,7 +195,7 @@ class CsvHttpMessageConverterTest {
     @JsonProperty("name")
     val name: String,
     @JsonProperty("age")
-    val age: Int
+    val age: Int,
   )
 
   @CsvSerializable
@@ -208,7 +206,7 @@ class CsvHttpMessageConverterTest {
     @JsonProperty("name")
     val name: String,
     @JsonProperty("age")
-    val age: Int
+    val age: Int,
   )
 
   @CsvSerializable
@@ -218,10 +216,10 @@ class CsvHttpMessageConverterTest {
     @JsonProperty("full_name")
     val fullName: String,
     @JsonProperty("person_age")
-    val personAge: Int
+    val personAge: Int,
   )
 
   data class NonCsvSerializable(
-    val value: String
+    val value: String,
   )
 }

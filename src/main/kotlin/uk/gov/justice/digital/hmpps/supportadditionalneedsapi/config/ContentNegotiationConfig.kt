@@ -12,6 +12,8 @@ class ContentNegotiationConfig : WebMvcConfigurer {
 
   override fun configureContentNegotiation(configurer: ContentNegotiationConfigurer) {
     configurer
+      .favorParameter(true)
+      .parameterName("format")
       .ignoreAcceptHeader(false) // Use Accept header as primary method
       .defaultContentType(MediaType("text", "csv")) // Default to CSV for backward compatibility
       .mediaType("json", MediaType.APPLICATION_JSON)
