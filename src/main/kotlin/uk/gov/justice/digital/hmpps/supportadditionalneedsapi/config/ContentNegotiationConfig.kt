@@ -21,7 +21,9 @@ class ContentNegotiationConfig : WebMvcConfigurer {
   }
 
   override fun configureMessageConverters(converters: MutableList<HttpMessageConverter<*>>) {
-    // Add CSV converter before JSON converter
+    // Add CSV converter at position 0 to ensure it's evaluated before JSON converter.
+    // Spring checks converters in order, so CSV must come first to handle text/csv requests
+    // before the default JSON converter attempts to process them.
     converters.add(0, CsvHttpMessageConverter())
     super.configureMessageConverters(converters)
   }

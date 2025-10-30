@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.csv
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.dataformat.csv.CsvMapper
 import com.fasterxml.jackson.dataformat.csv.CsvSchema
@@ -13,13 +11,10 @@ import org.springframework.http.MediaType
 import org.springframework.http.converter.AbstractHttpMessageConverter
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.http.converter.HttpMessageNotWritableException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.util.StringUtils
 import java.io.IOException
 import java.nio.charset.StandardCharsets
 import kotlin.reflect.KClass
-import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.hasAnnotation
-import kotlin.reflect.full.memberProperties
 
 class CsvHttpMessageConverter :
   AbstractHttpMessageConverter<Any>(
@@ -49,15 +44,15 @@ class CsvHttpMessageConverter :
   override fun readInternal(clazz: Class<out Any>, inputMessage: HttpInputMessage): Any = throw UnsupportedOperationException("CSV deserialization is not supported")
 
   @Throws(IOException::class, HttpMessageNotWritableException::class)
-  override fun writeInternal(t: Any, outputMessage: HttpOutputMessage) {
+  override fun writeInternal(item: Any, outputMessage: HttpOutputMessage) {
     outputMessage.body.bufferedWriter(StandardCharsets.UTF_8).use { writer ->
       try {
-        when (t) {
-          is Collection<*> -> writeCollection(t, writer)
-          else -> writeSingleObject(t, writer)
+        when (item) {
+          is Collection<*> -> writeCollection(item, writer)
+          else -> writeSingleObject(item, writer)
         }
       } catch (e: Exception) {
-        handleWriteException(e, t::class.simpleName ?: "Unknown")
+        handleWriteException(e, item::class.simpleName ?: "Unknown")
       }
     }
   }
@@ -132,34 +127,14 @@ class CsvHttpMessageConverter :
 
   private fun buildCsvSchema(clazz: KClass<*>): CsvSchema {
     log.debug { "Building CSV schema for ${clazz.simpleName}" }
-    val builder = CsvSchema.builder()
 
     if (!clazz.hasAnnotation<CsvSerializable>()) {
-      log.debug { "Class ${clazz.simpleName} does not have @CsvSerializable annotation, proceeding with reflection" }
+      log.debug { "Class ${clazz.simpleName} does not have @CsvSerializable annotation, proceeding with schema generation" }
     }
 
-    // Check if class has JsonPropertyOrder annotation
-    val propertyOrder = clazz.findAnnotation<JsonPropertyOrder>()
-
-    if (propertyOrder != null && propertyOrder.value.isNotEmpty()) {
-      log.debug { "Using JsonPropertyOrder for ${clazz.simpleName}: ${propertyOrder.value.joinToString()}" }
-      propertyOrder.value.forEach { fieldName ->
-        builder.addColumn(fieldName)
-      }
-    } else {
-      // Use reflection to get all properties
-      val properties = clazz.memberProperties.toList()
-      log.debug { "Using reflection for ${clazz.simpleName}, found ${properties.size} properties" }
-
-      properties.forEach { property ->
-        val jsonProperty = property.findAnnotation<JsonProperty>()
-        val columnName = jsonProperty?.value ?: StringUtils.toSnakeCase(property.name)
-        builder.addColumn(columnName)
-        log.trace { "Added column: $columnName for property: ${property.name}" }
-      }
-    }
-
-    val schema = builder.build()
+    // Let Jackson build the schema automatically from the class
+    // This will properly respect @JsonProperty and @JsonPropertyOrder annotations
+    val schema = csvMapper.schemaFor(clazz.java)
     log.debug { "Built CSV schema with ${schema.size()} columns for ${clazz.simpleName}" }
     return schema
   }
