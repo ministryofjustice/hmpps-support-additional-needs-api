@@ -703,7 +703,7 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/SupportStrategy'
-        '400':
+        '404':
           $ref: '#/components/responses/404Error'
       operationId: get-support-strategy
     put:
@@ -726,8 +726,34 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Support Strategy not found
+  '/profile/{prisonNumber}/support-strategies/{supportStrategyReference}/archive':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: supportStrategyReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific support strategy to archive
+    put:
+      summary: Archives a single support strategy by UUID.
+      description: |
+        Archives a specific support strategy associated with the given prison number.
 
-
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      operationId: archive-support-strategy
+      responses:
+        '204':
+          description: The support strategy was successfully archived.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
 components:
   securitySchemes:
     bearerAuth:
