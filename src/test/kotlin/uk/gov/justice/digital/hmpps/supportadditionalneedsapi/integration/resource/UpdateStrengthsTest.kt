@@ -4,11 +4,13 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource.OTHER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
@@ -49,7 +51,7 @@ class UpdateStrengthsTest : IntegrationTestBase() {
     )
 
     val strength = strengths.find { it.strengthType.code == "MEMORY" } ?: throw IllegalStateException("strength not found")
-    val updateStrengthRequest = UpdateStrengthRequest(active = false, prisonId = "FKL")
+    val updateStrengthRequest = UpdateStrengthRequest(symptoms = "updated symptoms", howIdentified = listOf(IdentificationSource.OTHER), howIdentifiedOther = "how identified other", prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -69,7 +71,9 @@ class UpdateStrengthsTest : IntegrationTestBase() {
       strengthRepository.findAllByPrisonNumber(prisonNumber).find { it.strengthType.code == "MEMORY" }
         ?: throw IllegalStateException("strength not found")
 
-    assertThat(updatedStrength.active).isEqualTo(false)
+    assertThat(updatedStrength.symptoms).isEqualTo("updated symptoms")
+    assertThat(updatedStrength.howIdentified).isEqualTo(linkedSetOf(OTHER))
+    assertThat(updatedStrength.howIdentifiedOther).isEqualTo("how identified other")
     assertThat(updatedStrength.updatedAtPrison).isEqualTo("FKL")
   }
 
@@ -80,7 +84,7 @@ class UpdateStrengthsTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateStrengthRequest = UpdateStrengthRequest(active = false, prisonId = "FKL")
+    val updateStrengthRequest = UpdateStrengthRequest(symptoms = "updated symptoms", howIdentified = listOf(IdentificationSource.OTHER), howIdentifiedOther = "how identified other", prisonId = "FKL")
 
     val ref = UUID.randomUUID().toString()
     // When

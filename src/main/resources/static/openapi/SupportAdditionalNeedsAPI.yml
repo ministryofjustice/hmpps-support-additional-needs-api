@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.6'
+  version: '0.13.7'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1788,7 +1788,7 @@ components:
         symptoms:
           type: string
           description: Optional details about the symptoms of this strength
-          example: John struggles is great at reading.
+          example: John is great at reading.
         howIdentified:
           type: array
           items:
@@ -1809,14 +1809,26 @@ components:
       description: |
         request object to update a strength.
       properties:
-        active:
-          type: boolean
-          description: Whether or not the strength is active
+        symptoms:
+          type: string
+          description: Optional details about the symptoms of this strength
+          example: John is great at reading.
+        howIdentified:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentificationSource'
+          description: |
+            The list of enums as to how this strength was identified. Multiple reasons may apply.
+        howIdentifiedOther:
+          type: string
+          description: Details about how this strength was identified when the OTHER IdentificationSource enum option is chosen
+          example: The trainer noticed that John was great at reading.
         prisonId:
           $ref: '#/components/schemas/PrisonId'
           description: The prison the strength was updated at
       required:
-        - active
+        - symptoms
+        - howIdentified
         - prisonId
 
     UpdatePlanCreationStatusRequest:
