@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.reporting
 
 import io.swagger.v3.oas.annotations.Hidden
-import jakarta.validation.constraints.NotNull
 import org.springframework.format.annotation.DateTimeFormat
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
@@ -28,16 +27,16 @@ class EducationSupportPlansDueForCreationController(
   @PreAuthorize(HAS_VIEW_ELSP)
   @ValidDateRange(maxDays = 60)
   fun getEducationSupportPlansDueForCreation(
-    @RequestParam
-    @NotNull(message = "fromDate is required")
+    @RequestParam(required = false)
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    fromDate: LocalDate,
-    @RequestParam
-    @NotNull(message = "toDate is required")
+    fromDate: LocalDate?,
+    @RequestParam(required = false)
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-    toDate: LocalDate,
+    toDate: LocalDate?,
   ): ResponseEntity<String> {
-    val csvData = educationSupportPlansDueForCreationService.getEducationSupportPlansDueForCreationAsCsv(fromDate, toDate)
+    val effectiveToDate = toDate ?: LocalDate.now()
+    val effectiveFromDate = fromDate ?: effectiveToDate.minusDays(14)
+    val csvData = educationSupportPlansDueForCreationService.getEducationSupportPlansDueForCreationAsCsv(effectiveFromDate, effectiveToDate)
 
     return ResponseEntity.ok()
       .header(HttpHeaders.CONTENT_TYPE, "text/csv")

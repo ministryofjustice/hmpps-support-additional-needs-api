@@ -4,6 +4,7 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting.EducationSupportPlansDueForCreationRepository
 import java.time.LocalDate
 
@@ -20,11 +21,6 @@ class EducationSupportPlansDueForCreationService(
   ): String {
     log.debug("Fetching education support plans due for creation between $fromDate and $toDate")
 
-    if (fromDate.isAfter(toDate)) {
-      log.warn("Invalid date range: fromDate ($fromDate) is after toDate ($toDate)")
-      return generateCsv(emptyList())
-    }
-
     val planCreationSchedules = educationSupportPlansDueForCreationRepository
       .findEducationSupportPlansDueForCreation(fromDate, toDate)
 
@@ -33,7 +29,7 @@ class EducationSupportPlansDueForCreationService(
     return generateCsv(planCreationSchedules)
   }
 
-  private fun generateCsv(plans: List<uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity>): String {
+  private fun generateCsv(plans: List<PlanCreationScheduleEntity>): String {
     val csvMapper = CsvMapper().apply {
       registerModule(KotlinModule.Builder().build())
     }

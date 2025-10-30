@@ -26,18 +26,29 @@ class ReportDateRangeValidator : ConstraintValidator<ValidDateRange, Array<Any>>
     parameters: Array<Any>,
     context: ConstraintValidatorContext,
   ): Boolean {
-    // Expect parameters to be: [controller instance, fromDate, toDate]
-    // The first LocalDate should be fromDate, the second should be toDate
-    val dates = parameters.filterIsInstance<LocalDate>()
+    // Parameters array contains the method parameters
+    // Filter for LocalDate instances (which can be null)
+    val fromDateParam = parameters.getOrNull(0) as? LocalDate?
+    val toDateParam = parameters.getOrNull(1) as? LocalDate?
 
-    if (dates.size < 2) {
-      return true // missing params handled elsewhere
+    // Apply defaults if null
+    val toDate = toDateParam ?: LocalDate.now()
+    val fromDate = fromDateParam ?: toDate.minusDays(14)
+
+    // Check if fromDate is after toDate
+    if (fromDate.isAfter(toDate)) {
+      context.disableDefaultConstraintViolation()
+      context.buildConstraintViolationWithTemplate("fromDate must be before or equal to toDate")
+        .addConstraintViolation()
+      return false
     }
 
-    val fromDate = dates[0]
-    val toDate = dates[1]
+    // Check if date range exceeds max days
+    if (ChronoUnit.DAYS.between(fromDate, toDate) > maxDays) {
+      return false
+    }
 
-    return ChronoUnit.DAYS.between(fromDate, toDate) <= maxDays
+    return true
   }
 }
 

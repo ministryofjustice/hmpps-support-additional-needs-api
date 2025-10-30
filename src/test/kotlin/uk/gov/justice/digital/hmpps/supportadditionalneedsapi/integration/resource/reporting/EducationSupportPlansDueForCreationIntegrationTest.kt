@@ -300,42 +300,6 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       assertThat(lines[0]).isEqualTo("reference,prison_number,created_at_prison,deadline_date,status")
       assertThat(lines.filter { it.isNotBlank() }).hasSize(1)
     }
-
-    @Test
-    fun `should handle gracefully when fromDate is after toDate`() {
-      // Given
-      createPlanCreationSchedule(
-        prisonNumber = randomValidPrisonNumber(),
-        deadlineDate = TODAY,
-        createdAtPrison = "MDI",
-        status = PlanCreationScheduleStatus.SCHEDULED,
-      )
-
-      // When
-      val response = webTestClient.get()
-        .uri { uriBuilder ->
-          uriBuilder
-            .path(URI_TEMPLATE)
-            .queryParam("fromDate", TOMORROW.toString())
-            .queryParam("toDate", TODAY.toString())
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
-        .exchange()
-        .expectStatus()
-        .isOk
-        .expectHeader()
-        .contentType("text/csv")
-        .expectBody(String::class.java)
-        .returnResult()
-
-      // Then
-      val csvContent = response.responseBody
-      assertThat(csvContent).isNotNull
-
-      val lines = csvContent!!.lines()
-      assertThat(lines.filter { it.isNotBlank() }).hasSize(1)
-    }
   }
 
   @Nested
@@ -453,12 +417,110 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
     }
 
     @Test
-    fun `should return bad request when fromDate is missing`() {
+    fun `should use default fromDate when missing (toDate minus 14 days)`() {
+      // Given - Create a plan within the default range
+      val prisonNumber = randomValidPrisonNumber()
+      createPlanCreationSchedule(
+        prisonNumber = prisonNumber,
+        deadlineDate = TODAY.minusDays(7), // Within default 14 day range
+        createdAtPrison = "MDI",
+        status = PlanCreationScheduleStatus.SCHEDULED,
+      )
+
+      // When - Only provide toDate
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(URI_TEMPLATE)
+            .queryParam("toDate", TODAY.toString())
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentType("text/csv")
+        .expectBody(String::class.java)
+        .returnResult()
+
+      // Then
+      val csvContent = response.responseBody
+      assertThat(csvContent).isNotNull
+      assertThat(csvContent).contains(prisonNumber)
+    }
+
+    @Test
+    fun `should use default toDate when missing (today)`() {
+      // Given - Create a plan for today
+      val prisonNumber = randomValidPrisonNumber()
+      createPlanCreationSchedule(
+        prisonNumber = prisonNumber,
+        deadlineDate = TODAY,
+        createdAtPrison = "MDI",
+        status = PlanCreationScheduleStatus.SCHEDULED,
+      )
+
+      // When - Only provide fromDate
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(URI_TEMPLATE)
+            .queryParam("fromDate", YESTERDAY.toString())
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentType("text/csv")
+        .expectBody(String::class.java)
+        .returnResult()
+
+      // Then
+      val csvContent = response.responseBody
+      assertThat(csvContent).isNotNull
+      assertThat(csvContent).contains(prisonNumber)
+    }
+
+    @Test
+    fun `should use default dates when both are missing`() {
+      // Given - Create a plan for today (within default range)
+      val prisonNumber = randomValidPrisonNumber()
+      createPlanCreationSchedule(
+        prisonNumber = prisonNumber,
+        deadlineDate = TODAY.minusDays(5), // Within default 14 day range
+        createdAtPrison = "MDI",
+        status = PlanCreationScheduleStatus.SCHEDULED,
+      )
+
+      // When - No dates provided
+      val response = webTestClient.get()
+        .uri(URI_TEMPLATE)
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .expectHeader()
+        .contentType("text/csv")
+        .expectBody(String::class.java)
+        .returnResult()
+
+      // Then
+      val csvContent = response.responseBody
+      assertThat(csvContent).isNotNull
+      assertThat(csvContent).contains(prisonNumber)
+    }
+
+    @Test
+    fun `should return bad request when fromDate is after toDate`() {
       // When
       val response = webTestClient.get()
         .uri { uriBuilder ->
           uriBuilder
             .path(URI_TEMPLATE)
+            .queryParam("fromDate", TOMORROW.toString())
             .queryParam("toDate", TODAY.toString())
             .build()
         }
@@ -472,30 +534,7 @@ class EducationSupportPlansDueForCreationIntegrationTest : IntegrationTestBase()
       // Then
       val actual = response.responseBody
       assertThat(actual).isNotNull
-      assertThat(actual!!.status).isEqualTo(HttpStatus.BAD_REQUEST.value())
-    }
-
-    @Test
-    fun `should return bad request when toDate is missing`() {
-      // When
-      val response = webTestClient.get()
-        .uri { uriBuilder ->
-          uriBuilder
-            .path(URI_TEMPLATE)
-            .queryParam("fromDate", TODAY.toString())
-            .build()
-        }
-        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO")))
-        .exchange()
-        .expectStatus()
-        .isBadRequest
-        .expectBody(ErrorResponse::class.java)
-        .returnResult()
-
-      // Then
-      val actual = response.responseBody
-      assertThat(actual).isNotNull
-      assertThat(actual!!.status).isEqualTo(HttpStatus.BAD_REQUEST.value())
+      assertThat(actual!!.userMessage).contains("fromDate must be before or equal to toDate")
     }
 
     @Test
