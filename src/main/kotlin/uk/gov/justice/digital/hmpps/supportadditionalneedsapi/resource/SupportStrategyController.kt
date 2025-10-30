@@ -53,4 +53,14 @@ class SupportStrategyController(
     @PathVariable prisonNumber: String,
     @PathVariable supportStrategyReference: UUID,
   ): SupportStrategyResponse = supportStrategyService.getSupportStrategy(prisonNumber, supportStrategyReference)
+
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PutMapping("/{supportStrategyReference}/archive")
+  @PreAuthorize(HAS_EDIT_ELSP)
+  fun archiveSupportStrategy(
+    @PathVariable prisonNumber: String,
+    @PathVariable supportStrategyReference: UUID,
+  ) {
+    supportStrategyService.archiveSupportStrategy(prisonNumber, supportStrategyReference)
+  }
 }

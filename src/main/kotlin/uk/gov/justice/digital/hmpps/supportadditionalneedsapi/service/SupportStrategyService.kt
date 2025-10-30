@@ -58,6 +58,7 @@ class SupportStrategyService(
     type to supportStrategiesRequest
   }
 
+  @Transactional
   fun updateSupportStrategy(
     prisonNumber: String,
     supportStrategyReference: UUID,
@@ -85,5 +86,19 @@ class SupportStrategyService(
     )
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
     return supportStrategyMapper.toModel(supportStrategy)
+  }
+
+  @Transactional
+  fun archiveSupportStrategy(
+    prisonNumber: String,
+    supportStrategyReference: UUID,
+  ) {
+    val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
+      prisonNumber,
+      supportStrategyReference,
+    )
+      ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
+    supportStrategy.active = false
+    supportStrategyRepository.save(supportStrategy)
   }
 }
