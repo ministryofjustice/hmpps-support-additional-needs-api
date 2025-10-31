@@ -51,6 +51,43 @@ class GetStrengthTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get an archived strength for a given prisoner `() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    val entity = strengthRepository.saveAndFlush(
+      StrengthEntity(
+        prisonNumber = prisonNumber,
+        strengthType = memory,
+        createdAtPrison = "BXI",
+        updatedAtPrison = "BXI",
+        archiveReason = "archive reason",
+        active = false,
+      ),
+    )
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber, entity.reference)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(StrengthResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+    assertThat(actual!!.strengthType.code).isEqualTo("MEMORY")
+    assertThat(actual.archiveReason).isEqualTo("archive reason")
+  }
+
+  @Test
   fun `Return no strength for a given prisoner person has none`() {
     // Given
     stubGetTokenFromHmppsAuth()

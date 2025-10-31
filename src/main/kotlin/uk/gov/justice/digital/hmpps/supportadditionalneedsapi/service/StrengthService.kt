@@ -12,9 +12,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthAlnScreenerException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
@@ -117,6 +120,10 @@ class StrengthService(
     strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
+    if (!strength.active) {
+      throw StrengthArchivedException(prisonNumber, strengthReference)
+    }
+
     strength.symptoms = request.symptoms
     strength.howIdentified = strengthMapper.toEntity(request.howIdentified)
     strength.howIdentifiedOther = request.howIdentifiedOther
@@ -134,5 +141,27 @@ class StrengthService(
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
     return strengthMapper.toModel(strength)
+  }
+
+  fun archiveStrength(
+    prisonNumber: String,
+    strengthReference: UUID,
+    request: ArchiveStrengthRequest,
+  ) {
+    val strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+      ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
+
+    if (!strength.active) {
+      throw StrengthArchivedException(prisonNumber, strengthReference)
+    }
+    // only non screener strengths can be archived:
+    if (strength.alnScreenerId != null) {
+      throw StrengthAlnScreenerException(prisonNumber, strengthReference)
+    }
+
+    strength.active = false
+    strength.archiveReason = request.archiveReason
+    strength.updatedAtPrison = request.prisonId
+    strengthRepository.save(strength)
   }
 }

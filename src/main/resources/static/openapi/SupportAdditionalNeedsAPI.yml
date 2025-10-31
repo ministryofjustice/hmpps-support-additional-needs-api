@@ -479,7 +479,38 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Strength not found
+  '/profile/{prisonNumber}/strengths/{strengthReference}/archive':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: strengthReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific strength to archive
+    put:
+      summary: Archives a single strength by UUID.
+      description: |
+        Archives a specific strength associated with the given prison number.
 
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      operationId: archive-strength
+      requestBody:
+        $ref: '#/components/requestBodies/ArchiveStrength'
+      responses:
+        '204':
+          description: The strength was successfully archived.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:
@@ -851,6 +882,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ArchiveSupportStrategyRequest'
+
+    ArchiveStrength:
+      description: Request body to archive a strength for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArchiveStrengthRequest'
 
 
   #
@@ -1701,6 +1739,8 @@ components:
           type: boolean
           description: |
             Whether or not this strength is active
+        archiveReason:
+          type: string
       required:
         - reference
         - fromALNScreener
@@ -2269,6 +2309,21 @@ components:
 
     ArchiveSupportStrategyRequest:
       title: ArchiveSupportStrategyRequest
+      type: object
+      properties:
+        archiveReason:
+          type: string
+          description: Explanation as to why this record is archived.
+          minLength: 1
+          pattern: '.*\S.*'
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - archiveReason
+        - prisonId
+
+    ArchiveStrengthRequest:
+      title: ArchiveStrengthRequest
       type: object
       properties:
         archiveReason:
