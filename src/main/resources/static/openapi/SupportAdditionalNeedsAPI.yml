@@ -479,7 +479,34 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Strength not found
+  '/profile/{prisonNumber}/strengths/{strengthReference}/archive':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: strengthReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific strength to archive
+    put:
+      summary: Archives a single strength by UUID.
+      description: |
+        Archives a specific strength associated with the given prison number.
 
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      operationId: archive-strength
+      responses:
+        '204':
+          description: The strength was successfully archived.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
 
   '/profile/{prisonNumber}/reviews/review-schedules':
     parameters:

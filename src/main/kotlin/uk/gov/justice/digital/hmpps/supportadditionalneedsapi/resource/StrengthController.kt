@@ -50,4 +50,14 @@ class StrengthController(private val strengthService: StrengthService) {
     @PathVariable prisonNumber: String,
     @PathVariable strengthReference: UUID,
   ): StrengthResponse = strengthService.getStrength(prisonNumber, strengthReference)
+
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PutMapping("/{strengthReference}/archive")
+  @PreAuthorize(HAS_EDIT_ELSP)
+  fun archiveStrength(
+    @PathVariable prisonNumber: String,
+    @PathVariable strengthReference: UUID,
+  ) {
+    strengthService.archiveStrength(prisonNumber, strengthReference)
+  }
 }

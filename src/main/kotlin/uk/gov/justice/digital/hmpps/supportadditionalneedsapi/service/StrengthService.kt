@@ -135,4 +135,15 @@ class StrengthService(
 
     return strengthMapper.toModel(strength)
   }
+
+  fun archiveStrength(
+    prisonNumber: String,
+    strengthReference: UUID,
+  ) {
+    val strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+      ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
+
+    strength.active = false
+    strengthRepository.save(strength)
+  }
 }
