@@ -23,6 +23,9 @@ data class SupportStrategyEntity(
   @Column
   var detail: String? = null,
 
+  @Column
+  var archiveReason: String? = null,
+
   @Column(nullable = false)
   var active: Boolean = true,
 

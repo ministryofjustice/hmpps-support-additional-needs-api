@@ -9,8 +9,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Time
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.SupportStrategyRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SupportStrategyMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateSupportStrategiesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyRequest
@@ -70,6 +72,10 @@ class SupportStrategyService(
     )
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
 
+    if (!supportStrategy.active) {
+      throw SupportStrategyArchivedException(prisonNumber, supportStrategyReference)
+    }
+
     supportStrategy.detail = request.detail
     supportStrategy.updatedAtPrison = request.prisonId
 
@@ -92,13 +98,19 @@ class SupportStrategyService(
   fun archiveSupportStrategy(
     prisonNumber: String,
     supportStrategyReference: UUID,
+    request: ArchiveSupportStrategyRequest,
   ) {
     val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
       prisonNumber,
       supportStrategyReference,
     )
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
+    if (!supportStrategy.active) {
+      throw SupportStrategyArchivedException(prisonNumber, supportStrategyReference)
+    }
     supportStrategy.active = false
+    supportStrategy.updatedAtPrison = request.prisonId
+    supportStrategy.archiveReason = request.archiveReason
     supportStrategyRepository.save(supportStrategy)
   }
 }

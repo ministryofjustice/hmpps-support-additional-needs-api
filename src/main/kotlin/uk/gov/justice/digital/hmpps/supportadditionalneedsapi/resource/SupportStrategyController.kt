@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateSupportStrategiesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
@@ -60,7 +61,8 @@ class SupportStrategyController(
   fun archiveSupportStrategy(
     @PathVariable prisonNumber: String,
     @PathVariable supportStrategyReference: UUID,
+    @Valid @RequestBody request: ArchiveSupportStrategyRequest,
   ) {
-    supportStrategyService.archiveSupportStrategy(prisonNumber, supportStrategyReference)
+    supportStrategyService.archiveSupportStrategy(prisonNumber, supportStrategyReference, request)
   }
 }

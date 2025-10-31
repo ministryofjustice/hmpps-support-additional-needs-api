@@ -24,6 +24,8 @@ class ConditionNotFoundException(prisonNumber: String, reference: UUID) : Runtim
 
 class SupportStrategyNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Support Strategy with reference [$reference] not found for prisoner [$prisonNumber]")
 
+class SupportStrategyArchivedException(prisonNumber: String, reference: UUID) : RuntimeException("Support Strategy with reference [$reference] has been archived for prisoner [$prisonNumber]")
+
 class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] not found for prisoner [$prisonNumber]")
 
 class StrengthNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Strength with reference [$reference] not found for prisoner [$prisonNumber]")
