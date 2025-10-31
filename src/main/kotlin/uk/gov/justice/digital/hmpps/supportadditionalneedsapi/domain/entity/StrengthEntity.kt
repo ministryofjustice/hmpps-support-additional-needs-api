@@ -31,6 +31,9 @@ data class StrengthEntity(
   var symptoms: String? = null,
 
   @Column
+  var archiveReason: String? = null,
+
+  @Column
   @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
   var howIdentified: Set<IdentificationSource> = emptySet(),
 

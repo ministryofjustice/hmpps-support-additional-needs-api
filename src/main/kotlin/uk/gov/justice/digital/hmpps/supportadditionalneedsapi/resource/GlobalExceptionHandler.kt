@@ -29,6 +29,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonA
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthAlnScreenerException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
@@ -192,6 +194,8 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       PlanCreationScheduleStateException::class,
       CannotCompleteReviewWithNoSchedule::class,
       SupportStrategyArchivedException::class,
+      StrengthArchivedException::class,
+      StrengthAlnScreenerException::class,
     ],
   )
   protected fun handleExceptionReturnConflictErrorResponse(

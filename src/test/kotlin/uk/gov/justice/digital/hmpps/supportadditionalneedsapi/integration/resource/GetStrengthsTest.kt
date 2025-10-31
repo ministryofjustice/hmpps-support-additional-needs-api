@@ -66,6 +66,60 @@ class GetStrengthsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get list of non screener strengths for a given prisoner where one is archived`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "SENSORY_PROCESSING"))
+      ?: throw IllegalStateException("Reference data not found")
+    strengthRepository.saveAll(
+      listOf(
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = sensory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = memory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          archiveReason = "archive reason",
+          active = false,
+        ),
+      ),
+    )
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(StrengthListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+    assertThat(actual!!.strengths).hasSize(2)
+
+    val strengthCodes = actual.strengths.map { it.strengthType.code }
+    assertThat(strengthCodes).containsExactlyInAnyOrder("MEMORY", "SENSORY_PROCESSING")
+    actual.strengths.forEach {
+      assertThat(it.fromALNScreener).isFalse()
+    }
+    val archivedStrength = actual.strengths.first { it.strengthType.code == "MEMORY" }
+    assertThat(archivedStrength.active).isFalse()
+    assertThat(archivedStrength.archiveReason).isEqualTo("archive reason")
+  }
+
+  @Test
   fun `Get list of screener strengths for a given prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
@@ -57,7 +58,8 @@ class StrengthController(private val strengthService: StrengthService) {
   fun archiveStrength(
     @PathVariable prisonNumber: String,
     @PathVariable strengthReference: UUID,
+    @Valid @RequestBody request: ArchiveStrengthRequest,
   ) {
-    strengthService.archiveStrength(prisonNumber, strengthReference)
+    strengthService.archiveStrength(prisonNumber, strengthReference, request)
   }
 }
