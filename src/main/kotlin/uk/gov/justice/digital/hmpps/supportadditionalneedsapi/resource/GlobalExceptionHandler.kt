@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleStateException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 
@@ -190,6 +191,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       PersonAlreadyHasAPlanException::class,
       PlanCreationScheduleStateException::class,
       CannotCompleteReviewWithNoSchedule::class,
+      SupportStrategyArchivedException::class,
     ],
   )
   protected fun handleExceptionReturnConflictErrorResponse(

@@ -752,7 +752,9 @@ paths:
         '400':
           $ref: '#/components/responses/400Error'
         '404':
-          description: Support Strategy not found
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
   '/profile/{prisonNumber}/support-strategies/{supportStrategyReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
@@ -774,6 +776,8 @@ paths:
       tags:
         - Support Strategy
       operationId: archive-support-strategy
+      requestBody:
+        $ref: '#/components/requestBodies/ArchiveSupportStrategy'
       responses:
         '204':
           description: The support strategy was successfully archived.
@@ -781,6 +785,8 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
 components:
   securitySchemes:
     bearerAuth:
@@ -865,6 +871,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/UpdateSupportStrategyRequest'
+
+    ArchiveSupportStrategy:
+      description: Request body to archive a support strategy for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArchiveSupportStrategyRequest'
 
 
   #
@@ -2281,6 +2294,21 @@ components:
         - detail
         - prisonId
 
+    ArchiveSupportStrategyRequest:
+      title: ArchiveSupportStrategyRequest
+      type: object
+      properties:
+        archiveReason:
+          type: string
+          description: Explanation as to why this record is archived.
+          minLength: 1
+          pattern: '.*\S.*'
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - archiveReason
+        - prisonId
+
     SupportStrategyRequest:
       title: SupportStrategyRequest
       type: object
@@ -2305,6 +2333,8 @@ components:
           type: string
           format: uuid
         detail:
+          type: string
+        archiveReason:
           type: string
         supportStrategyType:
           $ref: '#/components/schemas/ReferenceData'

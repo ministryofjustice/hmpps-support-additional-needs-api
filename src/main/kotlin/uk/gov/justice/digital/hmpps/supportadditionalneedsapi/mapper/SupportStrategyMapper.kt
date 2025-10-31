@@ -29,6 +29,7 @@ class SupportStrategyMapper(
       supportStrategyType = supportStrategyType.toModel(),
       active = active,
       detail = detail,
+      archiveReason = archiveReason,
     )
   }
 
