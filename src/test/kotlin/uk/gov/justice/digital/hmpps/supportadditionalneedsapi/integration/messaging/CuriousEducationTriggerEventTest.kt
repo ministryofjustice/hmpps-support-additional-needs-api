@@ -5,6 +5,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
@@ -31,6 +32,12 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   @BeforeAll
   fun beforeAll() {
     stubForBankHoliday()
+  }
+
+  @BeforeEach
+  fun beforeEach() {
+    educationEnrolmentRepository.deleteAll()
+    educationRepository.deleteAll()
   }
 
   @Test
@@ -357,7 +364,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // also check the education enrolment(s) have been saved
     val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
     Assertions.assertThat(enrolments).hasSize(expectedNumberOfEnrolments)
-    Assertions.assertThat(enrolments[expectedNumberOfEnrolments - 1].endDate).isNull()
+    // Check that the CFI enrollment (current establishment) has no end date
+    val activeEnrolment = enrolments.find { it.establishmentId == "CFI" }
+    Assertions.assertThat(activeEnrolment).isNotNull()
+    Assertions.assertThat(activeEnrolment!!.endDate).isNull()
   }
 
   private fun putInTwoEducationAndValidate(prisonNumber: String, fundingType: String = "PES") {
