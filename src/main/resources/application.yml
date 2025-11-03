@@ -131,3 +131,4 @@ pes_contract_date: ${PES_CONTRACT_DATE}
 
 review:
   reviewDeadlineDaysToAdd: ${REVIEW_DEADLINE_DAYS_TO_ADD:5}
+  additionalReviewDateLogic: ${ADDITIONAL_REVIEW_DATE_LOGIC:true}
