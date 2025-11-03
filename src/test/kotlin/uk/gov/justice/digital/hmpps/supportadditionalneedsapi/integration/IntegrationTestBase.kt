@@ -115,7 +115,7 @@ abstract class IntegrationTestBase {
         registry.add("spring.datasource-primary.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource-primary.username", pgContainer::getUsername)
         registry.add("spring.datasource-primary.password", pgContainer::getPassword)
-        
+
         // Set properties for replica datasource (using same database for tests)
         registry.add("spring.datasource-replica.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource-replica.username", pgContainer::getUsername)
