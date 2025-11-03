@@ -126,34 +126,38 @@ class ReviewScheduleService(
     startDate: LocalDate,
     proposedDeadline: LocalDate,
   ): LocalDate {
-    var updatedDeadlineDate = minOf(current, proposedDeadline)
+    val updatedDeadlineDate = minOf(current, proposedDeadline)
+
+    // If additional logic is disabled, return early TODO remove this once we are happy
+    if (!reviewConfig.additionalReviewDateLogic) return updatedDeadlineDate
+
+    // if dates are different apply additional plan/review logic
     if (current != updatedDeadlineDate) {
-      if (reviewConfig.additionalReviewDateLogic) { // TODO remove this IF guard and config when we are happy with the logic
-        // At this point in the code the person has an existing review and has been put on another course
-        // If the start date of the new course is earlier than the date that the plan was created then we should
-        // not update the review date and keep it as is.
-        if (current != updatedDeadlineDate) {
-          val planCreationInstant = elspPlanRepository.findByPrisonNumber(prisonNumber)
-            ?.createdAt
-          planCreationInstant
-            ?.atZone(ZoneId.systemDefault())
-            ?.toLocalDate()
-            ?.takeIf { planCreationDate -> startDate < planCreationDate }
-            ?.let { updatedDeadlineDate = current } // short circuit so that the deadline date isn't changed.
-        }
+      val zoneId = ZoneId.systemDefault()
+      // At this point in the code the person has an existing review and has been put on another course
+      // If the start date of the new course is earlier than the date that the plan was created then we should
+      // not update the review date and keep it as is.
+
+      val planCreationDate: LocalDate? = elspPlanRepository.findByPrisonNumber(prisonNumber)
+        ?.createdAt
+        ?.atZone(zoneId)
+        ?.toLocalDate()
+
+      if (planCreationDate != null && startDate < planCreationDate) {
+        return current
       }
 
-      // or if the most recent review was after the start date
-      if (current != updatedDeadlineDate) {
-        val reviewCreatedInstant = elspReviewRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-          ?.createdAt
-        reviewCreatedInstant
-          ?.atZone(ZoneId.systemDefault())
-          ?.toLocalDate()
-          ?.takeIf { reviewCreatedDate -> reviewCreatedDate < current }
-          ?.let { updatedDeadlineDate = current } // short circuit so that the deadline date isn't changed.
+      val lastReviewCreatedDate: LocalDate? = elspReviewRepository
+        .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+        ?.createdAt
+        ?.atZone(zoneId)
+        ?.toLocalDate()
+
+      if (lastReviewCreatedDate != null && startDate < lastReviewCreatedDate) {
+        return current
       }
     }
+
     return updatedDeadlineDate
   }
 

@@ -76,8 +76,8 @@ data class ElspPlanEntity(
   var createdBy: String? = null,
 
   @CreationTimestamp
-  @Column(updatable = false)
-  var createdAt: Instant? = null,
+  @Column
+  var createdAt: Instant? = Instant.now(),
 
   @LastModifiedBy
   @Column

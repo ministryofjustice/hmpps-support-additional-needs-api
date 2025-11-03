@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Cond
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
@@ -85,7 +86,9 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.time.Instant
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 import java.util.*
 import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.concurrent.TimeUnit.SECONDS
@@ -380,6 +383,26 @@ abstract class IntegrationTestBase {
     )
 
     elspPlanRepository.save(elsp)
+  }
+
+  fun anOldElSPExists(prisonNumber: String): ElspPlanEntity {
+    val elsp = ElspPlanEntity(
+      prisonNumber = prisonNumber,
+      updatedAtPrison = "BXI",
+      hasCurrentEhcp = true,
+      individualSupport = "support",
+      planCreatedByJobRole = "Education coordinator",
+      planCreatedByName = "Bob Smith",
+      teachingAdjustments = "teachingAdjustments",
+      specificTeachingSkills = "specificTeachingSkills",
+      examAccessArrangements = "examAccessArrangements",
+      lnspSupport = "lnspSupport",
+      lnspSupportHours = 2,
+      detail = "detail",
+      createdAtPrison = "BXI",
+      createdAt = Instant.now().minus(90, ChronoUnit.DAYS),
+    )
+    return elspPlanRepository.saveAndFlush(elsp)
   }
 
   fun anElSPReviewExists(prisonNumber: String, reviewScheduleReference: UUID): ElspReviewEntity {

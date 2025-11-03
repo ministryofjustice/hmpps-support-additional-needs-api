@@ -292,10 +292,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
-    anElSPExists(prisonNumber = prisonNumber)
+    anOldElSPExists(prisonNumber = prisonNumber)
     val oldReviewSchedule = aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(1), status = ReviewScheduleStatus.COMPLETED)
     anElSPReviewExists(prisonNumber = prisonNumber, oldReviewSchedule.reference)
-    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(2))
+    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
     // person has a need:
     aValidChallengeExists(prisonNumber)
     putInEducationAndValidate(prisonNumber)
@@ -303,7 +303,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Then
     // the reviewSchedule should be marked as exempt
     val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(2))
+    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(1))
   }
 
   @Test
