@@ -6,7 +6,9 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
 import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ComponentScan.Filter
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.FilterType
 import org.springframework.context.annotation.Primary
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.orm.jpa.JpaTransactionManager
@@ -22,8 +24,8 @@ import javax.sql.DataSource
   transactionManagerRef = "primaryTransactionManager",
   basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository"],
   excludeFilters = [
-    org.springframework.context.annotation.ComponentScan.Filter(
-      type = org.springframework.context.annotation.FilterType.REGEX,
+    Filter(
+      type = FilterType.REGEX,
       pattern = ["uk\\.gov\\.justice\\.digital\\.hmpps\\.supportadditionalneedsapi\\.domain\\.repository\\.reporting\\..*"],
     ),
   ],
@@ -53,17 +55,11 @@ class PrimaryDataSourceConfig {
   @Primary
   fun primaryEntityManagerFactory(
     @Qualifier("primaryDataSource") dataSource: DataSource,
-    @Qualifier("primaryJpaProperties") jpaProperties: JpaProperties,
   ): LocalContainerEntityManagerFactoryBean = LocalContainerEntityManagerFactoryBean().apply {
     setDataSource(dataSource)
     setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
     persistenceUnitName = "primary"
     setPackagesToScan("uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity")
-
-    val properties = HashMap<String, Any?>()
-    properties.putAll(jpaProperties.properties)
-    properties["hibernate.dialect"] = "org.hibernate.dialect.PostgreSQLDialect"
-    setJpaPropertyMap(properties)
   }
 
   @Bean(name = ["primaryTransactionManager"])

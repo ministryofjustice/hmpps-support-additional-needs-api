@@ -64,9 +64,9 @@ spring:
       validationTimeout: 500
 
   datasource-replica:
-    url: 'jdbc:postgresql://${DB_REPLICA_SERVER:${DB_SERVER}}/${DB_REPLICA_NAME:${DB_NAME}}?sslmode=verify-full'
-    username: ${DB_REPLICA_USER:${DB_USER}}
-    password: ${DB_REPLICA_PASS:${DB_PASS}}
+    url: 'jdbc:postgresql://${DB_REPLICA_SERVER}/${DB_REPLICA_NAME}?sslmode=verify-full'
+    username: ${DB_REPLICA_USER}
+    password: ${DB_REPLICA_PASS}
     hikari:
       pool-name: SupportAdditionalNeeds-Replica-CP
       connectionTimeout: 3000
