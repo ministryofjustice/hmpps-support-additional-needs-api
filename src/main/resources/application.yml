@@ -54,7 +54,7 @@ spring:
       org.hibernate.envers.store_data_at_delete: true
       org.hibernate.envers.do_not_audit_optimistic_locking_field: false
 
-  datasource:
+  datasource-primary:
     url: 'jdbc:postgresql://${DB_SERVER}/${DB_NAME}?sslmode=verify-full'
     username: ${DB_USER}
     password: ${DB_PASS}
@@ -64,9 +64,9 @@ spring:
       validationTimeout: 500
 
   flyway:
-    url: ${spring.datasource.url}
-    user: ${spring.datasource.username}
-    password: ${spring.datasource.password}
+    url: ${spring.datasource-primary.url}
+    user: ${spring.datasource-primary.username}
+    password: ${spring.datasource-primary.password}
     validateMigrationNaming: true
     locations: classpath:/db/migration/common,classpath:/db/migration/prod,classpath:/db/postgres/common,classpath:/db/postgres/prod
     placeholders:
