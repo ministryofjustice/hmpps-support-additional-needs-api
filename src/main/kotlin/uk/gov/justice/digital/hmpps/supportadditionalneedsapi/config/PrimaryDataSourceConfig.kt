@@ -55,11 +55,17 @@ class PrimaryDataSourceConfig {
   @Primary
   fun primaryEntityManagerFactory(
     @Qualifier("primaryDataSource") dataSource: DataSource,
+    @Qualifier("primaryJpaProperties") jpaProperties: JpaProperties,
   ): LocalContainerEntityManagerFactoryBean = LocalContainerEntityManagerFactoryBean().apply {
     setDataSource(dataSource)
     setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
     persistenceUnitName = "primary"
     setPackagesToScan("uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity")
+
+    val properties = HashMap<String, Any?>()
+    properties.putAll(jpaProperties.properties)
+    properties["hibernate.physical_naming_strategy"] = "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy"
+    setJpaPropertyMap(properties)
   }
 
   @Bean(name = ["primaryTransactionManager"])

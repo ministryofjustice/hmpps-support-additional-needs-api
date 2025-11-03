@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config
 import org.hibernate.jpa.HibernatePersistenceProvider
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties
+import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -37,11 +38,18 @@ class ReplicaDataSourceConfig {
   @Bean(name = ["replicaEntityManagerFactory"])
   fun replicaEntityManagerFactory(
     @Qualifier("replicaDataSource") dataSource: DataSource,
+    @Qualifier("primaryJpaProperties") jpaProperties: JpaProperties,
   ): LocalContainerEntityManagerFactoryBean = LocalContainerEntityManagerFactoryBean().apply {
     setDataSource(dataSource)
     setPersistenceProviderClass(HibernatePersistenceProvider::class.java)
     persistenceUnitName = "replica"
     setPackagesToScan("uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity")
+
+    val properties = HashMap<String, Any?>()
+    properties.putAll(jpaProperties.properties)
+    properties["hibernate.physical_naming_strategy"] = "org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy"
+    properties["hibernate.connection.readOnly"] = true
+    setJpaPropertyMap(properties)
   }
 
   @Bean(name = ["replicaTransactionManager"])

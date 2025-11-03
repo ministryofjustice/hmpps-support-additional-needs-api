@@ -6,10 +6,27 @@ management.endpoint:
   info.cache.time-to-live: 0
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   jpa:
     show-sql: true
-  datasource:
-     url: 'jdbc:postgresql://${DB_SERVER:localhost:5432}/${DB_NAME:support-additional-needs-api-db}?currentSchema=public&user=${DB_USER:admin}&password=${DB_PASS:admin_password}&sslmode=disable'
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  datasource-primary:
+    url: 'jdbc:postgresql://${DB_SERVER:localhost:5432}/${DB_NAME:support-additional-needs-api-db}?currentSchema=public&user=${DB_USER:admin}&password=${DB_PASS:admin_password}&sslmode=disable'
+    hikari:
+      pool-name: SupportAdditionalNeeds-Primary-Test
+      maximum-pool-size: 5
+  datasource-replica:
+    # For now, use the same database as primary
+    url: 'jdbc:postgresql://${DB_SERVER:localhost:5432}/${DB_NAME:support-additional-needs-api-db}?currentSchema=public&user=${DB_USER:admin}&password=${DB_PASS:admin_password}&sslmode=disable'
+    hikari:
+      pool-name: SupportAdditionalNeeds-Replica-Test
+      maximum-pool-size: 3
+      read-only: false  # Set to false for tests since it's the same DB
+  flyway:
+    enabled: false
 
 hmpps-auth:
   url: "http://localhost:8090/auth"
