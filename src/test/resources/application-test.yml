@@ -26,7 +26,11 @@ spring:
       maximum-pool-size: 3
       read-only: false  # Set to false for tests since it's the same DB
   flyway:
-    enabled: false
+    enabled: true
+    locations: classpath:migration
+    placeholders:
+      dpr_user: DPR_USER
+      dpr_password: DPR_PASSWORD
 
 hmpps-auth:
   url: "http://localhost:8090/auth"
