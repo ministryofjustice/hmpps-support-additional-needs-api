@@ -100,7 +100,7 @@ class ArchiveSupportStrategiesTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `attempt to update a support strategy that does not exist`() {
+  fun `attempt to archive a support strategy that does not exist`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")

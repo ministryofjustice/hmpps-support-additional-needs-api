@@ -34,6 +34,7 @@ class StrengthMapper(
       howIdentified = toModel(howIdentified),
       howIdentifiedOther = howIdentifiedOther,
       active = active,
+      archiveReason = archiveReason,
       alnScreenerDate = if (fromALNScreener) screenerDate else null,
     )
   }

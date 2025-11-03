@@ -30,6 +30,10 @@ class ChallengeNotFoundException(prisonNumber: String, reference: UUID) : Runtim
 
 class StrengthNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Strength with reference [$reference] not found for prisoner [$prisonNumber]")
 
+class StrengthArchivedException(prisonNumber: String, reference: UUID) : RuntimeException("Strength with reference [$reference] has been archived for prisoner [$prisonNumber]")
+
+class StrengthAlnScreenerException(prisonNumber: String, reference: UUID) : RuntimeException("Strength with reference [$reference] cannot be archived as it is an ALN screener strength for prisoner [$prisonNumber]")
+
 class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
 
 class PlanNotFoundException(prisonNumber: String) : RuntimeException("ELSP plan not found for prisoner [$prisonNumber]")
