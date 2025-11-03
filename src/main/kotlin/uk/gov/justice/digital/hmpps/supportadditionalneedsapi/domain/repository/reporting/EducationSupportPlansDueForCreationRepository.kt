@@ -1,15 +1,14 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting
 
-import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.Repository
 import org.springframework.data.repository.query.Param
-import org.springframework.stereotype.Repository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import java.time.LocalDate
 import java.util.UUID
 
-@Repository
-interface EducationSupportPlansDueForCreationRepository : JpaRepository<PlanCreationScheduleEntity, UUID> {
+@org.springframework.stereotype.Repository
+interface EducationSupportPlansDueForCreationRepository : Repository<PlanCreationScheduleEntity, UUID> {
 
   @Query(
     """
