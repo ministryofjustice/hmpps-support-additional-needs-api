@@ -110,8 +110,8 @@ abstract class IntegrationTestBase {
     @JvmStatic
     @DynamicPropertySource
     fun properties(registry: DynamicPropertyRegistry) {
-      pgContainer?.run {
-        // Set properties for primary datasource
+      if (pgContainer != null) {
+        // Use TestContainers PostgreSQL instance
         registry.add("spring.datasource-primary.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource-primary.username", pgContainer::getUsername)
         registry.add("spring.datasource-primary.password", pgContainer::getPassword)
@@ -120,6 +120,18 @@ abstract class IntegrationTestBase {
         registry.add("spring.datasource-replica.url", pgContainer::getJdbcUrl)
         registry.add("spring.datasource-replica.username", pgContainer::getUsername)
         registry.add("spring.datasource-replica.password", pgContainer::getPassword)
+      } else {
+        // PostgreSQL is already running locally (e.g., in CI with docker-compose)
+        // Use the same format as in application-test.yml but with explicit values
+        val dbUrl = "jdbc:postgresql://localhost:5432/support-additional-needs-api-db?currentSchema=public&user=admin&password=admin_password&sslmode=disable"
+
+        // Set properties for primary datasource
+        registry.add("spring.datasource-primary.url") { dbUrl }
+        registry.add("spring.datasource-primary.hikari.maximum-pool-size") { 5 }
+
+        // Set properties for replica datasource (using same database for tests)
+        registry.add("spring.datasource-replica.url") { dbUrl }
+        registry.add("spring.datasource-replica.hikari.maximum-pool-size") { 3 }
       }
 
       System.setProperty("aws.region", "eu-west-2")
