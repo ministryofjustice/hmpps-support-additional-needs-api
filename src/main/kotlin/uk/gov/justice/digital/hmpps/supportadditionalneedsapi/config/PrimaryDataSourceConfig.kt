@@ -8,6 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.ComponentScan.Filter
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.DependsOn
 import org.springframework.context.annotation.FilterType
 import org.springframework.context.annotation.Primary
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
@@ -53,6 +54,7 @@ class PrimaryDataSourceConfig {
 
   @Bean(name = ["primaryEntityManagerFactory"])
   @Primary
+  @DependsOn("flywayInitializer") // Ensure Flyway runs before JPA
   fun primaryEntityManagerFactory(
     @Qualifier("primaryDataSource") dataSource: DataSource,
     @Qualifier("primaryJpaProperties") jpaProperties: JpaProperties,
