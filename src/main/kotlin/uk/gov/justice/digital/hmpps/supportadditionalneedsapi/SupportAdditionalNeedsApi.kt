@@ -9,11 +9,13 @@ import org.springframework.boot.runApplication
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.scheduling.annotation.EnableAsync
 
-@SpringBootApplication(exclude = [
+@SpringBootApplication(
+  exclude = [
     DataSourceAutoConfiguration::class,
     HibernateJpaAutoConfiguration::class,
-    FlywayAutoConfiguration::class
-])
+    FlywayAutoConfiguration::class,
+  ],
+)
 @ConfigurationPropertiesScan
 @EnableJpaAuditing
 @EnableAsync
