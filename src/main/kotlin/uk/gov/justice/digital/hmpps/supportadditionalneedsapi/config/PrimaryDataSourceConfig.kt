@@ -22,7 +22,7 @@ import javax.sql.DataSource
 @EnableJpaRepositories(
   entityManagerFactoryRef = "primaryEntityManagerFactory",
   transactionManagerRef = "primaryTransactionManager",
-  basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository"]
+  basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository"],
 )
 class PrimaryDataSourceConfig {
 
@@ -34,8 +34,7 @@ class PrimaryDataSourceConfig {
   @Bean
   @Primary
   @ConfigurationProperties("spring.datasource-primary.hikari")
-  fun primaryDataSource(primaryDataSourceProperties: DataSourceProperties): DataSource =
-    primaryDataSourceProperties.initializeDataSourceBuilder().build()
+  fun primaryDataSource(primaryDataSourceProperties: DataSourceProperties): DataSource = primaryDataSourceProperties.initializeDataSourceBuilder().build()
 
   @Bean
   @Primary
@@ -44,11 +43,11 @@ class PrimaryDataSourceConfig {
     @Qualifier("primaryDataSource") dataSource: DataSource,
     builder: EntityManagerFactoryBuilder,
     jpaProperties: JpaProperties,
-    hibernateProperties: HibernateProperties
+    hibernateProperties: HibernateProperties,
   ): LocalContainerEntityManagerFactoryBean {
     val properties = hibernateProperties.determineHibernateProperties(
       jpaProperties.properties,
-      HibernateSettings()
+      HibernateSettings(),
     )
     return builder
       .dataSource(dataSource)
@@ -60,6 +59,5 @@ class PrimaryDataSourceConfig {
 
   @Bean
   @Primary
-  fun primaryTransactionManager(@Qualifier("primaryEntityManagerFactory") primaryEntityManagerFactory: LocalContainerEntityManagerFactoryBean) =
-    JpaTransactionManager(primaryEntityManagerFactory.`object`!!)
+  fun primaryTransactionManager(@Qualifier("primaryEntityManagerFactory") primaryEntityManagerFactory: LocalContainerEntityManagerFactoryBean) = JpaTransactionManager(primaryEntityManagerFactory.`object`!!)
 }
