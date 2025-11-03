@@ -46,6 +46,7 @@ dependencies {
 
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
+  implementation("org.flywaydb:flyway-core")
   runtimeOnly("org.flywaydb:flyway-database-postgresql")
   runtimeOnly("org.postgresql:postgresql:$postgresqlVersion")
   implementation("org.hibernate.orm:hibernate-envers")
