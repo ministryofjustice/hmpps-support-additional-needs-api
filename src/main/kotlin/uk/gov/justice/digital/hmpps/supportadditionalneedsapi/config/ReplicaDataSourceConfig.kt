@@ -20,7 +20,7 @@ import javax.sql.DataSource
 @EnableJpaRepositories(
   entityManagerFactoryRef = "replicaEntityManagerFactory",
   transactionManagerRef = "replicaTransactionManager",
-  basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting"],
+  basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository"],
 )
 class ReplicaDataSourceConfig {
 

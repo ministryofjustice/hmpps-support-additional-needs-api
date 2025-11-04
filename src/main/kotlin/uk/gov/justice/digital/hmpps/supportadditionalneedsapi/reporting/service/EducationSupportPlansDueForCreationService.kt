@@ -1,11 +1,11 @@
-package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.reporting
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.service
 
 import com.fasterxml.jackson.dataformat.csv.CsvMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting.EducationSupportPlansDueForCreationRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.EducationSupportPlansDueForCreationRepository
 import java.time.LocalDate
 
 private val log = KotlinLogging.logger {}

@@ -4,8 +4,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.reporting.EducationSupportPlansDueForCreationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.EducationSupportPlansDueForCreationRepository
 import javax.sql.DataSource
 
 class ReplicaDatabaseRoutingTest : IntegrationTestBase() {
