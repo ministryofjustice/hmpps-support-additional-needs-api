@@ -58,6 +58,7 @@ class ConditionService(
     type to conditionRequest
   }
 
+  @Transactional
   fun updateCondition(
     prisonNumber: String,
     conditionReference: UUID,

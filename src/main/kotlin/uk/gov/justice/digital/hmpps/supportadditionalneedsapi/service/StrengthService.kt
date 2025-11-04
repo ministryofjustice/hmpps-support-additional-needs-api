@@ -111,6 +111,7 @@ class StrengthService(
     type to Strength
   }
 
+  @Transactional
   fun updateStrength(
     prisonNumber: String,
     strengthReference: UUID,
@@ -143,6 +144,7 @@ class StrengthService(
     return strengthMapper.toModel(strength)
   }
 
+  @Transactional
   fun archiveStrength(
     prisonNumber: String,
     strengthReference: UUID,
