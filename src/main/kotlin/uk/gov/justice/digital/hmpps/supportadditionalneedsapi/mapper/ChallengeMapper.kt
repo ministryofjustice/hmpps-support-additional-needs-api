@@ -35,6 +35,7 @@ class ChallengeMapper(
       howIdentifiedOther = howIdentifiedOther,
       alnScreenerDate = if (fromALNScreener) screenerDate else null,
       active = active,
+      archiveReason = archiveReason,
     )
   }
 

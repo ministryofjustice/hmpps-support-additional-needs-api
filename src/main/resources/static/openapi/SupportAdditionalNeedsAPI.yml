@@ -347,6 +347,39 @@ paths:
         '404':
           description: Challenge not found
 
+  '/profile/{prisonNumber}/challenge/{strengthReference}/archive':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: challengeReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific challenge to archive
+    put:
+      summary: Archives a single challenge by UUID.
+      description: |
+        Archives a specific challenge associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      operationId: archive-challenge
+      requestBody:
+        $ref: '#/components/requestBodies/ArchiveChallenge'
+      responses:
+        '204':
+          description: The challenge was successfully archived.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+
   '/profile/{prisonNumber}/strengths':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
@@ -889,6 +922,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ArchiveStrengthRequest'
+
+    ArchiveChallenge:
+      description: Request body to archive a challenge for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArchiveChallengeRequest'
 
 
   #
@@ -1667,6 +1707,10 @@ components:
           type: boolean
           description: |
             Whether or not this challenge is active
+        archiveReason:
+          type: string
+          description: Details about why this challenge was archived
+          example: His hearing improved dramatiacally with an implant.
       required:
         - reference
         - fromALNScreener
@@ -2324,6 +2368,21 @@ components:
 
     ArchiveStrengthRequest:
       title: ArchiveStrengthRequest
+      type: object
+      properties:
+        archiveReason:
+          type: string
+          description: Explanation as to why this record is archived.
+          minLength: 1
+          pattern: '.*\S.*'
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - archiveReason
+        - prisonId
+
+    ArchiveChallengeRequest:
+      title: ArchiveChallengeRequest
       type: object
       properties:
         archiveReason:

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
@@ -50,4 +51,15 @@ class ChallengeController(private val challengeService: ChallengeService) {
     @PathVariable challengeReference: UUID,
     @Valid @RequestBody request: UpdateChallengeRequest,
   ): ChallengeResponse = challengeService.updateChallenge(prisonNumber, challengeReference, request)
+
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PutMapping("/{challengeReference}/archive")
+  @PreAuthorize(HAS_EDIT_ELSP)
+  fun archiveChallenge(
+    @PathVariable prisonNumber: String,
+    @PathVariable challengeReference: UUID,
+    @Valid @RequestBody request: ArchiveChallengeRequest,
+  ) {
+    challengeService.archiveChallenge(prisonNumber, challengeReference, request)
+  }
 }
