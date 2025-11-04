@@ -58,7 +58,12 @@ generic-service:
       DB_NAME: "database_name"
       DB_USER: "database_username"
       DB_PASS: "database_password"
+      REPLICA_DB_USER: "database_username"
+      REPLICA_DB_PASS: "database_password"
+      REPLICA_DB_NAME: "database_name"
 
+    rds-postgresql-read-replica-output:
+      REPLICA_DB_SERVER: "rds_instance_address"
     # Inbound SQS config
     hmpps-domain-events-topic:
       HMPPS_SQS_TOPICS_DOMAINEVENTS_ARN: "topic_arn"

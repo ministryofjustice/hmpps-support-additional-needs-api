@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.reporting
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.controller
 
 import io.swagger.v3.oas.annotations.Hidden
 import org.springframework.format.annotation.DateTimeFormat
@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.service.EducationSupportPlansDueForCreationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.HAS_VIEW_ELSP
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.reporting.EducationSupportPlansDueForCreationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.validator.ValidDateRange
 import java.time.LocalDate
 
