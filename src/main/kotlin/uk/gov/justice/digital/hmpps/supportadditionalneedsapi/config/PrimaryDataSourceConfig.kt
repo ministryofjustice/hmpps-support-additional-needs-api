@@ -8,8 +8,10 @@ import org.springframework.boot.autoconfigure.orm.jpa.JpaProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.orm.jpa.EntityManagerFactoryBuilder
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.DependsOn
+import org.springframework.context.annotation.FilterType
 import org.springframework.context.annotation.Primary
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import org.springframework.orm.jpa.JpaTransactionManager
@@ -23,6 +25,12 @@ import javax.sql.DataSource
   entityManagerFactoryRef = "primaryEntityManagerFactory",
   transactionManagerRef = "primaryTransactionManager",
   basePackages = ["uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository"],
+  excludeFilters = [
+    ComponentScan.Filter(
+      type = FilterType.REGEX,
+      pattern = ["uk\\.gov\\.justice\\.digital\\.hmpps\\.supportadditionalneedsapi\\.domain\\.repository\\.reporting\\..*"],
+    ),
+  ],
 )
 class PrimaryDataSourceConfig {
 
