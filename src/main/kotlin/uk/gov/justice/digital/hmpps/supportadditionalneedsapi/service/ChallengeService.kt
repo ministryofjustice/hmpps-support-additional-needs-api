@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -12,9 +13,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeAlnScreenerException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ChallengeMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
@@ -23,6 +27,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Upd
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
 
+private val log = KotlinLogging.logger {}
+
 @Service
 class ChallengeService(
   private val challengeRepository: ChallengeRepository,
@@ -30,6 +36,7 @@ class ChallengeService(
   private val challengeMapper: ChallengeMapper,
   private val alnScreenerRepository: AlnScreenerRepository,
   private val scheduleService: ScheduleService,
+  private val needService: NeedService,
 ) {
   fun getChallenges(prisonNumber: String): ChallengeListResponse {
     val nonAlnChallenges = challengeRepository
@@ -119,6 +126,7 @@ class ChallengeService(
     type to challenge
   }
 
+  @Transactional
   fun updateChallenge(
     prisonNumber: String,
     challengeReference: UUID,
@@ -144,5 +152,39 @@ class ChallengeService(
     challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
     return challengeMapper.toModel(challenge)
+  }
+
+  @Transactional
+  fun archiveChallenge(
+    prisonNumber: String,
+    challengeReference: UUID,
+    request: ArchiveChallengeRequest,
+  ) {
+    val challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
+
+    if (!challenge.active) {
+      throw ChallengeArchivedException(prisonNumber, challengeReference)
+    }
+    // only non screener challenge can be archived:
+    if (challenge.alnScreenerId != null) {
+      throw ChallengeAlnScreenerException(prisonNumber, challengeReference)
+    }
+
+    challenge.active = false
+    challenge.archiveReason = request.archiveReason
+    challenge.updatedAtPrison = request.prisonId
+    challengeRepository.save(challenge)
+
+    // has this changed the persons need? do we need to update MN?
+    val hasNeed = needService.hasNeed(prisonNumber = prisonNumber)
+    // has archiving this record caused the overall need changed?
+    if (!hasNeed) {
+      log.info("Prisoner $prisonNumber no longer has a need due to archived challenge.")
+      scheduleService.processNeedChange(prisonNumber, hasNeed, prisonId = request.prisonId)
+    } else {
+      log.info("The challenge update did not change the overall need of $prisonNumber")
+    }
+    log.info("Processed Archive challenge for $prisonNumber")
   }
 }

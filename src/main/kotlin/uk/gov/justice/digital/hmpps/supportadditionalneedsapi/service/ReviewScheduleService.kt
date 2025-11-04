@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.C
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventPub
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
 import java.time.LocalDate
+import java.time.ZoneId
 
 private val log = KotlinLogging.logger {}
 
@@ -28,7 +30,9 @@ class ReviewScheduleService(
   @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val workingDayService: WorkingDayService,
   private val reviewRepository: ElspReviewRepository,
+  private val elspPlanRepository: ElspPlanRepository,
   private val reviewConfig: ReviewConfig,
+  private val elspReviewRepository: ElspReviewRepository,
 ) {
 
   fun getSchedules(prisonNumber: String): ReviewSchedulesResponse {
@@ -83,7 +87,12 @@ class ReviewScheduleService(
   }
 
   @Transactional
-  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, prisonId: String) {
+  fun createOrUpdateDueToEducationUpdate(
+    prisonNumber: String,
+    startDate: LocalDate,
+    fundingType: String,
+    prisonId: String,
+  ) {
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     val proposedDeadline = getDeadlineDate(startDate)
 
@@ -97,24 +106,66 @@ class ReviewScheduleService(
       return
     }
 
-    // Choose the earlier of the two deadlines; if unchanged do nothing
     val current = existing.deadlineDate
-    val desired = minOf(current, proposedDeadline)
+    val updatedDeadlineDate = getUpdatedDeadlineDate(current, prisonNumber, startDate, proposedDeadline)
 
-    if (current != desired) {
-      existing.deadlineDate = desired
+    // If it has changed then update the date and publish messages otherwise just log that it didn't change
+    if (current != updatedDeadlineDate) {
+      existing.deadlineDate = updatedDeadlineDate
       reviewScheduleRepository.save(existing)
       eventPublisher.createAndPublishReviewScheduleEvent(prisonNumber)
-      log.info("Review schedule deadline date updated to $desired for $prisonNumber, days to add was configured as $reviewConfig.reviewDeadlineDaysToAdd days")
+      log.info("Review schedule deadline date updated to $updatedDeadlineDate for $prisonNumber, days to add was configured as ${reviewConfig.reviewDeadlineDaysToAdd} days")
     } else {
-      log.info("Review date was unchanged for $prisonNumber the current deadline date was $current and the proposed was $proposedDeadline, days to add was configured as $reviewConfig.reviewDeadlineDaysToAdd days")
+      log.info("Review date was unchanged for $prisonNumber the current deadline date was $current and the proposed was $proposedDeadline, days to add was configured as ${reviewConfig.reviewDeadlineDaysToAdd} days")
     }
+  }
+
+  private fun getUpdatedDeadlineDate(
+    current: LocalDate,
+    prisonNumber: String,
+    startDate: LocalDate,
+    proposedDeadline: LocalDate,
+  ): LocalDate {
+    val updatedDeadlineDate = minOf(current, proposedDeadline)
+
+    // If additional logic is disabled, return early TODO remove this once we are happy
+    if (!reviewConfig.additionalReviewDateLogic) return updatedDeadlineDate
+
+    // if dates are different apply additional plan/review logic
+    if (current != updatedDeadlineDate) {
+      val zoneId = ZoneId.systemDefault()
+      // At this point in the code the person has an existing review and has been put on another course
+      // If the start date of the new course is earlier than the date that the plan was created then we should
+      // not update the review date and keep it as is.
+
+      val planCreationDate: LocalDate? = elspPlanRepository.findByPrisonNumber(prisonNumber)
+        ?.createdAt
+        ?.atZone(zoneId)
+        ?.toLocalDate()
+
+      if (planCreationDate != null && startDate < planCreationDate) {
+        return current
+      }
+
+      val lastReviewCreatedDate: LocalDate? = elspReviewRepository
+        .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+        ?.createdAt
+        ?.atZone(zoneId)
+        ?.toLocalDate()
+
+      if (lastReviewCreatedDate != null && startDate < lastReviewCreatedDate) {
+        return current
+      }
+    }
+
+    return updatedDeadlineDate
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
     val startDatePlusFive =
       workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, educationStartDate)
-    val pesPlusFive = workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, pesContractDate)
+    val pesPlusFive =
+      workingDayService.getNextWorkingDayNDaysFromDate(reviewConfig.reviewDeadlineDaysToAdd, pesContractDate)
     return maxOf(startDatePlusFive, pesPlusFive)
   }
 

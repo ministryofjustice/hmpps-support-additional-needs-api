@@ -36,6 +36,7 @@ generic-service:
     ENABLE_TEST_ENDPOINTS: false
     REVIEW_DEADLINE_DAYS_TO_ADD: 5
     HMPPS_SAR_ADDITIONALACCESSROLE: ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW
+    ADDITIONAL_REVIEW_DATE_LOGIC: false
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:

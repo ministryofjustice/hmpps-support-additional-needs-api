@@ -17,7 +17,7 @@ class GetChallengeTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Get a challenges for a given prisoner by reference`() {
+  fun `Get a challenge for a given prisoner by reference`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
@@ -47,6 +47,43 @@ class GetChallengeTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull()
     assertThat(actual!!.challengeType.code).isEqualTo("SENSORY_PROCESSING")
+  }
+
+  @Test
+  fun `Get an archived challenge for a given prisoner by reference`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
+      ?: throw IllegalStateException("Reference data not found")
+    val challengeEntity = challengeRepository.saveAndFlush(
+      ChallengeEntity(
+        prisonNumber = prisonNumber,
+        challengeType = sensory,
+        createdAtPrison = "BXI",
+        updatedAtPrison = "BXI",
+        active = false,
+        archiveReason = "archive reason",
+      ),
+    )
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber, challengeEntity.reference)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(ChallengeResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+    assertThat(actual!!.challengeType.code).isEqualTo("SENSORY_PROCESSING")
+    assertThat(actual.active).isFalse()
+    assertThat(actual.archiveReason).isEqualTo("archive reason")
   }
 
   @Test
