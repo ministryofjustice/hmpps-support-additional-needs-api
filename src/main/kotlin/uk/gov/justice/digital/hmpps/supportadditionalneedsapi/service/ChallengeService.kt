@@ -126,6 +126,7 @@ class ChallengeService(
     type to challenge
   }
 
+  @Transactional
   fun updateChallenge(
     prisonNumber: String,
     challengeReference: UUID,
@@ -153,6 +154,7 @@ class ChallengeService(
     return challengeMapper.toModel(challenge)
   }
 
+  @Transactional
   fun archiveChallenge(
     prisonNumber: String,
     challengeReference: UUID,
