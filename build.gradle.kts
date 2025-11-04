@@ -31,7 +31,7 @@ val postgresqlVersion = "42.7.8"
 val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.3"
 val buildDirectory: Directory = layout.buildDirectory.get()
-val springdocOpenapiVersion = "2.8.13"
+val springdocOpenapiVersion = "2.8.14"
 val hmppsSqsVersion = "5.6.1"
 val awaitilityVersion = "4.3.0"
 
@@ -42,7 +42,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:$hmppsSqsVersion")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.0")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1")
 
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
