@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
@@ -50,4 +51,15 @@ class ConditionController(private val conditionService: ConditionService) {
     @PathVariable prisonNumber: String,
     @PathVariable conditionReference: UUID,
   ): ConditionResponse = conditionService.getCondition(prisonNumber, conditionReference)
+
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @PutMapping("/{conditionReference}/archive")
+  @PreAuthorize(HAS_EDIT_ELSP)
+  fun archiveCondition(
+    @PathVariable prisonNumber: String,
+    @PathVariable conditionReference: UUID,
+    @Valid @RequestBody request: ArchiveConditionRequest,
+  ) {
+    conditionService.archiveCondition(prisonNumber, conditionReference, request)
+  }
 }

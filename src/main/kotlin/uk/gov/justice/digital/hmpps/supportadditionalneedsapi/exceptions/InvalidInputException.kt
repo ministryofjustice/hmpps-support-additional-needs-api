@@ -22,6 +22,8 @@ data class MultipleInvalidException(override val name: String, override val valu
 
 class ConditionNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Condition with reference [$reference] not found for prisoner [$prisonNumber]")
 
+class ConditionArchivedException(prisonNumber: String, reference: UUID) : RuntimeException("Condition with reference [$reference] has been archived for prisoner [$prisonNumber]")
+
 class SupportStrategyNotFoundException(prisonNumber: String, reference: UUID) : RuntimeException("Support Strategy with reference [$reference] not found for prisoner [$prisonNumber]")
 
 class SupportStrategyArchivedException(prisonNumber: String, reference: UUID) : RuntimeException("Support Strategy with reference [$reference] has been archived for prisoner [$prisonNumber]")
@@ -36,7 +38,7 @@ class StrengthAlnScreenerException(prisonNumber: String, reference: UUID) : Runt
 
 class ChallengeArchivedException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] has been archived for prisoner [$prisonNumber]")
 
-class ChallengeAlnScreenerException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] cannot be archived as it is an ALN screener strength for prisoner [$prisonNumber]")
+class ChallengeAlnScreenerException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] cannot be archived as it is an ALN screener challenge for prisoner [$prisonNumber]")
 
 class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
 

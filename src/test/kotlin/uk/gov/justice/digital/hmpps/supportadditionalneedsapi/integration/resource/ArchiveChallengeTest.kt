@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Refe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.time.LocalDate
@@ -144,7 +143,7 @@ class ArchiveChallengeTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Challenge with reference [${entity.reference}] cannot be archived as it is an ALN screener strength for prisoner [$prisonNumber]")
+      .hasUserMessage("Challenge with reference [${entity.reference}] cannot be archived as it is an ALN screener challenge for prisoner [$prisonNumber]")
   }
 
   @Test
@@ -154,7 +153,7 @@ class ArchiveChallengeTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     val ref = UUID.randomUUID().toString()
-    val request = ArchiveStrengthRequest(prisonId = "BXI", archiveReason = "archive reason")
+    val request = ArchiveChallengeRequest(prisonId = "BXI", archiveReason = "archive reason")
 
     // When
     val response = webTestClient.put()
