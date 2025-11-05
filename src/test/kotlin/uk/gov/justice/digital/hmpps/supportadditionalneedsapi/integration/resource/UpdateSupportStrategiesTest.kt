@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -19,31 +21,37 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
     private const val URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies/{reference}"
   }
 
-  @Test
-  fun `update a support strategy for a given prisoner`() {
+  @ParameterizedTest
+  @ValueSource(
+    strings = [
+      "updated detail",
+      "  updated detail  ",
+      """Updated detail with a trailing line break
+""",
+      """
+Updated detail with a leading line break
+""",
+      """
+
+     Updated detail with a leading and trailing line breaks
+
+""",
+      """Updated detail
+Split over several lines
+
+Including blank lines to simulate paragraph breaks.
+""",
+    ],
+  )
+  fun `update a support strategy for a given prisoner`(detail: String) {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
-      ?: throw IllegalStateException("Reference data not found")
-
-    val strategies = supportStrategyRepository.saveAll(
-      listOf(
-        SupportStrategyEntity(
-          prisonNumber = prisonNumber,
-          supportStrategyType = processingSpeed,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-          detail = "Needs quiet space to focus",
-          active = true,
-        ),
-      ),
-    )
-
+    val strategies = setupPrisonerSupportStrategies(prisonNumber)
     val strategy = strategies.first()
-    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail = "updated detail", prisonId = "FKL")
+    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail, prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -63,35 +71,36 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
       supportStrategyRepository.findAllByPrisonNumber(prisonNumber).find { it.supportStrategyType.code == "PROCESSING_SPEED" }
         ?: throw IllegalStateException("support strategy not found")
 
-    assertThat(updatedStrategy.detail).isEqualTo("updated detail")
+    assertThat(updatedStrategy.detail).isEqualTo(detail)
     assertThat(updatedStrategy.updatedAtPrison).isEqualTo("FKL")
   }
 
-  @Test
-  fun `update a support strategy for a given prisoner no detail`() {
+  @ParameterizedTest
+  @ValueSource(
+    strings = [
+      "",
+      "  ",
+      """
+""",
+      """
+  
+""",
+      """
+
+     
+
+""",
+    ],
+  )
+  fun `should not update a support strategy given invalid detail`(detail: String) {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
-      ?: throw IllegalStateException("Reference data not found")
-
-    val strategies = supportStrategyRepository.saveAll(
-      listOf(
-        SupportStrategyEntity(
-          prisonNumber = prisonNumber,
-          supportStrategyType = processingSpeed,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-          detail = "Needs quiet space to focus",
-          active = true,
-        ),
-      ),
-    )
-
+    val strategies = setupPrisonerSupportStrategies(prisonNumber)
     val strategy = strategies.first()
-    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail = "  ", prisonId = "FKL")
+    val updateSupportStrategyRequest = UpdateSupportStrategyRequest(detail, prisonId = "FKL")
 
     // When
     val response = webTestClient.put()
@@ -107,6 +116,8 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual)
       .hasStatus(HttpStatus.BAD_REQUEST.value())
+      .hasUserMessageContaining("Validation failed for object='updateSupportStrategyRequest'")
+      .hasDeveloperMessageContaining("Error on field 'detail': rejected value [$detail], must match \".*\\S.*\"")
   }
 
   @Test
@@ -134,5 +145,23 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Support Strategy with reference [$ref] not found for prisoner [$prisonNumber]")
+  }
+
+  private fun setupPrisonerSupportStrategies(prisonNumber: String): List<SupportStrategyEntity> {
+    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    return supportStrategyRepository.saveAll(
+      listOf(
+        SupportStrategyEntity(
+          prisonNumber = prisonNumber,
+          supportStrategyType = processingSpeed,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          detail = "Needs quiet space to focus",
+          active = true,
+        ),
+      ),
+    )
   }
 }
