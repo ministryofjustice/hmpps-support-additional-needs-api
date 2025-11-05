@@ -34,6 +34,9 @@ data class ConditionEntity(
   @Column(nullable = false)
   var active: Boolean = true,
 
+  @Column
+  var archiveReason: String? = null,
+
   @Column(updatable = false)
   val createdAtPrison: String,
 

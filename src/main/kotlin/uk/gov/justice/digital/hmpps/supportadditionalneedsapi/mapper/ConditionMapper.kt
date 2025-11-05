@@ -33,6 +33,7 @@ class ConditionMapper(
       active = active,
       conditionName = conditionName,
       conditionDetails = conditionDetails,
+      archiveReason = archiveReason,
     )
   }
 

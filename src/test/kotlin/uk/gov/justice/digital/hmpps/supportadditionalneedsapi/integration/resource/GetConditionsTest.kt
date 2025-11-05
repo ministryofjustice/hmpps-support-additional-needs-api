@@ -74,6 +74,61 @@ class GetConditionsTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Get list of conditions for a given prisoner where one is archived`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+
+    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
+      ?: throw IllegalStateException("Reference data not found")
+    val dyslexia = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "DYSLEXIA"))
+      ?: throw IllegalStateException("Reference data not found")
+    val mentalHealth = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "MENTAL_HEALTH"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    conditionRepository.saveAll(
+      listOf(
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          source = Source.SELF_DECLARED,
+          conditionType = adhd,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          source = Source.SELF_DECLARED,
+          conditionType = dyslexia,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          active = false,
+          archiveReason = "archive reason",
+        ),
+      ),
+    )
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+    assertThat(actual!!.conditions).hasSize(2)
+
+    val condition = actual.conditions.first { it.conditionType.code == "DYSLEXIA" }
+
+    assertThat(condition.active).isEqualTo(false)
+    assertThat(condition.archiveReason).isEqualTo("archive reason")
+  }
+
+  @Test
   fun `Return empty list when no conditions exist for prisoner`() {
     // Given
     stubGetTokenFromHmppsAuth()

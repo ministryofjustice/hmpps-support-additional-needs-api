@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.13.8'
+  version: '0.14.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -260,6 +260,39 @@ paths:
         '404':
           description: Condition not found
 
+  '/profile/{prisonNumber}/condition/{conditionReference}/archive':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+      - name: conditionReference
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: UUID of the specific condition to archive
+    put:
+      summary: Archives a single condition by UUID.
+      description: |
+        Archives a specific condition associated with the given prison number.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      operationId: archive-condition
+      requestBody:
+        $ref: '#/components/requestBodies/ArchiveCondition'
+      responses:
+        '204':
+          description: The challenge was successfully archived.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+
   '/profile/{prisonNumber}/challenges':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
@@ -347,7 +380,7 @@ paths:
         '404':
           description: Challenge not found
 
-  '/profile/{prisonNumber}/challenge/{strengthReference}/archive':
+  '/profile/{prisonNumber}/challenge/{challengeReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
       - name: challengeReference
@@ -929,6 +962,13 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ArchiveChallengeRequest'
+
+    ArchiveCondition:
+      description: Request body to archive a condition for a person.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ArchiveConditionRequest'
 
 
   #
@@ -1658,6 +1698,9 @@ components:
           type: boolean
           description: |
             Whether or not this condition is active
+        archiveReason:
+          type: string
+          description: the reason why this record was archived
       required:
         - reference
         - source
@@ -2399,6 +2442,22 @@ components:
       required:
         - archiveReason
         - prisonId
+
+    ArchiveConditionRequest:
+      title: ArchiveConditionRequest
+      type: object
+      properties:
+        archiveReason:
+          type: string
+          description: Explanation as to why this record is archived.
+          minLength: 1
+          pattern: '(?s)\A\s*\S.*\z'
+        prisonId:
+          $ref: '#/components/schemas/PrisonId'
+      required:
+        - archiveReason
+        - prisonId
+
 
     SupportStrategyRequest:
       title: SupportStrategyRequest

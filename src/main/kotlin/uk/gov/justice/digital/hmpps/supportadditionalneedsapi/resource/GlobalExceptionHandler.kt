@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotC
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeAlnScreenerException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanCreationScheduleNotFoundException
@@ -200,6 +201,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       StrengthAlnScreenerException::class,
       ChallengeArchivedException::class,
       ChallengeAlnScreenerException::class,
+      ConditionArchivedException::class,
     ],
   )
   protected fun handleExceptionReturnConflictErrorResponse(
