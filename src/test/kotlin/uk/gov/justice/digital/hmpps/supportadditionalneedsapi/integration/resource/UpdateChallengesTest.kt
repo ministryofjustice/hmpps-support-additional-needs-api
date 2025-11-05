@@ -84,7 +84,7 @@ class UpdateChallengesTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val updateChallengeRequest = UpdateChallengeRequest(symptoms = "", howIdentified = listOf(IdentificationSource.OTHER), prisonId = "FKL")
+    val updateChallengeRequest = UpdateChallengeRequest(symptoms = "updated symptoms", howIdentified = listOf(IdentificationSource.OTHER), prisonId = "FKL")
 
     val ref = UUID.randomUUID().toString()
     // When
