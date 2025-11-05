@@ -29,8 +29,7 @@ class UpdateSupportStrategiesTest : IntegrationTestBase() {
       """Updated detail with a trailing line break
 """,
       """
-Updated detail with a leading line break
-""",
+Updated detail with a leading line break""",
       """
 
      Updated detail with a leading and trailing line breaks
@@ -117,7 +116,7 @@ Including blank lines to simulate paragraph breaks.
     assertThat(actual)
       .hasStatus(HttpStatus.BAD_REQUEST.value())
       .hasUserMessageContaining("Validation failed for object='updateSupportStrategyRequest'")
-      .hasDeveloperMessageContaining("Error on field 'detail': rejected value [$detail], must match \".*\\S.*\"")
+      .hasDeveloperMessageContaining("Error on field 'detail': rejected value [$detail], must match \"(?s)\\A\\s*\\S.*\\z\"")
   }
 
   @Test
