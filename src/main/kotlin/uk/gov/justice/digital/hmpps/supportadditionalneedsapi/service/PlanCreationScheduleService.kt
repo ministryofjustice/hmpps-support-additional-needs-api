@@ -105,6 +105,7 @@ class PlanCreationScheduleService(
     val validStatuses = listOf(
       PlanCreationScheduleStatus.SCHEDULED,
       PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
+      PlanCreationScheduleStatus.EXEMPT_NO_NEED,
     )
 
     if (schedule.status !in validStatuses) {
@@ -230,6 +231,18 @@ class PlanCreationScheduleService(
             prisonId = prisonId,
           )
         }
+      }
+      // this was nothing to do with an aln change probably a new need added.
+      // need to un exempt if the person was exempt due to no need.
+      if (existing.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED) {
+        updateSchedule(
+          prisonNumber = prisonNumber,
+          schedule = existing,
+          newStatus = PlanCreationScheduleStatus.SCHEDULED,
+          earliestStartDate = educationStartDate,
+          deadlineDate = IN_THE_FUTURE_DATE,
+          prisonId = prisonId,
+        )
       }
     }
   }
