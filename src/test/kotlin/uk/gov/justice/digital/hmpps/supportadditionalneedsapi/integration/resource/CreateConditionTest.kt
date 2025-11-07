@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Con
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import java.util.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source as EntitySource
 
 class CreateConditionTest : IntegrationTestBase() {
@@ -185,6 +186,43 @@ class CreateConditionTest : IntegrationTestBase() {
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     assertThat(reviewScheduleEntity?.deadlineDate).isNotNull()
     assertThat(reviewScheduleEntity?.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should set the creation status to SCHEDULED when previously EXEMPT due to no need and a new condition is added`() {
+    // Given
+    stubForBankHoliday()
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    val curiousReference = UUID.randomUUID()
+    // in education
+    prisonerInEducation(prisonNumber)
+    // give then an ALN assessment need
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    val elspBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspBefore!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    // remove the ALN assessment need
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
+    val elspDuring = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspDuring!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NO_NEED)
+
+    // then add a condition
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    val elspAfter = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspAfter!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+
+    assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
+    assertThat(needService.hasNeed(prisonNumber)).isTrue()
   }
 
   private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(

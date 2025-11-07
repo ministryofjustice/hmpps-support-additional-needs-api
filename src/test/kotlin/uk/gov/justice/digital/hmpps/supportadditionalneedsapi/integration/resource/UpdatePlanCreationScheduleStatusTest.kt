@@ -109,7 +109,7 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual!!.status).isEqualTo(HttpStatus.CONFLICT.value())
-    assertThat(actual.userMessage).isEqualTo("Plan creation schedule status must be one of [[SCHEDULED, EXEMPT_PRISONER_TRANSFER]] but was [COMPLETED] for prisoner [$prisonNumber]")
+    assertThat(actual.userMessage).isEqualTo("Plan creation schedule status must be one of [[SCHEDULED, EXEMPT_PRISONER_TRANSFER, EXEMPT_NO_NEED]] but was [COMPLETED] for prisoner [$prisonNumber]")
   }
 
   @Test
