@@ -143,7 +143,7 @@ class ReviewScheduleService(
         ?.atZone(zoneId)
         ?.toLocalDate()
 
-      if (planCreationDate != null && startDate < planCreationDate) {
+      if (planCreationDate != null && startDate <= planCreationDate) {
         return current
       }
 
@@ -153,7 +153,7 @@ class ReviewScheduleService(
         ?.atZone(zoneId)
         ?.toLocalDate()
 
-      if (lastReviewCreatedDate != null && startDate < lastReviewCreatedDate) {
+      if (lastReviewCreatedDate != null && startDate <= lastReviewCreatedDate) {
         return current
       }
     }
