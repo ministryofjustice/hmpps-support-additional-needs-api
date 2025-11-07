@@ -287,6 +287,25 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `Person put on another education course with a date the same as the plan date and review schedule date will not change`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
+    stubGetTokenFromHmppsAuth()
+    anElSPExists(prisonNumber = prisonNumber)
+    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(2))
+    // person has a need:
+    aValidChallengeExists(prisonNumber)
+
+    putInEducationAndValidate(prisonNumber, educationStartDate = LocalDate.now())
+
+    // Then
+    // the reviewSchedule should be marked as exempt
+    val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(2))
+  }
+
+  @Test
   fun `Person put on another education course with a date before the most recent review and review schedule date will not change`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
