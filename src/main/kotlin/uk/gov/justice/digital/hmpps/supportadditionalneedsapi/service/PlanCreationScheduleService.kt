@@ -99,14 +99,14 @@ class PlanCreationScheduleService(
     updatedAtPrison: String,
     clearDeadlineDate: Boolean = false,
   ) {
-    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?: throw PlanCreationScheduleNotFoundException(prisonNumber)
-
     val validStatuses = listOf(
       PlanCreationScheduleStatus.SCHEDULED,
       PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
       PlanCreationScheduleStatus.EXEMPT_NO_NEED,
     )
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+      ?: throw PlanCreationScheduleNotFoundException(prisonNumber)
 
     if (schedule.status !in validStatuses) {
       throw PlanCreationScheduleStateException(
@@ -116,14 +116,8 @@ class PlanCreationScheduleService(
       )
     }
 
-    exemptSchedule(
-      prisonNumber = prisonNumber,
-      status = status,
-      exemptionReason = exemptionReason,
-      exemptionDetail = exemptionDetail,
-      prisonId = updatedAtPrison,
-      clearDeadlineDate = clearDeadlineDate,
-    )
+    log.debug("Exempting planCreationSchedule for prison $prisonNumber with reason $exemptionReason")
+    updateExemption(schedule, status, exemptionReason, exemptionDetail, updatedAtPrison, clearDeadlineDate)
   }
 
   @Transactional
@@ -136,18 +130,38 @@ class PlanCreationScheduleService(
     clearDeadlineDate: Boolean = false,
   ) {
     planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?.takeIf { it.status == PlanCreationScheduleStatus.SCHEDULED || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER || it.status == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY }
-      ?.let {
-        it.status = status
-        it.exemptionReason = exemptionReason
-        it.exemptionDetail = exemptionDetail
-        it.updatedAtPrison = prisonId
-        if (clearDeadlineDate) {
-          it.deadlineDate = IN_THE_FUTURE_DATE
-        }
-        planCreationScheduleRepository.save(it)
-        eventPublisher.createAndPublishPlanCreationSchedule(prisonNumber)
+      ?.takeIf {
+        it.status in listOf(
+          PlanCreationScheduleStatus.SCHEDULED,
+          PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
+          PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
+        )
       }
+      ?.let {
+        updateExemption(it, status, exemptionReason, exemptionDetail, prisonId, clearDeadlineDate)
+      }
+  }
+
+  private fun updateExemption(
+    schedule: PlanCreationScheduleEntity,
+    status: PlanCreationScheduleStatus,
+    exemptionReason: String?,
+    exemptionDetail: String?,
+    updatedAtPrison: String,
+    clearDeadlineDate: Boolean,
+  ) {
+    schedule.apply {
+      this.status = status
+      this.exemptionReason = exemptionReason
+      this.exemptionDetail = exemptionDetail
+      this.updatedAtPrison = updatedAtPrison
+      if (clearDeadlineDate) {
+        this.deadlineDate = IN_THE_FUTURE_DATE
+      }
+    }
+
+    planCreationScheduleRepository.save(schedule)
+    eventPublisher.createAndPublishPlanCreationSchedule(schedule.prisonNumber)
   }
 
   fun getDeadlineDate(educationStartDate: LocalDate): LocalDate {
@@ -170,13 +184,24 @@ class PlanCreationScheduleService(
       }
   }
 
-  fun createOrUpdateDueToEducationUpdate(prisonNumber: String, startDate: LocalDate, fundingType: String, subjectToKPIRules: Boolean, prisonId: String) {
+  fun createOrUpdateDueToEducationUpdate(
+    prisonNumber: String,
+    startDate: LocalDate,
+    fundingType: String,
+    subjectToKPIRules: Boolean,
+    prisonId: String,
+  ) {
     val isKPI = fundingType.equals("PES", ignoreCase = true) && subjectToKPIRules
     val earliestStart = if (isKPI) startDate else null
     val deadline = if (isKPI) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
 
     val existing = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
-      ?: return createSchedule(prisonNumber = prisonNumber, deadlineDate = deadline, earliestStartDate = earliestStart, prisonId = prisonId)
+      ?: return createSchedule(
+        prisonNumber = prisonNumber,
+        deadlineDate = deadline,
+        earliestStartDate = earliestStart,
+        prisonId = prisonId,
+      )
 
     val alreadyCorrect =
       existing.status == PlanCreationScheduleStatus.SCHEDULED &&
@@ -216,7 +241,12 @@ class PlanCreationScheduleService(
           )
         }
       }
-      return createSchedule(prisonNumber = prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = prisonId)
+      return createSchedule(
+        prisonNumber = prisonNumber,
+        deadlineDate = IN_THE_FUTURE_DATE,
+        earliestStartDate = null,
+        prisonId = prisonId,
+      )
     } else {
       // need to do check in here to see if the ALN assessment was done before the education start
       // if it was then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
