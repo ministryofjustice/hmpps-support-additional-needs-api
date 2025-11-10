@@ -18,7 +18,6 @@ data class SarChronologicalReport(
 )
 
 data class PlanWithReviews(
-  val planId: UUID,
   val prisonNumber: String,
   val planVersions: List<PlanVersion>,
   val reviews: List<ReviewWithPlanEdits>,
@@ -26,8 +25,6 @@ data class PlanWithReviews(
 
 data class PlanVersion(
   val version: Int,
-  val planType: String?,
-  val mainGoals: String?,
   val prisonName: String,
   val status: String?,
   val statusDetails: String?,
@@ -70,7 +67,6 @@ data class ChallengeHistory(
 )
 
 data class ChallengeVersion(
-  val version: Int,
   val symptoms: String?,
   val howIdentified: String?,
   val howIdentifiedOther: String?,
@@ -101,7 +97,6 @@ data class StrengthVersion(
   val createdBy: String?,
   val updatedAt: String,
   val updatedBy: String?,
-  val changes: List<FieldChange>,
 )
 
 data class ConditionHistory(
@@ -121,7 +116,6 @@ data class ConditionVersion(
   val createdBy: String?,
   val updatedAt: String,
   val updatedBy: String?,
-  val changes: List<FieldChange>,
 )
 
 data class ContributorData(
