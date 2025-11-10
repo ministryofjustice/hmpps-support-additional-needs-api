@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.stereotype.Repository

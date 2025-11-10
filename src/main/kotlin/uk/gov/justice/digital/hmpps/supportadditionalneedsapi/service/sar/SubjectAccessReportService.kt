@@ -5,10 +5,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Elsp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspPlanHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspReviewHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.PlanCreationScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
