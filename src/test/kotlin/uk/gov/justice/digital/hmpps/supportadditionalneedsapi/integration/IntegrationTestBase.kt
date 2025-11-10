@@ -48,15 +48,11 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspReviewHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.PlanCreationScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReviewScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.SupportStrategyRepository
@@ -77,6 +73,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspPlanHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ElspReviewHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.PlanCreationScheduleHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.reporting.repository.ReviewScheduleHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
