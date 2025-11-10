@@ -42,10 +42,9 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
 
   private fun createReviewScheduleRecords(
     prisonNumber: String,
-    reference: UUID = UUID.randomUUID(),
   ): List<ReviewScheduleEntity> = (1..3).map { index ->
     val reviewScheduleEntity = ReviewScheduleEntity(
-      reference = reference,
+      reference = UUID.randomUUID(),
       prisonNumber = prisonNumber,
       deadlineDate = LocalDate.now().minusMonths(1),
       status = if (index == 3) ReviewScheduleStatus.SCHEDULED else ReviewScheduleStatus.COMPLETED,
