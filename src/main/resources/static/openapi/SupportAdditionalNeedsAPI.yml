@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.14.0'
+  version: '0.14.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -399,7 +399,7 @@ paths:
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
-        - Strength
+        - challenge
       operationId: archive-challenge
       requestBody:
         $ref: '#/components/requestBodies/ArchiveChallenge'
