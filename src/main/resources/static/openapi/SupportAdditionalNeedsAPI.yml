@@ -260,7 +260,7 @@ paths:
         '404':
           description: Condition not found
 
-  '/profile/{prisonNumber}/condition/{conditionReference}/archive':
+  '/profile/{prisonNumber}/conditions/{conditionReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
       - name: conditionReference
@@ -279,7 +279,7 @@ paths:
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
-        - Strength
+        - Condition
       operationId: archive-condition
       requestBody:
         $ref: '#/components/requestBodies/ArchiveCondition'
@@ -380,7 +380,7 @@ paths:
         '404':
           description: Challenge not found
 
-  '/profile/{prisonNumber}/challenge/{challengeReference}/archive':
+  '/profile/{prisonNumber}/challenges/{challengeReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"
       - name: challengeReference
