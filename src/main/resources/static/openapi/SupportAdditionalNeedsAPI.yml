@@ -399,7 +399,7 @@ paths:
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
-        - challenge
+        - Challenge
       operationId: archive-challenge
       requestBody:
         $ref: '#/components/requestBodies/ArchiveChallenge'
