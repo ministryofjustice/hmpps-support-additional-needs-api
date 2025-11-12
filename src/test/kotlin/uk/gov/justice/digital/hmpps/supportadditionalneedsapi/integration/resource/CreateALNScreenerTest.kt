@@ -164,6 +164,37 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(screener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
   }
 
+  @Test
+  fun `test cascade delete of challenges and strengths`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val challengesList = createChallengesList()
+    val strengthsList = createStrengthsList()
+    val alnScreener = ALNScreenerRequest(prisonId = "BXI", strengths = strengthsList, challenges = challengesList, screenerDate = LocalDate.parse("2020-01-01"))
+
+    // When
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(alnScreener)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber).size).isGreaterThan(0)
+    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber).size).isGreaterThan(0)
+
+    // Then
+    val screener = alnScreenerRepository.findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+    alnScreenerRepository.deleteById(screener!!.id)
+    alnScreenerRepository.flush()
+
+    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber).size).isZero()
+    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber).size).isZero()
+  }
+
   private fun createChallengesList(): List<ALNChallenge> = listOf(
     ALNChallenge(
       challengeTypeCode = "MEMORY",
