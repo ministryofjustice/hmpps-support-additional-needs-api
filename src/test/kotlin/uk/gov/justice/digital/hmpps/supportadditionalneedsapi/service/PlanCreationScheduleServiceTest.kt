@@ -124,7 +124,7 @@ class PlanCreationScheduleServiceTest {
   fun `createSchedule creates when in education and has need`() {
     setUpService()
     whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
-    whenever(needService.getNeedSources(prisonNumber)).thenReturn(setOf(ALN_SCREENER))
+    whenever(needService.getNeedSources(prisonNumber)).thenReturn(sortedSetOf(ALN_SCREENER))
     whenever(planCreationScheduleRepository.saveAndFlush(any())).thenAnswer { it.arguments[0] }
 
     val deadline = LocalDate.now().plusDays(5)

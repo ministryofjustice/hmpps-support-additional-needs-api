@@ -315,7 +315,7 @@ abstract class IntegrationTestBase {
         exemptionReason = null,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
-        needSources = setOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED),
+        needSources = sortedSetOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED),
         earliestStartDate = null,
       )
     planCreationScheduleRepository.saveAndFlush(planCreationScheduleEntity)
@@ -445,7 +445,7 @@ abstract class IntegrationTestBase {
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
           symptoms = "symptoms",
-          howIdentified = setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL),
+          howIdentified = sortedSetOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL),
           alnScreenerId = screenerId,
         ),
       ),
@@ -499,7 +499,7 @@ abstract class IntegrationTestBase {
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
           symptoms = "StrengthSymptoms",
-          howIdentified = setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
+          howIdentified = sortedSetOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
           alnScreenerId = screenerId,
         ),
       ),
