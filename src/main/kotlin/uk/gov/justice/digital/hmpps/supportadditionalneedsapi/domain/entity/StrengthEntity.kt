@@ -1,15 +1,15 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
-import io.hypersistence.utils.hibernate.type.array.EnumArrayType
-import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
+import jakarta.persistence.EnumType
+import jakarta.persistence.Enumerated
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
-import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
+import org.hibernate.type.SqlTypes
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.util.*
 
@@ -34,8 +34,9 @@ data class StrengthEntity(
   var archiveReason: String? = null,
 
   @Column
-  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
-  var howIdentified: Set<IdentificationSource> = emptySet(),
+  @JdbcTypeCode(SqlTypes.ARRAY)
+  @Enumerated(EnumType.STRING)
+  var howIdentified: SortedSet<IdentificationSource> = sortedSetOf(),
 
   @Column
   var howIdentifiedOther: String? = null,

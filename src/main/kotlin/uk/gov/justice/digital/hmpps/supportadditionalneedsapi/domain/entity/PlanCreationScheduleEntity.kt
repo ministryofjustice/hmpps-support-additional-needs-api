@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
-import io.hypersistence.utils.hibernate.type.array.EnumArrayType
-import io.hypersistence.utils.hibernate.type.array.ListArrayType
 import jakarta.persistence.AttributeConverter
 import jakarta.persistence.Column
 import jakarta.persistence.Converter
@@ -13,10 +11,10 @@ import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
 import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.Parameter
-import org.hibernate.annotations.Type
+import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.envers.Audited
+import org.hibernate.type.SqlTypes
 import org.springframework.data.annotation.CreatedBy
 import org.springframework.data.annotation.LastModifiedBy
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
@@ -50,7 +48,8 @@ data class PlanCreationScheduleEntity(
   var exemptionDetail: String? = null,
 
   @Column
-  @Type(ListArrayType::class, parameters = [Parameter(name = EnumArrayType.SQL_ARRAY_TYPE, value = "varchar")])
+  @JdbcTypeCode(SqlTypes.ARRAY)
+  @Enumerated(EnumType.STRING)
   var needSources: Set<NeedSource> = emptySet(),
 
   @Column(updatable = false)

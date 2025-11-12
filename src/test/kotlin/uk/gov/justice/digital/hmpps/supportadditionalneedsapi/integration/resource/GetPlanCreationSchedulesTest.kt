@@ -41,7 +41,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.SCHEDULED)
     assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
-    assertThat(actual.planCreationSchedules[0].needSources).isEqualTo(listOf(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED))
+    assertThat(actual.planCreationSchedules[0].needSources).containsExactlyInAnyOrder(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED)
   }
 
   @Test

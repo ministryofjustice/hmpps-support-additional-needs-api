@@ -499,7 +499,7 @@ abstract class IntegrationTestBase {
           createdAtPrison = "BXI",
           updatedAtPrison = "BXI",
           symptoms = "StrengthSymptoms",
-          howIdentified = setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
+          howIdentified = sortedSetOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
           alnScreenerId = screenerId,
         ),
       ),
