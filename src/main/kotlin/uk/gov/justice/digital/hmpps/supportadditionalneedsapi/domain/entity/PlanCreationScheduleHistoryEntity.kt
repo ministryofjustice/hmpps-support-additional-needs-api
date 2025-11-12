@@ -12,6 +12,7 @@ import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.Instant
 import java.time.LocalDate
+import java.util.SortedSet
 import java.util.UUID
 
 /**
@@ -47,7 +48,7 @@ data class PlanCreationScheduleHistoryEntity(
   @Column(name = "need_sources")
   @JdbcTypeCode(SqlTypes.ARRAY)
   @Enumerated(EnumType.STRING)
-  val needSources: Set<NeedSource> = emptySet(),
+  val needSources: SortedSet<NeedSource> = sortedSetOf(),
 
   @Column(name = "created_by")
   val createdBy: String,

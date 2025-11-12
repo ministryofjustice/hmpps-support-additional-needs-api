@@ -50,7 +50,7 @@ data class PlanCreationScheduleEntity(
   @Column
   @JdbcTypeCode(SqlTypes.ARRAY)
   @Enumerated(EnumType.STRING)
-  var needSources: Set<NeedSource> = emptySet(),
+  var needSources: SortedSet<NeedSource> = sortedSetOf(),
 
   @Column(updatable = false)
   val createdAtPrison: String,

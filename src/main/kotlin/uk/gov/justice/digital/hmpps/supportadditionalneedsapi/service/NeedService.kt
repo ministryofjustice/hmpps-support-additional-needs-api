@@ -95,12 +95,12 @@ class NeedService(
       (alnNeed ?: hasLDDNeed(prisonNumber)) == true
   }
 
-  fun getNeedSources(prisonNumber: String): Set<NeedSource> {
+  fun getNeedSources(prisonNumber: String): SortedSet<NeedSource> {
     log.debug("Getting need sources for $prisonNumber")
     val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
-    return buildSet {
+    return sortedSetOf<NeedSource>().apply {
       val alnNeed = hasALNScreenerNeed(prisonNumber)
       if (alnNeed == true) {
         add(NeedSource.ALN_SCREENER)

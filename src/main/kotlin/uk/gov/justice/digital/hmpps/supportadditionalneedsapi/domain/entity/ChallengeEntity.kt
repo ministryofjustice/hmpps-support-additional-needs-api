@@ -33,7 +33,7 @@ data class ChallengeEntity(
   @Column
   @JdbcTypeCode(SqlTypes.ARRAY)
   @Enumerated(EnumType.STRING)
-  var howIdentified: Set<IdentificationSource> = emptySet(),
+  var howIdentified: SortedSet<IdentificationSource> = sortedSetOf(),
 
   @Column
   var howIdentifiedOther: String? = null,

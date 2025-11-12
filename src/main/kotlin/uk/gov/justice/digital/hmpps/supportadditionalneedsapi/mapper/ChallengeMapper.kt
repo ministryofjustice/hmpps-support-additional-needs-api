@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import java.time.LocalDate
+import java.util.SortedSet
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource as IdentificationSourceEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
@@ -43,8 +44,8 @@ class ChallengeMapper(
     .takeIf { it.isNotEmpty() }
     ?.map { IdentificationSourceModel.valueOf(it.name) }
 
-  fun toEntity(identificationSources: List<IdentificationSourceModel>?): Set<IdentificationSourceEntity> = identificationSources
+  fun toEntity(identificationSources: List<IdentificationSourceModel>?): SortedSet<IdentificationSourceEntity> = identificationSources
     ?.map { IdentificationSourceEntity.valueOf(it.name) }
-    ?.toSet()
-    ?: emptySet()
+    ?.toSortedSet()
+    ?: sortedSetOf()
 }
