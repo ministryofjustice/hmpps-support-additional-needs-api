@@ -2,9 +2,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ServiceProperties
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
@@ -19,7 +19,7 @@ private val log = KotlinLogging.logger {}
 class EventPublisher(
   private val hmppsQueueService: HmppsQueueService,
   private val objectMapper: ObjectMapper,
-  @Value("\${service.base-url}") private val serviceBaseUrl: String,
+  private val serviceProperties: ServiceProperties,
 ) {
 
   internal val eventTopic by lazy { hmppsQueueService.findByTopicId("domainevents") as HmppsTopic }
@@ -78,7 +78,7 @@ class EventPublisher(
   private fun constructDetailUrl(detailPath: String, prisonerNumber: String): String {
     // Replace placeholder "{prisonerNumber}" with the actual prisonerNumber
     val updatedPath = detailPath.replace("{prisonerNumber}", prisonerNumber)
-    return URI.create("$serviceBaseUrl/$updatedPath").toString()
+    return URI.create("${serviceProperties.baseUrl}/$updatedPath").toString()
   }
 
   data class HmppsDomainEvent(
