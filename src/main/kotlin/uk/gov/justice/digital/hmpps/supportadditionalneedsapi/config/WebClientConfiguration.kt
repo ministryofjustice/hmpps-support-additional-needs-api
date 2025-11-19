@@ -21,8 +21,7 @@ class WebClientConfiguration(
 ) {
   // HMPPS Auth health ping is required if your service calls HMPPS Auth to get a token to call other services
   @Bean
-  fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient =
-    builder.healthWebClient(hmppsAuthProperties.url, apiProperties.healthTimeout)
+  fun hmppsAuthHealthWebClient(builder: WebClient.Builder): WebClient = builder.healthWebClient(hmppsAuthProperties.url, apiProperties.healthTimeout)
 
   @Bean(name = ["prisonerSearchApiWebClient"])
   fun prisonerSearchApiWebClient(
