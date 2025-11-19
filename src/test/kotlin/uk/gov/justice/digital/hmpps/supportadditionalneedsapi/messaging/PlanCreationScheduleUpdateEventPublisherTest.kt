@@ -12,6 +12,7 @@ import software.amazon.awssdk.services.sns.SnsAsyncClient
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import software.amazon.awssdk.services.sns.model.PublishResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ServiceProperties
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import java.time.Instant
@@ -23,7 +24,8 @@ class PlanCreationScheduleUpdateEventPublisherTest {
   private val hmppsQueueService: HmppsQueueService = mock()
   private val snsClient: SnsAsyncClient = mock()
   private val objectMapper: ObjectMapper = mock()
-  private val service = EventPublisher(hmppsQueueService, objectMapper, "http://localhost:8080")
+  private val serviceProperties = ServiceProperties(baseUrl = "http://localhost:8080")
+  private val service = EventPublisher(hmppsQueueService, objectMapper, serviceProperties)
 
   @Test
   fun `publish creates to plan creation schedule update event`() {
