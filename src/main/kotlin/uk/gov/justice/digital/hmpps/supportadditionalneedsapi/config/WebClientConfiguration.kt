@@ -11,7 +11,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ApisProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.HmppsAuthProperties
 import uk.gov.justice.hmpps.kotlin.auth.healthWebClient
+import java.time.Duration
 import kotlin.apply as kotlinApply
+
+private const val DEFAULT_TIMEOUT_SECONDS: Long = 30
 
 @Configuration
 class WebClientConfiguration(
@@ -31,6 +34,7 @@ class WebClientConfiguration(
     authorizedClientManager,
     registrationId = "prisoner-search-api",
     url = apisProperties.prisonerSearchApi.url,
+    timeout = apiProperties.timeout,
   )
 
   @Bean(name = ["curiousApiWebClient"])
@@ -41,6 +45,7 @@ class WebClientConfiguration(
     authorizedClientManager,
     registrationId = "curious-api",
     url = apisProperties.curiousApi.url,
+    timeout = apiProperties.timeout,
   )
 
   @Bean(name = ["manageUsersApiWebClient"])
@@ -51,24 +56,29 @@ class WebClientConfiguration(
     authorizedClientManager,
     registrationId = "manage-users-api",
     url = apisProperties.manageUsersApi.url,
+    timeout = apiProperties.timeout,
   )
 
   @Bean(name = ["bankHolidaysApiWebClient"])
   fun bankHolidaysApiWebClient(
     builder: WebClient.Builder,
-  ): WebClient = builder.baseUrl(apisProperties.bankHolidaysApi.url).build()
+  ): WebClient = builder
+    .baseUrl(apisProperties.bankHolidaysApi.url)
+    .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(apiProperties.timeout)))
+    .build()
 
   private fun WebClient.Builder.authorisedWebClient(
     authorizedClientManager: OAuth2AuthorizedClientManager,
     registrationId: String,
     url: String,
+    timeout: Duration = Duration.ofSeconds(DEFAULT_TIMEOUT_SECONDS),
   ): WebClient {
     val oauth2Client = ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager).kotlinApply {
       setDefaultClientRegistrationId(registrationId)
     }
 
     return baseUrl(url)
-      .clientConnector(ReactorClientHttpConnector(HttpClient.create()))
+      .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
       .filter(oauth2Client)
       .build()
   }

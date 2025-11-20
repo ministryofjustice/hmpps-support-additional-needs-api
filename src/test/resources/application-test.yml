@@ -5,6 +5,9 @@ management.endpoint:
   health.cache.time-to-live: 0
   info.cache.time-to-live: 0
 
+api:
+  timeout: 150ms
+
 spring:
   jpa:
     show-sql: true
