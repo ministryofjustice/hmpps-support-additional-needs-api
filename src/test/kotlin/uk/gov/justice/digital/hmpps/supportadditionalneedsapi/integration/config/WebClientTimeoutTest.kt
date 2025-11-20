@@ -179,4 +179,3 @@ class WebClientTimeoutTest : IntegrationTestBase() {
     assertThat(response).contains("ok")
   }
 }
-
