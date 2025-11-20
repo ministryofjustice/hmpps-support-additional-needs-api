@@ -22,6 +22,7 @@ generic-service:
     MANAGE_USERS_API_URL: https://manage-users-api-preprod.hmpps.service.justice.gov.uk
     SERVICE_BASE_URL: https://support-for-additional-needs-api-preprod.hmpps.service.justice.gov.uk
     BANK_HOLIDAYS_API_URL: https://www.gov.uk
+    ADDITIONAL_REVIEW_DATE_LOGIC: true
 
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts

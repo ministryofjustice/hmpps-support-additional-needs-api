@@ -13,6 +13,7 @@ generic-service:
     MANAGE_USERS_API_URL: https://manage-users-api.hmpps.service.justice.gov.uk
     SERVICE_BASE_URL: https://support-for-additional-needs-api.hmpps.service.justice.gov.uk
     BANK_HOLIDAYS_API_URL: https://www.gov.uk
+    ADDITIONAL_REVIEW_DATE_LOGIC: true
 
   postgresDatabaseRestore:
     jobName: san-prod-to-preprod-restore
