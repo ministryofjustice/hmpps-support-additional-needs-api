@@ -61,16 +61,19 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
     stubGetDisplayName("system")
     val prisonNumber = randomValidPrisonNumber()
     aValidPlanCreationScheduleExists(prisonNumber)
-    val request = UpdatePlanCreationStatusRequest(
-      prisonId = "LWI",
-      status = PlanCreationUpdateStatus.EXEMPT_PRISONER_NOT_COMPLY,
-    )
+    val requestJson = """
+      {
+        "prisonId": "LWI",
+        "status": "EXEMPT_PRISONER_NOT_COMPLY"
+      }
+    """.trimIndent()
 
     // When
     val response = webTestClient.patch()
       .uri(URI_TEMPLATE, prisonNumber)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-      .bodyValue(request)
+      .header("Content-Type", "application/json")
+      .bodyValue(requestJson)
       .exchange()
       .expectStatus()
       .isBadRequest
@@ -79,7 +82,6 @@ class UpdatePlanCreationScheduleStatusTest : IntegrationTestBase() {
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual!!.status).isEqualTo(HttpStatus.BAD_REQUEST.value())
-    assertThat(actual.userMessage).isEqualTo("Reason must be specified for Exemptions")
   }
 
   @Test

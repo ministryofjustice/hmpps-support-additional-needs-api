@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Upd
 import kotlin.reflect.KClass
 
 /**
- * Hibernate Constraint Validator class and [] annotation ta validate that the Exemption reason is populated or not populated
+ * Hibernate Constraint Validator class and [] annotation to validate that the Exemption reason is populated or not populated
  * depending on whether the status is an exemption status
  */
 @SupportedValidationTarget(ValidationTarget.PARAMETERS)
@@ -24,11 +24,7 @@ class UpdatePlanExemptionReasonConstraintValidator : ConstraintValidator<ReasonS
     val request = parameters.find { it is UpdatePlanCreationStatusRequest } as? UpdatePlanCreationStatusRequest
       ?: return false // parameter wasn't found, this will be already have been trapped by the controller.
 
-    return if (request.status in exemptStatuses()) {
-      request.exemptionReason != null
-    } else {
-      request.exemptionReason == null
-    }
+    return request.status in exemptStatuses()
   }
 }
 

@@ -2020,6 +2020,8 @@ components:
       required:
         - status
         - prisonId
+        - exemptionReason
+        - exemptionDetail
 
     ALNScreenerRequest:
       title: ALNScreenerRequest
