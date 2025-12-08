@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Cond
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
@@ -74,6 +76,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremo
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.HmppsPrisonerSearchApiExtension.Companion.hmppsPrisonerSearchApi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.wiremock.ManageUsersApiExtension.Companion.manageUsersApi
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.EhcpStatusMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
@@ -135,6 +138,12 @@ abstract class IntegrationTestBase {
     Awaitility.setDefaultPollInterval(500, MILLISECONDS)
     Awaitility.setDefaultTimeout(5, SECONDS)
   }
+
+  @Autowired
+  private lateinit var ehcpStatusRepository: EhcpStatusRepository
+
+  @Autowired
+  private lateinit var ehcpStatusMapper: EhcpStatusMapper
 
   @Autowired
   private lateinit var elspPlanMapper: ElspPlanMapper
@@ -387,7 +396,26 @@ abstract class IntegrationTestBase {
       ),
     )
 
+    val ehcp = ehcpStatusMapper.toEntity(
+      prisonNumber,
+      educationSupportPlanRequest = CreateEducationSupportPlanRequest(
+        prisonId = "BXI",
+        hasCurrentEhcp = true,
+        reviewDate = LocalDate.now(),
+        individualSupport = "support",
+        planCreatedBy = PlanContributor("Tom Brown", jobRole = "Education coordinator"),
+        otherContributors = listOf(PlanContributor(name = "Bob Smith", jobRole = "Teacher")),
+        teachingAdjustments = "teachingAdjustments",
+        specificTeachingSkills = "specificTeachingSkills",
+        examAccessArrangements = "examAccessArrangements",
+        lnspSupport = "lnspSupport",
+        lnspSupportHours = 2,
+        detail = "detail",
+      ),
+    )
+
     elspPlanRepository.save(elsp)
+    ehcpStatusRepository.save(ehcp)
   }
 
   fun anOldElSPExists(prisonNumber: String): ElspPlanEntity {
@@ -406,6 +434,8 @@ abstract class IntegrationTestBase {
       createdAtPrison = "BXI",
       createdAt = Instant.now().minus(90, ChronoUnit.DAYS),
     )
+    val ehcp = EhcpStatusEntity(prisonNumber = prisonNumber, hasCurrentEhcp = true, createdAtPrison = "BXI", updatedAtPrison = "BXI")
+    ehcpStatusRepository.save(ehcp)
     return elspPlanRepository.saveAndFlush(elsp)
   }
 
