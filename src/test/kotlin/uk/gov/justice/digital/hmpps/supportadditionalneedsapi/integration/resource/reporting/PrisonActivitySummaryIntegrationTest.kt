@@ -296,7 +296,6 @@ class PrisonActivitySummaryIntegrationTest : IntegrationTestBase() {
     val entity = ElspPlanEntity(
       prisonNumber = prisonNumber,
       updatedAtPrison = prison,
-      hasCurrentEhcp = true,
       individualSupport = "support",
       planCreatedByJobRole = "Education coordinator",
       createdAtPrison = prison,

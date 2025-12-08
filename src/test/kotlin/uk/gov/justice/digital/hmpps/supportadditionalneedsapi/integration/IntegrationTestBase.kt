@@ -394,7 +394,6 @@ abstract class IntegrationTestBase {
     val elsp = ElspPlanEntity(
       prisonNumber = prisonNumber,
       updatedAtPrison = "BXI",
-      hasCurrentEhcp = true,
       individualSupport = "support",
       planCreatedByJobRole = "Education coordinator",
       planCreatedByName = "Bob Smith",

@@ -27,9 +27,6 @@ data class ElspPlanHistoryEntity(
   @OneToMany(mappedBy = "plan")
   val otherContributors: List<OtherContributorHistoryEntity> = emptyList(),
 
-  @Column(name = "has_current_ehcp")
-  val hasCurrentEhcp: Boolean = false,
-
   @Column(name = "teaching_adjustments")
   var teachingAdjustments: String? = null,
 
