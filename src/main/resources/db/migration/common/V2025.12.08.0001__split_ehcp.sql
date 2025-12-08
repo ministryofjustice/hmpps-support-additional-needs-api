@@ -29,7 +29,7 @@ INSERT INTO ehcp_status (
     updated_at
 )
 SELECT
-    gen_random_uuid(),     -- Generate a new UUID for the reference column
+    gen_random_uuid(),
     prison_number,
     has_current_ehcp,
     created_at_prison,
@@ -39,7 +39,7 @@ SELECT
     updated_by,
     updated_at
 FROM
-    elsp_plan;
+    elsp_plan_history where rev_type = 0 ; --ie when the original entity was created
 
 
 ALTER TABLE elsp_plan
