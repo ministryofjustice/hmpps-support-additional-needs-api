@@ -7,5 +7,5 @@ import java.util.UUID
 
 @Repository
 interface EhcpStatusRepository : JpaRepository<EhcpStatusEntity, UUID> {
-  fun findByPrisonNumber(prisonNumber: String): EhcpStatusEntity?
+  fun findByPrisonNumber(prisonNumber: String): EhcpStatusEntity
 }

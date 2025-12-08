@@ -11,13 +11,13 @@ class EhcpStatusMapper(
   private val userService: ManageUserService,
 ) {
 
-  fun toEntity(prisonNumber: String, educationSupportPlanResponse: CreateEducationSupportPlanRequest): EhcpStatusEntity {
-    val entity = with(educationSupportPlanResponse) {
+  fun toEntity(prisonNumber: String, educationSupportPlanRequest: CreateEducationSupportPlanRequest): EhcpStatusEntity {
+    val entity = with(educationSupportPlanRequest) {
       EhcpStatusEntity(
         prisonNumber = prisonNumber,
         createdAtPrison = prisonId,
         updatedAtPrison = prisonId,
-        hasCurrentEhcp = educationSupportPlanResponse.hasCurrentEhcp,
+        hasCurrentEhcp = educationSupportPlanRequest.hasCurrentEhcp,
       )
     }
     return entity

@@ -17,10 +17,10 @@ class ElspPlanMapper(
 
   fun toModel(
     entity: ElspPlanEntity,
-    ehcpStatusEntity: EhcpStatusEntity?,
+    ehcpStatusEntity: EhcpStatusEntity,
   ): EducationSupportPlanResponse = with(entity) {
     EducationSupportPlanResponse(
-      hasCurrentEhcp = ehcpStatusEntity?.hasCurrentEhcp ?: false,
+      hasCurrentEhcp = ehcpStatusEntity.hasCurrentEhcp,
       planCreatedBy = planCreatedByName?.let { PlanContributor(planCreatedByName, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
@@ -41,8 +41,8 @@ class ElspPlanMapper(
     )
   }
 
-  fun toEntity(prisonNumber: String, educationSupportPlanResponse: CreateEducationSupportPlanRequest): ElspPlanEntity {
-    val entity = with(educationSupportPlanResponse) {
+  fun toEntity(prisonNumber: String, educationSupportPlanRequest: CreateEducationSupportPlanRequest): ElspPlanEntity {
+    val entity = with(educationSupportPlanRequest) {
       ElspPlanEntity(
         prisonNumber = prisonNumber,
         createdAtPrison = prisonId,
@@ -60,12 +60,12 @@ class ElspPlanMapper(
       )
     }
 
-    educationSupportPlanResponse.otherContributors?.forEach { contributor ->
+    educationSupportPlanRequest.otherContributors?.forEach { contributor ->
       val contributorEntity = OtherContributorEntity(
         name = contributor.name,
         jobRole = contributor.jobRole,
-        createdAtPrison = educationSupportPlanResponse.prisonId,
-        updatedAtPrison = educationSupportPlanResponse.prisonId,
+        createdAtPrison = educationSupportPlanRequest.prisonId,
+        updatedAtPrison = educationSupportPlanRequest.prisonId,
         elspPlan = entity,
       )
       entity.otherContributors.add(contributorEntity)

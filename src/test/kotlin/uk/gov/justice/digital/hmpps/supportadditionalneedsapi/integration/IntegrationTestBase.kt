@@ -371,7 +371,7 @@ abstract class IntegrationTestBase {
   fun anElSPExists(prisonNumber: String) {
     val elsp = elspPlanMapper.toEntity(
       prisonNumber,
-      educationSupportPlanResponse = CreateEducationSupportPlanRequest(
+      educationSupportPlanRequest = CreateEducationSupportPlanRequest(
         prisonId = "BXI",
         hasCurrentEhcp = true,
         reviewDate = LocalDate.now(),
