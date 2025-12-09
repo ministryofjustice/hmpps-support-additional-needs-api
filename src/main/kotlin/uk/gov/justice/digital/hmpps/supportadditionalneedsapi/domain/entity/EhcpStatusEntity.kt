@@ -1,11 +1,9 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 
-import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.Hibernate
 import org.hibernate.annotations.CreationTimestamp
@@ -19,47 +17,20 @@ import java.util.*
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
-@Table(name = "elsp_plan")
+@Table(name = "ehcp_status")
 @Audited(withModifiedFlag = false)
-data class ElspPlanEntity(
+data class EhcpStatusEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 
-  @Column(length = 200)
-  val planCreatedByName: String? = null,
-
-  @Column(length = 200)
-  val planCreatedByJobRole: String? = null,
-
-  @Column
-  var teachingAdjustments: String? = null,
-
-  @Column
-  var specificTeachingSkills: String? = null,
-
-  @Column
-  var examAccessArrangements: String? = null,
-
-  @Column
-  var lnspSupport: String? = null,
-
-  @Column
-  var lnspSupportHours: Int? = null,
-
-  @Column
-  var detail: String? = null,
-
   @Column(nullable = false)
-  val individualSupport: String,
+  val hasCurrentEhcp: Boolean = false,
 
   @Column(updatable = false)
   val createdAtPrison: String,
 
   @Column
   var updatedAtPrison: String,
-
-  @OneToMany(mappedBy = "elspPlan", cascade = [CascadeType.ALL], orphanRemoval = true)
-  val otherContributors: MutableList<OtherContributorEntity> = mutableListOf(),
 
   @Id
   @Column
@@ -87,7 +58,7 @@ data class ElspPlanEntity(
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-    other as ElspPlanEntity
+    other as EhcpStatusEntity
 
     return id == other.id
   }

@@ -95,7 +95,6 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
 
     assertThat(content.educationSupportPlans.size).isEqualTo(1)
     content.educationSupportPlans.first().let { p ->
-      assertThat(p.hasCurrentEhcp).isEqualTo("Yes")
       assertThat(p.individualSupport).isEqualTo("support")
       assertThat(p.teachingAdjustments).isEqualTo("teachingAdjustments")
       assertThat(p.specificTeachingSkills).isEqualTo("specificTeachingSkills")

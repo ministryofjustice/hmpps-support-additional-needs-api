@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ELSP_CREATED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.EhcpStatusMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
@@ -15,13 +17,16 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.T
 @Service
 class EducationSupportPlanService(
   private val elspPlanRepository: ElspPlanRepository,
+  private val ehcpStatusRepository: EhcpStatusRepository,
   private val elspPlanMapper: ElspPlanMapper,
+  private val ehcpStatusMapper: EhcpStatusMapper,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val planReviewScheduleService: ReviewScheduleService,
 ) {
   fun getPlan(prisonNumber: String): EducationSupportPlanResponse {
     val entity = elspPlanRepository.findByPrisonNumber(prisonNumber) ?: throw PlanNotFoundException(prisonNumber)
-    return elspPlanMapper.toModel(entity)
+    val ehcpStatusEntity = ehcpStatusRepository.findByPrisonNumber(prisonNumber)
+    return elspPlanMapper.toModel(entity, ehcpStatusEntity)
   }
 
   @Transactional
@@ -32,15 +37,17 @@ class EducationSupportPlanService(
   fun create(prisonNumber: String, request: CreateEducationSupportPlanRequest): EducationSupportPlanResponse {
     checkPlanDoesNotExist(prisonNumber)
 
-    val entity = elspPlanMapper.toEntity(prisonNumber, request)
-    val savedEntity = elspPlanRepository.saveAndFlush(entity)
+    val elspPlanEntity = elspPlanMapper.toEntity(prisonNumber, request)
+    val savedEntity = elspPlanRepository.saveAndFlush(elspPlanEntity)
+    val ehcpStatusEntity = ehcpStatusMapper.toEntity(prisonNumber, request)
+    val savedEhcpStatusEntity = ehcpStatusRepository.saveAndFlush(ehcpStatusEntity)
 
     // Update the plan creation schedule (if it exists)
     planCreationScheduleService.completeSchedule(prisonNumber, request.prisonId)
     // Create the review Schedule - with the deadline date from this request
     planReviewScheduleService.createReviewSchedule(prisonNumber, request.reviewDate, request.prisonId)
 
-    return elspPlanMapper.toModel(savedEntity)
+    return elspPlanMapper.toModel(savedEntity, savedEhcpStatusEntity)
   }
 
   private fun checkPlanDoesNotExist(prisonNumber: String) {

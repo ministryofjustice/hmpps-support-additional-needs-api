@@ -4,7 +4,6 @@ import jakarta.persistence.Column
 import jakarta.persistence.Embeddable
 import jakarta.persistence.EmbeddedId
 import jakarta.persistence.Entity
-import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
 import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
@@ -13,40 +12,13 @@ import java.util.*
 
 @Entity
 @Immutable
-@Table(name = "elsp_plan_history")
-data class ElspPlanHistoryEntity(
+@Table(name = "ehcp_status_history")
+data class EhcpStatusHistoryEntity(
   @Column(name = "prison_number")
   val prisonNumber: String,
 
-  @Column(name = "plan_created_by_name")
-  val planCreatedByName: String? = null,
-
-  @Column(name = "plan_created_by_job_role")
-  val planCreatedByJobRole: String? = null,
-
-  @OneToMany(mappedBy = "plan")
-  val otherContributors: List<OtherContributorHistoryEntity> = emptyList(),
-
-  @Column(name = "teaching_adjustments")
-  var teachingAdjustments: String? = null,
-
-  @Column(name = "specific_teaching_Skills")
-  var specificTeachingSkills: String? = null,
-
-  @Column(name = "exam_access_arrangements")
-  var examAccessArrangements: String? = null,
-
-  @Column(name = "lnsp_support")
-  var lnspSupport: String? = null,
-
-  @Column(name = "lnsp_support_hours")
-  var lnspSupportHours: Int? = null,
-
-  @Column
-  var detail: String? = null,
-
-  @Column(name = "individual_support")
-  val individualSupport: String,
+  @Column(name = "has_current_ehcp", nullable = false)
+  val hasCurrentEhcp: Boolean = false,
 
   @Column(updatable = false)
   val reference: UUID = UUID.randomUUID(),
@@ -70,12 +42,12 @@ data class ElspPlanHistoryEntity(
   val updatedAtPrison: String,
 
   @EmbeddedId
-  val id: ElspPlanHistoryEntityKey,
+  val id: EhcpStatusHistoryEntityKey,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-    other as ElspPlanHistoryEntity
+    other as EhcpStatusHistoryEntity
 
     return id == other.id
   }
@@ -86,7 +58,7 @@ data class ElspPlanHistoryEntity(
 }
 
 @Embeddable
-data class ElspPlanHistoryEntityKey(
+data class EhcpStatusHistoryEntityKey(
   @Column(name = "rev_id")
   val revisionNumber: Long,
   @Column(name = "id")

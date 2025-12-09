@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.OtherContributorEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
@@ -16,9 +17,10 @@ class ElspPlanMapper(
 
   fun toModel(
     entity: ElspPlanEntity,
+    ehcpStatusEntity: EhcpStatusEntity,
   ): EducationSupportPlanResponse = with(entity) {
     EducationSupportPlanResponse(
-      hasCurrentEhcp = hasCurrentEhcp,
+      hasCurrentEhcp = ehcpStatusEntity.hasCurrentEhcp,
       planCreatedBy = planCreatedByName?.let { PlanContributor(planCreatedByName, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
@@ -39,15 +41,14 @@ class ElspPlanMapper(
     )
   }
 
-  fun toEntity(prisonNumber: String, educationSupportPlanResponse: CreateEducationSupportPlanRequest): ElspPlanEntity {
-    val entity = with(educationSupportPlanResponse) {
+  fun toEntity(prisonNumber: String, educationSupportPlanRequest: CreateEducationSupportPlanRequest): ElspPlanEntity {
+    val entity = with(educationSupportPlanRequest) {
       ElspPlanEntity(
         prisonNumber = prisonNumber,
         createdAtPrison = prisonId,
         updatedAtPrison = prisonId,
         planCreatedByName = planCreatedBy?.name,
         planCreatedByJobRole = planCreatedBy?.jobRole,
-        hasCurrentEhcp = hasCurrentEhcp,
         lnspSupport = lnspSupport,
         lnspSupportHours = lnspSupportHours,
         teachingAdjustments = teachingAdjustments,
@@ -59,12 +60,12 @@ class ElspPlanMapper(
       )
     }
 
-    educationSupportPlanResponse.otherContributors?.forEach { contributor ->
+    educationSupportPlanRequest.otherContributors?.forEach { contributor ->
       val contributorEntity = OtherContributorEntity(
         name = contributor.name,
         jobRole = contributor.jobRole,
-        createdAtPrison = educationSupportPlanResponse.prisonId,
-        updatedAtPrison = educationSupportPlanResponse.prisonId,
+        createdAtPrison = educationSupportPlanRequest.prisonId,
+        updatedAtPrison = educationSupportPlanRequest.prisonId,
         elspPlan = entity,
       )
       entity.otherContributors.add(contributorEntity)

@@ -4,7 +4,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Elsp
 import java.time.Instant
 
 data class EducationSupportPlanReport(
-  val hasCurrentEhcp: String,
   val individualSupport: String,
   val createdBy: String,
   val createdAt: Instant,
@@ -21,7 +20,6 @@ data class EducationSupportPlanReport(
 )
 
 fun ElspPlanHistoryEntity.toReportModel(): EducationSupportPlanReport = EducationSupportPlanReport(
-  hasCurrentEhcp = toYesNo(hasCurrentEhcp),
   individualSupport = individualSupport,
   createdBy = createdBy,
   createdAt = createdAt,
