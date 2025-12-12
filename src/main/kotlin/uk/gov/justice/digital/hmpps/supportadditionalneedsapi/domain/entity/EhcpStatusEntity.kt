@@ -24,7 +24,7 @@ data class EhcpStatusEntity(
   val prisonNumber: String,
 
   @Column(nullable = false)
-  val hasCurrentEhcp: Boolean = false,
+  var hasCurrentEhcp: Boolean = false,
 
   @Column(updatable = false)
   val createdAtPrison: String,
