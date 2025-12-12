@@ -17,10 +17,10 @@ class ElspPlanMapper(
 
   fun toModel(
     entity: ElspPlanEntity,
-    ehcpStatusEntity: EhcpStatusEntity?,
+    ehcpStatusEntity: EhcpStatusEntity,
   ): EducationSupportPlanResponse = with(entity) {
     EducationSupportPlanResponse(
-      hasCurrentEhcp = ehcpStatusEntity?.hasCurrentEhcp ?: false,
+      hasCurrentEhcp = ehcpStatusEntity.hasCurrentEhcp,
       planCreatedBy = planCreatedByName?.let { PlanContributor(planCreatedByName, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
