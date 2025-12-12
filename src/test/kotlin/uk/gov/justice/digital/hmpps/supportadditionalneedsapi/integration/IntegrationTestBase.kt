@@ -140,7 +140,7 @@ abstract class IntegrationTestBase {
   }
 
   @Autowired
-  private lateinit var ehcpStatusRepository: EhcpStatusRepository
+  lateinit var ehcpStatusRepository: EhcpStatusRepository
 
   @Autowired
   private lateinit var ehcpStatusMapper: EhcpStatusMapper
