@@ -51,6 +51,38 @@ class SearchByPrisonTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should return paged results with one result given search by prisoner Id`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(PRISONER_1.prisonerNumber, PRISON_ID)
+    stubForBankHoliday()
+
+    // When
+    val response = webTestClient.get()
+      .uri { uriBuilder ->
+        uriBuilder
+          .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+          .queryParam("prisonerNameOrNumber", PRISONER_1.prisonerNumber)
+          .build()
+      }
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult(SearchByPrisonResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual)
+      .isPage(1)
+      .hasPageSize(50)
+      .isFirstPage()
+      .isLastPage()
+      .hasTotalElements(1)
+      .currentPageHasNumberOfRecords(1)
+  }
+
+  @Test
   fun `should return paged results containing trimmed name values`() {
     // Given
     stubGetTokenFromHmppsAuth()

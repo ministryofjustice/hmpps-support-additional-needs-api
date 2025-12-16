@@ -18,9 +18,25 @@ class SearchService(
   private val prisonerOverviewRepository: PrisonerOverviewRepository,
   private val workingDayService: WorkingDayService,
 ) {
+  private fun isPrisonNumber(prisonerNameOrNumber: String?): Boolean {
+    if (prisonerNameOrNumber.isNullOrBlank()) return false
+
+    val prnRegex = Regex("^[A-Z]\\d{4}[A-Z]{2}$")
+    return prnRegex.matches(prisonerNameOrNumber)
+  }
+
   fun searchPrisoners(searchCriteria: SearchCriteria): List<Person> {
-    // Get all prisoners in the prison
-    val prisonerSearchPrisoners = prisonerSearchApiService.getAllPrisonersInPrison(searchCriteria.prisonId)
+    val prisonerSearchPrisoners =
+      searchCriteria.prisonerNameOrNumber
+        ?.takeIf { isPrisonNumber(it) }
+        ?.let { prisonNumber ->
+          prisonerSearchApiService
+            .getPrisoner(prisonNumber)
+            .takeIf { it.prisonId == searchCriteria.prisonId }
+            ?.let { listOf(it) }
+            ?: emptyList()
+        }
+        ?: prisonerSearchApiService.getAllPrisonersInPrison(searchCriteria.prisonId)
 
     // Get all prisonNumbers from filtered list
     val prisonNumbers = prisonerSearchPrisoners.map { it.prisonerNumber }
