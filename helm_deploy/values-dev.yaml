@@ -22,6 +22,7 @@ generic-service:
     CURIOUS_API_URL: https://testservices.sequation.net/sequation-virtual-campus2-api
     MANAGE_USERS_API_URL: https://manage-users-api-dev.hmpps.service.justice.gov.uk
     SERVICE_BASE_URL: https://support-for-additional-needs-api-dev.hmpps.service.justice.gov.uk
+    UI_SERVICE_BASE_URL: https://support-for-additional-needs-dev.hmpps.service.justice.gov.uk
     BANK_HOLIDAYS_API_URL: https://www.gov.uk
     ENABLE_TEST_ENDPOINTS: true
     PES_CONTRACT_DATE: "2025-08-01"

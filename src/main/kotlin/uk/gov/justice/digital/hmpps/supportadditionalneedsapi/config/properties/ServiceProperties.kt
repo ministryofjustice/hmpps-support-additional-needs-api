@@ -15,4 +15,10 @@ data class ServiceProperties(
    */
   @field:NotBlank(message = "Base URL must not be blank")
   val baseUrl: String,
+
+  /**
+   * Base URL for the UI service, used for generating URLS.
+   */
+  @field:NotBlank(message = "UI Base URL must not be blank")
+  val uiBaseUrl: String,
 )

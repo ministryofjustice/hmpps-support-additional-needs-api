@@ -24,7 +24,7 @@ class PlanCreationScheduleUpdateEventPublisherTest {
   private val hmppsQueueService: HmppsQueueService = mock()
   private val snsClient: SnsAsyncClient = mock()
   private val objectMapper: ObjectMapper = mock()
-  private val serviceProperties = ServiceProperties(baseUrl = "http://localhost:8080")
+  private val serviceProperties = ServiceProperties(baseUrl = "http://localhost:8080", uiBaseUrl = "http://localhost:8080")
   private val service = EventPublisher(hmppsQueueService, objectMapper, serviceProperties)
 
   @Test
