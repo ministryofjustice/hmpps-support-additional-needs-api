@@ -2463,7 +2463,8 @@ components:
       required:
         - hasNeed
         - url
-        - modal
+        - modalUrl
+        - needSources
 
     EducationSupportPlanReviewResponse:
       title: EducationSupportPlanReviewResponse
