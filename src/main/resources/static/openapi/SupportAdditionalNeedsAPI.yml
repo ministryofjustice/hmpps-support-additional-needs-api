@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.16.0'
+  version: '0.17.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -110,7 +110,7 @@ paths:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
       tags:
-        - Support Plan
+        - Needs
       operationId: has-need
       responses:
         '200':
@@ -193,6 +193,26 @@ paths:
         '200':
           $ref: '#/components/responses/PlanActionStatusResponse'
       operationId: get-plan-action-status
+
+  '/profile/{prisonNumber}/additional-needs-factors':
+    parameters:
+      - $ref: "#/components/parameters/prisonNumberPathParameter"
+    get:
+      summary: Retrieves the list of needs, strengths and support strategies.
+      description: |
+        
+        This will only return Non screener challenges and strengths
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
+      tags:
+        - Needs
+      responses:
+        '200':
+          $ref: '#/components/responses/AdditionalNeedsFactors'
+      operationId: getAdditionalNeedsFactors
 
   '/profile/{prisonNumber}/conditions':
     parameters:
@@ -1291,6 +1311,37 @@ components:
             $ref: '#/components/schemas/ReviewScheduleResponse'
       required:
         - reviewSchedules
+
+    AdditionalNeedsFactorsResponse:
+      title: AdditionalNeedsFactorsResponse
+      description: A list of needs, strengths and support strategies for a prisoner.
+      type: object
+      properties:
+        conditions:
+          type: array
+          description: A List containing zero or more Conditions.
+          items:
+            $ref: '#/components/schemas/ConditionResponse'
+        challenges:
+          type: array
+          description: A List containing zero or more Challenges.
+          items:
+            $ref: '#/components/schemas/ChallengeResponse'
+        strengths:
+          type: array
+          description: A List containing zero or more Strengths.
+          items:
+            $ref: '#/components/schemas/StrengthResponse'
+        supportStrategies:
+          type: array
+          description: A List containing zero or more SupportStrategies.
+          items:
+            $ref: '#/components/schemas/SupportStrategyResponse'
+      required:
+        - conditions
+        - challenges
+        - strengths
+        - supportStrategies
 
     ConditionListResponse:
       title: ConditionListResponse
@@ -2713,6 +2764,22 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/SearchByPrisonResponse'
+    AdditionalNeedsFactors:
+      description: Response body containing the a list of Additional Needs Factors.
+      headers:
+        Access-Control-Allow-Origin:
+          schema:
+            type: string
+        Access-Control-Allow-Methods:
+          schema:
+            type: string
+        Access-Control-Allow-Headers:
+          schema:
+            type: string
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/AdditionalNeedsFactorsResponse'
 
     ConditionList:
       description: Response body containing the a list of conditions.

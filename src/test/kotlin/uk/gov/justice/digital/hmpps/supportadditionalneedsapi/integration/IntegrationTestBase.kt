@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Revi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
@@ -530,6 +531,123 @@ abstract class IntegrationTestBase {
           symptoms = "StrengthSymptoms",
           howIdentified = sortedSetOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS),
           alnScreenerId = screenerId,
+        ),
+      ),
+    )
+  }
+
+  fun conditionsExist(prisonNumber: String) {
+    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
+      ?: throw IllegalStateException("Reference data not found")
+    val dyslexia = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "DYSLEXIA"))
+      ?: throw IllegalStateException("Reference data not found")
+    val mentalHealth = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "MENTAL_HEALTH"))
+      ?: throw IllegalStateException("Reference data not found")
+
+    conditionRepository.saveAll(
+      listOf(
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          source = Source.SELF_DECLARED,
+          conditionType = adhd,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          source = Source.SELF_DECLARED,
+          conditionType = dyslexia,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        ConditionEntity(
+          prisonNumber = prisonNumber,
+          source = Source.CONFIRMED_DIAGNOSIS,
+          conditionType = mentalHealth,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+      ),
+    )
+  }
+
+  fun nonAlnChallengesExist(prisonNumber: String) {
+    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
+      ?: throw IllegalStateException("Reference data not found")
+    challengeRepository.saveAll(
+      listOf(
+        ChallengeEntity(
+          prisonNumber = prisonNumber,
+          challengeType = sensory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        ChallengeEntity(
+          prisonNumber = prisonNumber,
+          challengeType = memory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+      ),
+    )
+  }
+
+  fun nonAlnStrengthsExist(prisonNumber: String) {
+    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
+      ?: throw IllegalStateException("Reference data not found")
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "SENSORY_PROCESSING"))
+      ?: throw IllegalStateException("Reference data not found")
+    strengthRepository.saveAll(
+      listOf(
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = sensory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+        StrengthEntity(
+          prisonNumber = prisonNumber,
+          strengthType = memory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+      ),
+    )
+  }
+
+  fun supportStrategiesExist(prisonNumber: String) {
+    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
+      ?: throw IllegalStateException("Reference data not found for PROCESSING_SPEED")
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "SENSORY"))
+      ?: throw IllegalStateException("Reference data not found for SENSORY")
+    val general = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "GENERAL"))
+      ?: throw IllegalStateException("Reference data not found for GENERAL")
+
+    supportStrategyRepository.saveAll(
+      listOf(
+        SupportStrategyEntity(
+          prisonNumber = prisonNumber,
+          supportStrategyType = processingSpeed,
+          detail = "Needs quiet space to focus",
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          active = true,
+        ),
+        SupportStrategyEntity(
+          prisonNumber = prisonNumber,
+          supportStrategyType = sensory,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          active = true,
+        ),
+        SupportStrategyEntity(
+          prisonNumber = prisonNumber,
+          supportStrategyType = general,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+          active = true,
         ),
       ),
     )

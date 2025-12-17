@@ -33,12 +33,16 @@ class StrengthService(
   private val alnScreenerRepository: AlnScreenerRepository,
   private val strengthMapper: StrengthMapper,
 ) {
-  fun getStrengths(prisonNumber: String): StrengthListResponse {
+  fun getStrengths(prisonNumber: String, includeAln: Boolean = true): StrengthListResponse {
     val nonAlnStrengths = strengthRepository
       .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
-    val alnScreener = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+    val alnScreener = if (includeAln) {
+      alnScreenerRepository
+        .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+    } else {
+      null
+    }
 
     val alnStrengths = alnScreener?.strengths
       .orEmpty()

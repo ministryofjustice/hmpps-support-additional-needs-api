@@ -23,26 +23,7 @@ class GetStrengthsTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "MEMORY"))
-      ?: throw IllegalStateException("Reference data not found")
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.STRENGTH, "SENSORY_PROCESSING"))
-      ?: throw IllegalStateException("Reference data not found")
-    strengthRepository.saveAll(
-      listOf(
-        StrengthEntity(
-          prisonNumber = prisonNumber,
-          strengthType = sensory,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-        StrengthEntity(
-          prisonNumber = prisonNumber,
-          strengthType = memory,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-      ),
-    )
+    nonAlnStrengthsExist(prisonNumber)
 
     // When
     val response = webTestClient.get()
