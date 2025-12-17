@@ -38,20 +38,22 @@ class ChallengeService(
   private val scheduleService: ScheduleService,
   private val needService: NeedService,
 ) {
-  fun getChallenges(prisonNumber: String): ChallengeListResponse {
-    val nonAlnChallenges = challengeRepository
-      .findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
+  fun getChallenges(prisonNumber: String, includeAln: Boolean = true): ChallengeListResponse {
+    val nonAlnChallenges =
+      challengeRepository.findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber)
 
-    val alnScreener = alnScreenerRepository
-      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+    val alnScreener = if (includeAln) {
+      alnScreenerRepository
+        .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+    } else {
+      null
+    }
 
-    val alnChallenges = alnScreener
-      ?.challenges
-      .orEmpty()
+    val alnChallenges = alnScreener?.challenges.orEmpty()
 
     val allChallenges = nonAlnChallenges + alnChallenges
-
     val models = allChallenges.map { challengeMapper.toModel(it, alnScreener?.screeningDate) }
+
     return ChallengeListResponse(models)
   }
 

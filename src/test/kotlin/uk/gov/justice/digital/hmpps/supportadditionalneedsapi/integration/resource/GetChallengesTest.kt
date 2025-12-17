@@ -23,26 +23,7 @@ class GetChallengesTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val memory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "MEMORY"))
-      ?: throw IllegalStateException("Reference data not found")
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
-      ?: throw IllegalStateException("Reference data not found")
-    challengeRepository.saveAll(
-      listOf(
-        ChallengeEntity(
-          prisonNumber = prisonNumber,
-          challengeType = sensory,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-        ChallengeEntity(
-          prisonNumber = prisonNumber,
-          challengeType = memory,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-      ),
-    )
+    nonAlnChallengesExist(prisonNumber)
 
     // When
     val response = webTestClient.get()

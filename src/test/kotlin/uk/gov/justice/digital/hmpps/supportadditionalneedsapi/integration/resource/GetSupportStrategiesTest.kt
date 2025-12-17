@@ -20,40 +20,7 @@ class GetSupportStrategiesTest : IntegrationTestBase() {
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
-
-    val processingSpeed = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
-      ?: throw IllegalStateException("Reference data not found for PROCESSING_SPEED")
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "SENSORY"))
-      ?: throw IllegalStateException("Reference data not found for SENSORY")
-    val general = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "GENERAL"))
-      ?: throw IllegalStateException("Reference data not found for GENERAL")
-
-    supportStrategyRepository.saveAll(
-      listOf(
-        SupportStrategyEntity(
-          prisonNumber = prisonNumber,
-          supportStrategyType = processingSpeed,
-          detail = "Needs quiet space to focus",
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-          active = true,
-        ),
-        SupportStrategyEntity(
-          prisonNumber = prisonNumber,
-          supportStrategyType = sensory,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-          active = true,
-        ),
-        SupportStrategyEntity(
-          prisonNumber = prisonNumber,
-          supportStrategyType = general,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-          active = true,
-        ),
-      ),
-    )
+    supportStrategiesExist(prisonNumber)
 
     // When
     val response = webTestClient.get()

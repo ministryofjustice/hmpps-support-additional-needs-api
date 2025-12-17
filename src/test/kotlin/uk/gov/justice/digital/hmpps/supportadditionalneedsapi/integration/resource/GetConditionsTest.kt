@@ -22,38 +22,7 @@ class GetConditionsTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
 
-    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
-      ?: throw IllegalStateException("Reference data not found")
-    val dyslexia = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "DYSLEXIA"))
-      ?: throw IllegalStateException("Reference data not found")
-    val mentalHealth = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "MENTAL_HEALTH"))
-      ?: throw IllegalStateException("Reference data not found")
-
-    conditionRepository.saveAll(
-      listOf(
-        ConditionEntity(
-          prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = adhd,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-        ConditionEntity(
-          prisonNumber = prisonNumber,
-          source = Source.SELF_DECLARED,
-          conditionType = dyslexia,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-        ConditionEntity(
-          prisonNumber = prisonNumber,
-          source = Source.CONFIRMED_DIAGNOSIS,
-          conditionType = mentalHealth,
-          createdAtPrison = "BXI",
-          updatedAtPrison = "BXI",
-        ),
-      ),
-    )
+    conditionsExist(prisonNumber)
 
     // When
     val response = webTestClient.get()
