@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
 import java.time.LocalDate
 import java.util.*
+
 private val log = KotlinLogging.logger {}
 
 @Service
@@ -101,13 +102,13 @@ class NeedService(
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
     return sortedSetOf<NeedSource>().apply {
-      val alnNeed = hasALNScreenerNeed(prisonNumber)
-      if (alnNeed == true) {
-        add(NeedSource.ALN_SCREENER)
-      } else {
-        if (hasLDDNeed(prisonNumber) == true) {
-          add(NeedSource.LDD_SCREENER)
+      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      if (alnAssessment != null) {
+        if (alnAssessment.hasNeed) {
+          add(NeedSource.ALN_SCREENER)
         }
+      } else if (hasLDDNeed(prisonNumber) == true) {
+        add(NeedSource.LDD_SCREENER)
       }
 
       if (challenges.any { it.active && !it.fromALNScreener }) {

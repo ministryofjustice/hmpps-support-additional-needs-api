@@ -66,7 +66,7 @@ class PlanCreationScheduleHistoryMapper(
     )
   }
 
-  private fun toNeedSources(needSources: Set<NeedSource>): List<NeedSourceModel>? = needSources
+  fun toNeedSources(needSources: Set<NeedSource>): List<NeedSourceModel>? = needSources
     .takeIf { it.isNotEmpty() }
     ?.map { NeedSourceModel.valueOf(it.name) }
 

@@ -136,6 +136,7 @@ apis:
 
 service:
   base-url: ${SERVICE_BASE_URL}
+  ui-base-url: ${UI_SERVICE_BASE_URL}
 
 pes_contract_date: ${PES_CONTRACT_DATE}
 
