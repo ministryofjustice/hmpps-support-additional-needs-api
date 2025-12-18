@@ -76,7 +76,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(3)
     assertThat(actual.needSources).containsExactlyInAnyOrder(NeedSource.CONDITION_SELF_DECLARED, NeedSource.CHALLENGE_NOT_ALN_SCREENER, NeedSource.ALN_SCREENER)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -115,7 +115,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(1)
     assertThat(actual.needSources[0]).isEqualTo(NeedSource.CONDITION_SELF_DECLARED)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -152,7 +152,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(1)
     assertThat(actual.needSources[0]).isEqualTo(NeedSource.CHALLENGE_NOT_ALN_SCREENER)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -186,7 +186,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(1)
     assertThat(actual.needSources[0]).isEqualTo(NeedSource.ALN_SCREENER)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -223,7 +223,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(1)
     assertThat(actual.needSources[0]).isEqualTo(NeedSource.ALN_SCREENER)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -259,7 +259,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual!!.hasNeed).isFalse
     assertThat(actual.needSources.size).isZero
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -288,7 +288,7 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual.needSources.size).isEqualTo(1)
     assertThat(actual.needSources[0]).isEqualTo(NeedSource.LDD_SCREENER)
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 
   @Test
@@ -313,6 +313,6 @@ class HasNeedTest : IntegrationTestBase() {
     assertThat(actual!!.hasNeed).isFalse
     assertThat(actual.needSources.size).isZero
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview/modal")
+    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragmene/$prisonNumber/additional-needs")
   }
 }

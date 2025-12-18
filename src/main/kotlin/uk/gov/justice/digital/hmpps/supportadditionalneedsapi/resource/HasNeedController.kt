@@ -36,5 +36,5 @@ class HasNeedController(
 
   private fun getUrl(prisonNumber: String): String = serviceProperties.uiBaseUrl + "/profile/" + prisonNumber + "/overview"
 
-  private fun getModalUrl(prisonNumber: String): String = serviceProperties.uiBaseUrl + "/profile/" + prisonNumber + "/overview/modal"
+  private fun getModalUrl(prisonNumber: String): String = serviceProperties.uiBaseUrl + "/code-fragment/" + prisonNumber + "/additional-needs"
 }
