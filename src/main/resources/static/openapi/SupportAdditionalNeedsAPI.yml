@@ -2504,7 +2504,7 @@ components:
         modalUrl:
           type: string
           description: A link to the modal view of the persons needs in SAN
-          example: https://support-for-additional-needs-dev.hmpps.service.justice.gov.uk/profile/A5052DY/overview/modal
+          example: https://support-for-additional-needs-dev.hmpps.service.justice.gov.uk/code-fragment/A5052DY/additional-needs
         needSources:
           type: array
           items:
