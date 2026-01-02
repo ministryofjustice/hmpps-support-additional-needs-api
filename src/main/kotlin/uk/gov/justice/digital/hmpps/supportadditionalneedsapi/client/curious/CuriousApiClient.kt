@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
  */
 @Component
 class CuriousApiClient(
-  @Qualifier("curiousApiWebClient")
+  @param:Qualifier("curiousApiWebClient")
   private val curiousApiWebClient: WebClient,
 ) {
 

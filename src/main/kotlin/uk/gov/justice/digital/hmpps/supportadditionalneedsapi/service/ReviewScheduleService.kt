@@ -27,7 +27,7 @@ class ReviewScheduleService(
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
   private val reviewScheduleHistoryMapper: ReviewScheduleHistoryMapper,
   private val eventPublisher: EventPublisher,
-  @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
+  @param:Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val workingDayService: WorkingDayService,
   private val reviewRepository: ElspReviewRepository,
   private val elspPlanRepository: ElspPlanRepository,

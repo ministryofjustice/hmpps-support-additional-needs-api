@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
 data class ALNAssessmentDTO(
-  @JsonProperty("v2")
+  @param:JsonProperty("v2")
   val data: ALNData?,
 ) {
   @get:JsonIgnore

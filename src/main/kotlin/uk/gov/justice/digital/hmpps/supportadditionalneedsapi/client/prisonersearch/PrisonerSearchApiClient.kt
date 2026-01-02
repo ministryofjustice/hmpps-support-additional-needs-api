@@ -9,7 +9,7 @@ import reactor.core.publisher.Mono
 
 @Component
 class PrisonerSearchApiClient(
-  @Qualifier("prisonerSearchApiWebClient")
+  @param:Qualifier("prisonerSearchApiWebClient")
   private val prisonerSearchApiWebClient: WebClient,
 ) {
 

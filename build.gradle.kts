@@ -118,7 +118,6 @@ tasks.named("assemble") {
 tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
   validateSpec.set(true)
   generatorName.set("kotlin-spring")
-  templateDir.set("$projectDir/src/main/resources/static/openapi/templates")
   inputSpec.set("$projectDir/src/main/resources/static/openapi/SupportAdditionalNeedsAPI.yml")
   outputDir.set("$buildDirectory/generated")
   modelPackage.set("uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model")
