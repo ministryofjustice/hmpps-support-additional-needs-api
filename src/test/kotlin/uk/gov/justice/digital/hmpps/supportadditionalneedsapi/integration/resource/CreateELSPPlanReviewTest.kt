@@ -167,10 +167,14 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     // check that the review history has two records:
     val reviewHistory = elspReviewHistoryRepository.findAllByPrisonNumber(prisonNumber)
     assertThat(reviewHistory).hasSize(2)
-    assertThat(reviewHistory[0].reviewCreatedByName).isEqualTo(planReviewRequest1.reviewCreatedBy!!.name)
-    assertThat(reviewHistory[0].reviewCreatedByJobRole).isEqualTo(planReviewRequest1.reviewCreatedBy!!.jobRole)
-    assertThat(reviewHistory[1].reviewCreatedByName).isEqualTo(planReviewRequest2.reviewCreatedBy!!.name)
-    assertThat(reviewHistory[1].reviewCreatedByJobRole).isEqualTo(planReviewRequest2.reviewCreatedBy!!.jobRole)
+    with(planReviewRequest1.reviewCreatedBy!!) {
+      assertThat(reviewHistory[0].reviewCreatedByName).isEqualTo(name)
+      assertThat(reviewHistory[0].reviewCreatedByJobRole).isEqualTo(jobRole)
+    }
+    with(planReviewRequest2.reviewCreatedBy!!) {
+      assertThat(reviewHistory[1].reviewCreatedByName).isEqualTo(name)
+      assertThat(reviewHistory[1].reviewCreatedByJobRole).isEqualTo(jobRole)
+    }
   }
 
   fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
