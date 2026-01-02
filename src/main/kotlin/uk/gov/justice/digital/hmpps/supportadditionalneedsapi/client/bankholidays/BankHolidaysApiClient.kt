@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.CacheConfig
  */
 @Component
 class BankHolidaysApiClient(
-  @Qualifier("bankHolidaysApiWebClient")
+  @param:Qualifier("bankHolidaysApiWebClient")
   private val bankHolidaysApiWebClient: WebClient,
 ) {
 
