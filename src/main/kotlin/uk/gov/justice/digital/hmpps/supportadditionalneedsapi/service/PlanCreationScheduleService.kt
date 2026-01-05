@@ -28,7 +28,7 @@ class PlanCreationScheduleService(
   private val planCreationScheduleHistoryMapper: PlanCreationScheduleHistoryMapper,
   private val needService: NeedService,
   private val eventPublisher: EventPublisher,
-  @Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
+  @param:Value("\${pes_contract_date:}") val pesContractDate: LocalDate,
   private val elspPlanRepository: ElspPlanRepository,
   private val workingDayService: WorkingDayService,
 ) {
