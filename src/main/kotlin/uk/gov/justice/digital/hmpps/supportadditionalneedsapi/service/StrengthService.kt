@@ -170,4 +170,14 @@ class StrengthService(
     strength.updatedAtPrison = request.prisonId
     strengthRepository.save(strength)
   }
+
+  @Transactional
+  fun archiveAllScreenerStrengths(prisonerNumber: String) {
+    val alnStrengths = strengthRepository.findAllByPrisonNumberAndAlnScreenerIdIsNotNull(prisonerNumber)
+    alnStrengths.forEach {
+      it.active = false
+      it.archiveReason = "Old screener"
+    }
+    strengthRepository.saveAll(alnStrengths)
+  }
 }

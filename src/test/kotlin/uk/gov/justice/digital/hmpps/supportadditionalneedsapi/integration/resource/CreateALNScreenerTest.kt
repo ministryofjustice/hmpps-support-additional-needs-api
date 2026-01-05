@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resou
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
@@ -194,6 +195,83 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber).size).isZero()
     assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber).size).isZero()
   }
+
+  @Test
+  fun `Create two ALN screeners for a prisoner with the same screening date`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val challengesList = createChallengesList()
+    val strengthsList = createStrengthsList()
+    val screenerDate = LocalDate.parse("2020-01-01")
+    val alnScreener1 = ALNScreenerRequest(
+      prisonId = "NWI",
+      strengths = strengthsList,
+      challenges = challengesList,
+      screenerDate = screenerDate,
+    )
+    val alnScreener2 = ALNScreenerRequest(
+      prisonId = "BXI",
+      strengths = strengthsList,
+      challenges = challengesList,
+      screenerDate = screenerDate,
+    )
+
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(alnScreener1)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    aSmallPause()
+
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(alnScreener2)
+      .exchange()
+      .expectStatus()
+      .isCreated
+
+    // When
+    val response = webTestClient.get()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .expectBody<ALNScreeners>()
+      .returnResult()
+      .responseBody!!
+
+    // Then
+    val latestScreener = response.screeners.first()
+    assertThat(latestScreener.screenerDate).isEqualTo(screenerDate)
+    assertThat(latestScreener.createdAtPrison).isEqualTo("BXI")
+    assertThat(latestScreener.challenges.map { it.challengeType.code }).containsExactlyInAnyOrder("MEMORY", "SPEED_OF_CALCULATION")
+    assertThat(latestScreener.strengths.map { it.strengthType.code }).containsExactlyInAnyOrder("PEOPLE_PERSON", "SPATIAL_AWARENESS")
+    assertThat(latestScreener.createdBy).isEqualTo("testuser")
+    assertThat(latestScreener.createdByDisplayName).isEqualTo("Test User")
+    assertThat(latestScreener.challenges.map { it.alnScreenerDate }).containsOnly(screenerDate)
+    assertThat(latestScreener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
+
+    val oldScreener = response.screeners.last()
+    assertThat(oldScreener.screenerDate).isEqualTo(screenerDate)
+    assertThat(oldScreener.createdAtPrison).isEqualTo("NWI")
+    assertThat(oldScreener.challenges.map { it.challengeType.code }).containsExactlyInAnyOrder("MEMORY", "SPEED_OF_CALCULATION")
+    assertThat(oldScreener.strengths.map { it.strengthType.code }).containsExactlyInAnyOrder("PEOPLE_PERSON", "SPATIAL_AWARENESS")
+    assertThat(oldScreener.createdBy).isEqualTo("testuser")
+    assertThat(oldScreener.createdByDisplayName).isEqualTo("Test User")
+    assertThat(oldScreener.challenges.map { it.alnScreenerDate }).containsOnly(screenerDate)
+    assertThat(oldScreener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
+
+    assertThat(oldScreener.challenges.map { it.active }).containsOnly(false)
+    assertThat(oldScreener.strengths.map { it.active }).containsOnly(false)
+  }
+
 
   private fun createChallengesList(): List<ALNChallenge> = listOf(
     ALNChallenge(

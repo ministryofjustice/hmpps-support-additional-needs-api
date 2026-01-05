@@ -713,4 +713,8 @@ abstract class IntegrationTestBase {
   private fun sendCuriousALNMessage(sqsMessage: SqsMessage) {
     sendDomainEvent(sqsMessage)
   }
+
+  fun aSmallPause(duration: Long = 100L){
+    Thread.sleep(duration)
+  }
 }
