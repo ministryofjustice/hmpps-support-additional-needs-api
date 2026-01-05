@@ -3,11 +3,11 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholida
 import com.fasterxml.jackson.annotation.JsonProperty
 
 data class BankHolidays(
-  @JsonProperty("england-and-wales")
+  @param:JsonProperty("england-and-wales")
   val englandAndWales: RegionBankHolidays,
 
   val scotland: RegionBankHolidays,
 
-  @JsonProperty("northern-ireland")
+  @param:JsonProperty("northern-ireland")
   val northernIreland: RegionBankHolidays,
 )

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
 
 data class EducationDTO(
-  @JsonProperty("v2")
+  @param:JsonProperty("v2")
   val educationData: List<Education>,
 )
 
