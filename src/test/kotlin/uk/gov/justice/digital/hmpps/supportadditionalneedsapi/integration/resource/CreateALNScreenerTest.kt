@@ -257,6 +257,8 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(latestScreener.createdByDisplayName).isEqualTo("Test User")
     assertThat(latestScreener.challenges.map { it.alnScreenerDate }).containsOnly(screenerDate)
     assertThat(latestScreener.strengths.map { it.alnScreenerDate }).containsOnly(screenerDate)
+    assertThat(latestScreener.challenges.map { it.active }).containsOnly(true)
+    assertThat(latestScreener.strengths.map { it.active }).containsOnly(true)
 
     val oldScreener = response.screeners.last()
     assertThat(oldScreener.screenerDate).isEqualTo(screenerDate)
