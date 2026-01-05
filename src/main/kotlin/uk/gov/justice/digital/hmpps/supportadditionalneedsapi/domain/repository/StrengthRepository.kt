@@ -8,6 +8,7 @@ import java.util.UUID
 @Repository
 interface StrengthRepository : JpaRepository<StrengthEntity, UUID> {
   fun findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber: String): List<StrengthEntity>
+  fun findAllByPrisonNumberAndAlnScreenerIdIsNotNull(prisonNumber: String): List<StrengthEntity>
   fun findAllByPrisonNumber(prisonNumber: String): List<StrengthEntity>
   fun getStrengthEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): StrengthEntity?
 }

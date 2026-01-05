@@ -189,4 +189,14 @@ class ChallengeService(
     }
     log.info("Processed Archive challenge for $prisonNumber")
   }
+
+  @Transactional
+  fun archiveAllScreenerChallenges(prisonerNumber: String) {
+    val alnChallenges = challengeRepository.findAllByPrisonNumberAndAlnScreenerIdIsNotNull(prisonerNumber)
+    alnChallenges.forEach {
+      it.active = false
+      it.archiveReason = "Old screener"
+    }
+    challengeRepository.saveAll(alnChallenges)
+  }
 }

@@ -10,5 +10,6 @@ interface ChallengeRepository : JpaRepository<ChallengeEntity, UUID> {
 
   fun findAllByPrisonNumber(prisonNumber: String): List<ChallengeEntity>
   fun findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber: String): List<ChallengeEntity>
+  fun findAllByPrisonNumberAndAlnScreenerIdIsNotNull(prisonNumber: String): List<ChallengeEntity>
   fun getChallengeEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): ChallengeEntity?
 }

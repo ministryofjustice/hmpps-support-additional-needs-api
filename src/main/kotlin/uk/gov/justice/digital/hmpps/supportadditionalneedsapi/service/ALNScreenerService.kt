@@ -38,6 +38,10 @@ class ALNScreenerService(
     additionalInfoField = "screenerDate",
   )
   fun createScreener(prisonNumber: String, request: ALNScreenerRequest) {
+    // Whenever a new screener is added mark any existing screener challenges/strengths as inactive.
+    challengeService.archiveAllScreenerChallenges(prisonNumber)
+    strengthService.archiveAllScreenerStrengths(prisonNumber)
+
     with(request) {
       val alnScreener = alnScreenerRepository.saveAndFlush(
         ALNScreenerEntity(
@@ -56,8 +60,15 @@ class ALNScreenerService(
   }
 
   fun getScreeners(prisonNumber: String): ALNScreeners {
-    val screeners = alnScreenerRepository.findAllByPrisonNumber(prisonNumber)
-      .sortedByDescending { it.screeningDate }
+    val screeners = alnScreenerRepository
+      .findAllByPrisonNumber(prisonNumber)
+      .sortedWith(
+        // Sort by most recent screening first.
+        // If two or more screeners have the same date, use most recently updated
+        compareByDescending<ALNScreenerEntity> { it.screeningDate }
+          .thenByDescending { it.updatedAt },
+      )
+
     return ALNScreeners(screeners.map { alnScreenerMapper.toModel(it) })
   }
 
