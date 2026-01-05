@@ -714,7 +714,7 @@ abstract class IntegrationTestBase {
     sendDomainEvent(sqsMessage)
   }
 
-  fun aSmallPause(duration: Long = 100L){
+  fun aSmallPause(duration: Long = 100L) {
     Thread.sleep(duration)
   }
 }

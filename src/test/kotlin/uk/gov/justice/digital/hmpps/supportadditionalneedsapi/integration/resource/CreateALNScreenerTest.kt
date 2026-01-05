@@ -274,7 +274,6 @@ class CreateALNScreenerTest : IntegrationTestBase() {
     assertThat(oldScreener.strengths.map { it.active }).containsOnly(false)
   }
 
-
   private fun createChallengesList(): List<ALNChallenge> = listOf(
     ALNChallenge(
       challengeTypeCode = "MEMORY",
