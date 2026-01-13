@@ -66,6 +66,7 @@ class AdminToolsController(
       eventType = EventType.EDUCATION_STATUS_UPDATE,
       additionalInformation = additionalInformation,
       description = if (start) "EDUCATION_STARTED" else "EDUCATION_STOPPED",
+
     )
 
     testDataService.sendDomainEvent(domainEvent)
@@ -90,7 +91,8 @@ class AdminToolsController(
           "publishedAt": "$publishedAt",
           "description": "$description",
           "version": "$version",
-          "additionalInformation": ${ObjectMapper().writeValueAsString(additionalInformation)}
+          "additionalInformation": ${ObjectMapper().writeValueAsString(additionalInformation)},
+          "detailUrl": "http://localhost:8080/$prisonNumber"
         }        
     """.trimIndent(),
     MessageId = UUID.randomUUID(),

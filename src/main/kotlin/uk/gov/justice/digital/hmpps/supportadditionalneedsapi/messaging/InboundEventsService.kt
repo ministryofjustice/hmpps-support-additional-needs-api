@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.Addition
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.validator.PRISON_NUMBER_FORMAT
+import java.net.URL
 
 private val log = KotlinLogging.logger {}
 
@@ -63,8 +65,35 @@ class InboundEventsService(
       is PrisonerReceivedAdditionalInformation -> scheduleService.processReceived(additionalInformation)
       is PrisonerReleasedAdditionalInformation -> scheduleService.processReleased(additionalInformation)
       is PrisonerMergedAdditionalInformation -> scheduleService.processMerged(additionalInformation)
-      is EducationStatusUpdateAdditionalInformation -> educationService.processEducationStatusUpdate(inboundEvent.prisonNumber(), additionalInformation, inboundEvent)
-      is EducationALNAssessmentUpdateAdditionalInformation -> alnScreenerService.processALNAssessmentUpdate(inboundEvent.prisonNumber(), additionalInformation, inboundEvent)
+      is EducationStatusUpdateAdditionalInformation -> educationService.processEducationStatusUpdate(
+        prisonNumberFromDetailUrl(inboundEvent.detailUrl),
+        additionalInformation,
+        inboundEvent,
+      )
+
+      is EducationALNAssessmentUpdateAdditionalInformation -> alnScreenerService.processALNAssessmentUpdate(
+        prisonNumberFromDetailUrl(inboundEvent.detailUrl),
+        additionalInformation,
+        inboundEvent,
+      )
     }
+  }
+
+  fun prisonNumberFromDetailUrl(detailURL: URL?): String {
+    if (detailURL == null) throw IllegalArgumentException()
+
+    val prisonNumber = detailURL.path
+      .substringAfterLast('/')
+      .also {
+        require(it.isNotBlank()) {
+          "No prison number found in detailURL: $detailURL"
+        }
+      }
+
+    require(prisonNumber.matches(Regex(PRISON_NUMBER_FORMAT))) {
+      "Invalid prison number extracted: $prisonNumber from $detailURL"
+    }
+
+    return prisonNumber
   }
 }

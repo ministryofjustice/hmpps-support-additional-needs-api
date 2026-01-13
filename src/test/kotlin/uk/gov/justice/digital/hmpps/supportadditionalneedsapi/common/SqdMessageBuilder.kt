@@ -34,7 +34,8 @@ fun aValidHmppsDomainEventsSqsMessage(
           "publishedAt": "$publishedAt",
           "description": "$description",
           "version": "$version",
-          "additionalInformation": ${ObjectMapper().writeValueAsString(additionalInformation)}
+          "additionalInformation": ${ObjectMapper().writeValueAsString(additionalInformation)},
+          "detailUrl": "${"http://localhost:8080/$prisonNumber"}"
         }        
   """.trimIndent(),
   MessageId = UUID.randomUUID(),
