@@ -8,7 +8,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.3.0"
   kotlin("plugin.spring") version "2.3.0"
   kotlin("plugin.jpa") version "2.3.0"
-  id("org.openapi.generator") version "7.18.0"
+  id("org.openapi.generator") version "7.19.0"
 
   `java-test-fixtures`
 }
@@ -27,7 +27,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val postgresqlVersion = "42.7.8"
+val postgresqlVersion = "42.7.9"
 val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.4"
 val buildDirectory: Directory = layout.buildDirectory.get()
@@ -41,7 +41,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:$hmppsSqsVersion")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.20.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.0")
 
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 
