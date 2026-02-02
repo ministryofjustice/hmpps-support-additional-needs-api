@@ -93,9 +93,10 @@ class ALNScreenerService(
     log.info("Retrieving ALN assessments for $prisonNumber")
     val alnAssessments = curiousApiClient.getALNAssessment(prisonNumber).alnAssessments.orEmpty()
 
-    val latestAssessment = alnAssessments
-      .filter { it.assessmentDate != null }
-      .maxByOrNull { it.assessmentDate!! }
+    val latestAssessment = alnAssessments.maxWithOrNull(
+      compareBy<ALNAssessment> { it.assessmentDate }
+        .thenBy { it.modifiedDate },
+    )
 
     if (latestAssessment == null) {
       log.warn("No valid ALN assessments found for $prisonNumber — skipping need recording.")
@@ -110,7 +111,7 @@ class ALNScreenerService(
       prisonNumber = prisonNumber,
       hasNeed = hasNeed,
       curiousReference = info.curiousExternalReference,
-      screenerDate = latestAssessment.assessmentDate!!,
+      screenerDate = latestAssessment.assessmentDate,
     )
 
     val overallNeed = needService.hasNeed(prisonNumber = prisonNumber)

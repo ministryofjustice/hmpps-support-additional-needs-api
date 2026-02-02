@@ -710,6 +710,76 @@ abstract class IntegrationTestBase {
   }
 }"""
 
+  fun createALNAssessmentMessageWithMultipleOnSameDay(
+    prisonNumber: String,
+    curiousReference: UUID = UUID.randomUUID(),
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ) {
+    stubGetCurious2LearnerAssessments(
+      prisonNumber,
+      createTestALNAssessmentWithMultipleOnSameDay(prisonNumber, hasNeed = hasNeed, assessmentDate = assessmentDate),
+    )
+    val sqsMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_ALN_ASSESSMENT_UPDATE,
+      additionalInformation = aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference),
+      description = "ASSESSMENT_COMPLETED",
+    )
+    sendCuriousALNMessage(sqsMessage)
+
+    // Then
+    // wait until the queue is drained / message is processed
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+    await untilCallTo {
+      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+      if (hasNeed) {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isTrue()
+      } else {
+        Assertions.assertThat(alnAssessment!!.hasNeed).isFalse()
+      }
+      Assertions.assertThat(alnAssessment.curiousReference).isEqualTo(curiousReference)
+      Assertions.assertThat(alnAssessment.screeningDate).isEqualTo(assessmentDate)
+    } matches { it != null }
+  }
+
+  // Curious returns two assessments with the same date
+  fun createTestALNAssessmentWithMultipleOnSameDay(
+    prisonNumber: String,
+    hasNeed: Boolean = true,
+    assessmentDate: LocalDate = LocalDate.now(),
+  ): String = """{
+  "v2": {
+    "assessments": {
+      "aln": [
+        {
+          "assessmentDate": "$assessmentDate",
+          "assessmentOutcome": "${if (hasNeed) "Yes" else "No"}",
+          "establishmentId": "KMI",
+          "establishmentName": "WTI",
+          "hasPrisonerConsent": "Yes",
+          "stakeholderReferral": "yes",
+          "createdDate": "2026-01-29T12:11:57.063",
+          "modifiedDate": "2026-01-29T12:11:57.063"
+        },
+        {
+          "assessmentDate": "$assessmentDate",
+          "assessmentOutcome": "${if (hasNeed) "No" else "Yes"}",
+          "establishmentId": "KMI",
+          "establishmentName": "WTI",
+          "hasPrisonerConsent": "Yes",
+          "stakeholderReferral": "yes",
+          "createdDate": "2026-01-28T12:11:57.063",
+          "modifiedDate": "2026-01-28T12:11:57.063"
+        }
+      ]
+    },
+    "prn": "$prisonNumber"
+  }
+}"""
+
   private fun sendCuriousALNMessage(sqsMessage: SqsMessage) {
     sendDomainEvent(sqsMessage)
   }
