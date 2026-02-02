@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class ALNAssessmentDTO(
   @param:JsonProperty("v2")
@@ -23,10 +24,12 @@ data class Assessments(
 )
 
 data class ALNAssessment(
-  val assessmentDate: LocalDate?,
-  val assessmentOutcome: String?,
+  val assessmentDate: LocalDate,
+  val assessmentOutcome: String,
   val establishmentId: String?,
   val establishmentName: String?,
   val hasPrisonerConsent: String?,
   val stakeholderReferral: String?,
+  val createdDate: LocalDateTime?,
+  val modifiedDate: LocalDateTime?,
 )

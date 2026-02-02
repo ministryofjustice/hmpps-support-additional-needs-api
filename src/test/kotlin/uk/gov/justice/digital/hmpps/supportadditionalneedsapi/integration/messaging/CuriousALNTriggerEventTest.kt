@@ -44,6 +44,25 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `should process Curious ALN domain event and mark the person as having an ALN need when curious has two assessments on the same day`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+
+    // When
+    val curiousReference = UUID.randomUUID()
+    createALNAssessmentMessageWithMultipleOnSameDay(prisonNumber, curiousReference, hasNeed = true)
+
+    // Then
+    Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
+    Assertions.assertThat(needService.hasNeed(prisonNumber)).isTrue()
+
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    Assertions.assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER)
+    Assertions.assertThat(timelineEntries[0].additionalInfo).isEqualTo("curiousReference:$curiousReference")
+  }
+
+  @Test
   fun `should process Curious ALN domain event where assessment date greater than education start date, mark the person as having an ALN need and create schedule with no deadline date`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
