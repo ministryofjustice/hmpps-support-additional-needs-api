@@ -1,318 +1,222 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.resource
 
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.Arguments
+import org.junit.jupiter.params.provider.MethodSource
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.HasNeedResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.NeedSource
-import java.time.LocalDate
-import java.util.UUID
+import java.util.stream.Stream
 
 class HasNeedTest : IntegrationTestBase() {
+
   companion object {
     private const val URI_TEMPLATE = "/profile/{prisonNumber}/has-need"
-  }
 
-  @Test
-  fun `A prisoner has a condition, challenge and LDD assessment`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
-      ?: throw IllegalStateException("Reference data not found")
-
-    conditionRepository.saveAndFlush(
-      ConditionEntity(
-        prisonNumber = prisonNumber,
-        source = Source.SELF_DECLARED,
-        conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+    @JvmStatic
+    fun scenarios(): Stream<Arguments> = Stream.of(
+      Arguments.of(
+        Scenario(
+          name = "condition + challenge + aln",
+          seed = {
+            seedCondition()
+            seedChallenge()
+            seedAln(hasNeed = true)
+          },
+          expectedHasNeed = true,
+          expectedNeedSources = listOf(
+            NeedSource.CONDITION_SELF_DECLARED,
+            NeedSource.CHALLENGE_NOT_ALN_SCREENER,
+            NeedSource.ALN_SCREENER,
+          ),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "condition only",
+          seed = { seedCondition() },
+          expectedHasNeed = false,
+          expectedNeedSources = listOf(NeedSource.CONDITION_SELF_DECLARED),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "condition + support strategy",
+          seed = {
+            seedCondition()
+            seedSupportStrategy()
+          },
+          expectedHasNeed = true,
+          expectedNeedSources = listOf(NeedSource.CONDITION_SELF_DECLARED),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "condition + plan",
+          seed = {
+            seedCondition()
+            seedELSP()
+          },
+          expectedHasNeed = true,
+          expectedNeedSources = listOf(NeedSource.CONDITION_SELF_DECLARED),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "challenge only",
+          seed = { seedChallenge() },
+          expectedHasNeed = true,
+          expectedNeedSources = listOf(NeedSource.CHALLENGE_NOT_ALN_SCREENER),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "challenge + plan",
+          seed = {
+            seedChallenge()
+            seedELSP()
+          },
+          expectedHasNeed = true,
+          expectedNeedSources = listOf(NeedSource.CHALLENGE_NOT_ALN_SCREENER),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "aln only",
+          seed = { seedAln(hasNeed = true) },
+          expectedHasNeed = false,
+          expectedNeedSources = listOf(NeedSource.ALN_SCREENER),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "aln + ldd",
+          seed = {
+            seedAln(hasNeed = true)
+            seedLdd(hasNeed = true)
+          },
+          expectedHasNeed = false,
+          expectedNeedSources = listOf(NeedSource.ALN_SCREENER),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "aln + ldd",
+          seed = {
+            seedAln(hasNeed = false)
+            seedLdd(hasNeed = true)
+          },
+          expectedHasNeed = false,
+          expectedNeedSources = emptyList(),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "ldd only",
+          seed = { seedLdd(hasNeed = true) },
+          expectedHasNeed = false,
+          expectedNeedSources = listOf(NeedSource.LDD_SCREENER),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "no need",
+          seed = { /* nothing */ },
+          expectedHasNeed = false,
+          expectedNeedSources = emptyList(),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "Plan only ",
+          seed = { seedELSP() },
+          expectedHasNeed = false,
+          expectedNeedSources = emptyList(),
+        ),
+      ),
+      Arguments.of(
+        Scenario(
+          name = "Strength only ",
+          seed = { seedStrength() },
+          expectedHasNeed = false,
+          expectedNeedSources = emptyList(),
+        ),
       ),
     )
+  }
 
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
-      ?: throw IllegalStateException("Reference data not found")
-    challengeRepository.saveAndFlush(
-      ChallengeEntity(
-        prisonNumber = prisonNumber,
-        challengeType = sensory,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
-      ),
-    )
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("scenarios")
+  fun `has-need scenarios`(scenario: Scenario) {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
 
-    val alnAssessment = AlnAssessmentEntity(
-      prisonNumber = prisonNumber,
-      hasNeed = true,
-      screeningDate = LocalDate.now(),
-      curiousReference = UUID.randomUUID(),
-    )
-    alnAssessmentRepository.saveAndFlush(alnAssessment)
+    scenario.seed(SeedContext(this, prisonNumber))
 
     // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE, prisonNumber)
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
       .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
+      .expectStatus().isOk
+      .returnResult<HasNeedResponse>()
 
     // Then
     val actual = response.responseBody.blockFirst()
     assertThat(actual).isNotNull
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(3)
-    assertThat(actual.needSources).containsExactlyInAnyOrder(NeedSource.CONDITION_SELF_DECLARED, NeedSource.CHALLENGE_NOT_ALN_SCREENER, NeedSource.ALN_SCREENER)
+    actual!!
+
+    assertThat(actual.hasNeed).isEqualTo(scenario.expectedHasNeed)
+    assertThat(actual.needSources).containsExactlyInAnyOrderElementsOf(scenario.expectedNeedSources)
+
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
     assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
   }
 
-  @Test
-  fun `A prisoner has a need that is a condition`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
-      ?: throw IllegalStateException("Reference data not found")
-
-    conditionRepository.saveAndFlush(
-      ConditionEntity(
-        prisonNumber = prisonNumber,
-        source = Source.SELF_DECLARED,
-        conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
-      ),
-    )
-
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(1)
-    assertThat(actual.needSources[0]).isEqualTo(NeedSource.CONDITION_SELF_DECLARED)
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
+  data class Scenario(
+    val name: String,
+    val seed: SeedContext.() -> Unit,
+    val expectedHasNeed: Boolean,
+    val expectedNeedSources: List<NeedSource>,
+  ) {
+    override fun toString(): String = name
   }
 
-  @Test
-  fun `A prisoner has a need that is a challenge`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
+  data class SeedContext(
+    val test: HasNeedTest,
+    val prisonNumber: String,
+  ) {
+    fun seedCondition() = with(test) {
+      aValidConditionExists(prisonNumber)
+    }
 
-    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
-      ?: throw IllegalStateException("Reference data not found")
-    challengeRepository.saveAndFlush(
-      ChallengeEntity(
-        prisonNumber = prisonNumber,
-        challengeType = sensory,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
-      ),
-    )
+    fun seedChallenge() = with(test) {
+      aValidChallengeExists(prisonNumber)
+    }
 
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
+    fun seedStrength() = with(test) {
+      aValidStrengthExists(prisonNumber)
+    }
 
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(1)
-    assertThat(actual.needSources[0]).isEqualTo(NeedSource.CHALLENGE_NOT_ALN_SCREENER)
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
-  }
+    fun seedSupportStrategy() = with(test) {
+      aValidSupportStrategyExists(prisonNumber)
+    }
 
-  @Test
-  fun `A prisoner has a need that is an aln assessment`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
+    fun seedAln(hasNeed: Boolean) = with(test) {
+      createALNAssessmentMessage(prisonNumber, hasNeed = hasNeed)
+    }
 
-    val alnAssessment = AlnAssessmentEntity(
-      prisonNumber = prisonNumber,
-      hasNeed = true,
-      screeningDate = LocalDate.now(),
-      curiousReference = UUID.randomUUID(),
-    )
-    alnAssessmentRepository.saveAndFlush(alnAssessment)
+    fun seedLdd(hasNeed: Boolean) = with(test) {
+      aValidLDDExists(prisonNumber, hasNeed = hasNeed)
+    }
 
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(1)
-    assertThat(actual.needSources[0]).isEqualTo(NeedSource.ALN_SCREENER)
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
-  }
-
-  @Test
-  fun `A prisoner has an aln assessment and LDD assessment`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val alnAssessment = AlnAssessmentEntity(
-      prisonNumber = prisonNumber,
-      hasNeed = true,
-      screeningDate = LocalDate.now(),
-      curiousReference = UUID.randomUUID(),
-    )
-    alnAssessmentRepository.saveAndFlush(alnAssessment)
-
-    val lddAssessment = LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true)
-    lddAssessmentRepository.saveAndFlush(lddAssessment)
-
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(1)
-    assertThat(actual.needSources[0]).isEqualTo(NeedSource.ALN_SCREENER)
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
-  }
-
-  @Test
-  fun `A prisoner has an aln assessment with no need and LDD assessment`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val alnAssessment = AlnAssessmentEntity(
-      prisonNumber = prisonNumber,
-      hasNeed = false,
-      screeningDate = LocalDate.now(),
-      curiousReference = UUID.randomUUID(),
-    )
-    alnAssessmentRepository.saveAndFlush(alnAssessment)
-
-    val lddAssessment = LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true)
-    lddAssessmentRepository.saveAndFlush(lddAssessment)
-
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
-    assertThat(actual!!.hasNeed).isFalse
-    assertThat(actual.needSources.size).isZero
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
-  }
-
-  @Test
-  fun `A prisoner has an LDD assessment`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    val lddAssessment = LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true)
-    lddAssessmentRepository.saveAndFlush(lddAssessment)
-
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull
-    assertThat(actual!!.hasNeed).isTrue
-    assertThat(actual.needSources.size).isEqualTo(1)
-    assertThat(actual.needSources[0]).isEqualTo(NeedSource.LDD_SCREENER)
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
-  }
-
-  @Test
-  fun `A prisoner has a no need`() {
-    // Given
-    stubGetTokenFromHmppsAuth()
-    stubGetDisplayName("testuser")
-    val prisonNumber = randomValidPrisonNumber()
-
-    // When
-    val response = webTestClient.get()
-      .uri(URI_TEMPLATE, prisonNumber)
-      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO"), username = "testuser"))
-      .exchange()
-      .expectStatus()
-      .isOk
-      .returnResult(HasNeedResponse::class.java)
-
-    // Then
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
-    assertThat(actual!!.hasNeed).isFalse
-    assertThat(actual.needSources.size).isZero
-    assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
-    assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
+    fun seedELSP() = with(test) {
+      anElSPExists(prisonNumber = prisonNumber)
+    }
   }
 }

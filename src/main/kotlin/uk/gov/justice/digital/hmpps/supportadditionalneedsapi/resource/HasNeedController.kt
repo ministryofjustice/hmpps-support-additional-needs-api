@@ -9,7 +9,10 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ServiceProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.PlanCreationScheduleHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.HasNeedResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStrategyService
 
 @Validated
 @RestController
@@ -18,16 +21,30 @@ class HasNeedController(
   private val needService: NeedService,
   private val planCreationScheduleHistoryMapper: PlanCreationScheduleHistoryMapper,
   private val serviceProperties: ServiceProperties,
+  private val planService: EducationSupportPlanService,
+  private val supportStrategyService: SupportStrategyService,
+  private val challengeService: ChallengeService,
+
 ) {
   @PreAuthorize(HAS_VIEW_ELSP)
   @GetMapping
   fun hasNeed(@PathVariable prisonNumber: String): HasNeedResponse {
-    val needSources =
-      planCreationScheduleHistoryMapper.toNeedSources(needService.getNeedSources(prisonNumber)) ?: listOf()
+    val needSources = planCreationScheduleHistoryMapper
+      .toNeedSources(needService.getNeedSources(prisonNumber))
+      .orEmpty()
+
     val hasNeed = needSources.isNotEmpty()
 
+    val hasPlan = planService.hasPlan(prisonNumber)
+    val hasManualSupportStrategy =
+      supportStrategyService.getSupportStrategies(prisonNumber).supportStrategies.any { it.active }
+    val hasManualChallenge =
+      challengeService.getChallenges(prisonNumber).challenges.any { it.active && !it.fromALNScreener }
+
+    val hasSANInformation = hasNeed && (hasPlan || hasManualSupportStrategy || hasManualChallenge)
+
     return HasNeedResponse(
-      hasNeed = hasNeed,
+      hasNeed = hasSANInformation,
       url = getUrl(prisonNumber),
       modalUrl = getModalUrl(prisonNumber),
       needSources = needSources,
