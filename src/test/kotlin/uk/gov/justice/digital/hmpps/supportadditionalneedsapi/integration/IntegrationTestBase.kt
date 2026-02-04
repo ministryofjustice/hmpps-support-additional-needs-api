@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Ehcp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -463,6 +464,25 @@ abstract class IntegrationTestBase {
       hasStrengths = true,
     ),
   )
+
+  fun aValidSupportStrategyExists(prisonNumber: String) {
+    val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.SUPPORT_STRATEGY, "PROCESSING_SPEED"))
+      ?: throw IllegalStateException("Reference data not found")
+    supportStrategyRepository.saveAndFlush(
+      SupportStrategyEntity(
+        prisonNumber = prisonNumber,
+        supportStrategyType = sensory,
+        createdAtPrison = "BXI",
+        updatedAtPrison = "BXI",
+      ),
+    )
+  }
+
+  fun aValidLDDExists(prisonNumber: String, hasNeed: Boolean) {
+    lddAssessmentRepository.saveAndFlush(
+      LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = hasNeed),
+    )
+  }
 
   fun aValidChallengeExists(prisonNumber: String, screenerId: UUID? = null) {
     val sensory = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CHALLENGE, "SENSORY_PROCESSING"))
