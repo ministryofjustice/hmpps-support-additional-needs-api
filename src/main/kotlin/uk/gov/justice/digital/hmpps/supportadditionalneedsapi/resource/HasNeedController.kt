@@ -36,12 +36,12 @@ class HasNeedController(
     val hasNeed = needSources.isNotEmpty()
 
     val hasPlan = planService.hasPlan(prisonNumber)
-    val hasManualSupportStrategy =
+    val hasSupportStrategy =
       supportStrategyService.getSupportStrategies(prisonNumber).supportStrategies.any { it.active }
     val hasManualChallenge =
       challengeService.getChallenges(prisonNumber).challenges.any { it.active && !it.fromALNScreener }
 
-    val hasSANInformation = hasNeed && (hasPlan || hasManualSupportStrategy || hasManualChallenge)
+    val hasSANInformation = hasNeed && (hasPlan || hasSupportStrategy || hasManualChallenge)
 
     return HasNeedResponse(
       hasNeed = hasSANInformation,
