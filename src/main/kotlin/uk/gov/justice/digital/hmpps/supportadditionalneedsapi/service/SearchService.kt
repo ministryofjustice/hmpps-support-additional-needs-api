@@ -163,8 +163,8 @@ private fun List<Person>.sortBy(searchCriteria: SearchCriteria): List<Person> {
     SearchSortField.CELL_LOCATION -> compareBy(nullsLast()) { it.cellLocation }
     SearchSortField.DEADLINE_DATE -> compareBy(nullsLast()) { it.deadlineDate }
     SearchSortField.PLAN_STATUS -> compareBy { person -> customPlanStatusOrder[person.planStatus] }
-    SearchSortField.IN_EDUCATION -> compareBy(reverseOrder()) { it.inEducation }
-    SearchSortField.HAS_ADDITIONAL_NEED -> compareBy(reverseOrder()) { it.hasAdditionalNeed }
+    SearchSortField.IN_EDUCATION -> compareBy { it.inEducation }
+    SearchSortField.HAS_ADDITIONAL_NEED -> compareBy { it.hasAdditionalNeed }
   }
 
   return when (searchCriteria.sortDirection) {

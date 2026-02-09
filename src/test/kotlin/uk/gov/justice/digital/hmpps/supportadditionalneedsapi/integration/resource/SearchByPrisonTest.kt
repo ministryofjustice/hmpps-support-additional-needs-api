@@ -383,11 +383,11 @@ class SearchByPrisonTest : IntegrationTestBase() {
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
         .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_2") })
-        .person(2, { it.hasSurname("PRISONER_3") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_1") })
-        .person(5, { it.hasSurname("PRISONER_4") })
+        .person(1, { it.hasSurname("PRISONER_1") })
+        .person(2, { it.hasSurname("PRISONER_4") })
+        .person(3, { it.hasSurname("PRISONER_2") })
+        .person(4, { it.hasSurname("PRISONER_3") })
+        .person(5, { it.hasSurname("PRISONER_5") })
     }
 
     @Test
@@ -413,11 +413,11 @@ class SearchByPrisonTest : IntegrationTestBase() {
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
         .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_2") })
-        .person(4, { it.hasSurname("PRISONER_3") })
-        .person(5, { it.hasSurname("PRISONER_5") })
+        .person(1, { it.hasSurname("PRISONER_2") })
+        .person(2, { it.hasSurname("PRISONER_3") })
+        .person(3, { it.hasSurname("PRISONER_5") })
+        .person(4, { it.hasSurname("PRISONER_1") })
+        .person(5, { it.hasSurname("PRISONER_4") })
     }
 
     @Test
@@ -443,11 +443,11 @@ class SearchByPrisonTest : IntegrationTestBase() {
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
         .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_2") })
-        .person(5, { it.hasSurname("PRISONER_3") })
+        .person(1, { it.hasSurname("PRISONER_2") })
+        .person(2, { it.hasSurname("PRISONER_3") })
+        .person(3, { it.hasSurname("PRISONER_1") })
+        .person(4, { it.hasSurname("PRISONER_4") })
+        .person(5, { it.hasSurname("PRISONER_5") })
     }
 
     @Test
@@ -473,11 +473,11 @@ class SearchByPrisonTest : IntegrationTestBase() {
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
         .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_2") })
-        .person(2, { it.hasSurname("PRISONER_3") })
-        .person(3, { it.hasSurname("PRISONER_1") })
-        .person(4, { it.hasSurname("PRISONER_4") })
-        .person(5, { it.hasSurname("PRISONER_5") })
+        .person(1, { it.hasSurname("PRISONER_1") })
+        .person(2, { it.hasSurname("PRISONER_4") })
+        .person(3, { it.hasSurname("PRISONER_5") })
+        .person(4, { it.hasSurname("PRISONER_2") })
+        .person(5, { it.hasSurname("PRISONER_3") })
     }
 
     @Test
