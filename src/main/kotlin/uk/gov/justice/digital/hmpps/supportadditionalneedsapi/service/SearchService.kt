@@ -91,31 +91,32 @@ class SearchService(
       // Overdue review
       overview.reviewDeadlineDate != null &&
         overview.deadlineDate != null &&
-        overview.deadlineDate == overview.reviewDeadlineDate &&
+        overview.deadlineDate.isEqual(overview.reviewDeadlineDate) &&
         overview.reviewDeadlineDate < today -> PlanStatus.REVIEW_OVERDUE
 
       // Overdue plan creation
       overview.planCreationDeadlineDate != null &&
         overview.deadlineDate != null &&
-        overview.deadlineDate == overview.planCreationDeadlineDate &&
+        overview.deadlineDate.isEqual(overview.planCreationDeadlineDate) &&
         overview.planCreationDeadlineDate < today -> PlanStatus.PLAN_OVERDUE
 
       // Needs plan (has needs and education, no deadline, and no plan yet)
       !overview.hasPlan &&
-        overview.planCreationDeadlineDate == Constants.IN_THE_FUTURE_DATE
+        overview.planCreationDeadlineDate != null &&
+        overview.planCreationDeadlineDate.isEqual(Constants.IN_THE_FUTURE_DATE)
       -> PlanStatus.NEEDS_PLAN
 
       // Review due soon (within 5 working days)
       overview.reviewDeadlineDate != null &&
         overview.deadlineDate != null &&
-        overview.deadlineDate == overview.reviewDeadlineDate &&
+        overview.deadlineDate.isEqual(overview.reviewDeadlineDate) &&
         !overview.reviewDeadlineDate.isBefore(today) &&
         !overview.reviewDeadlineDate.isAfter(todayPlus5WorkingDays) -> PlanStatus.REVIEW_DUE
 
       // Plan is due soon (within 5 working days)
       overview.planCreationDeadlineDate != null &&
         overview.deadlineDate != null &&
-        overview.deadlineDate == overview.planCreationDeadlineDate &&
+        overview.deadlineDate.isEqual(overview.planCreationDeadlineDate) &&
         !overview.hasPlan &&
         !overview.planDeclined &&
         !overview.planCreationDeadlineDate.isBefore(today) &&
@@ -162,6 +163,8 @@ private fun List<Person>.sortBy(searchCriteria: SearchCriteria): List<Person> {
     SearchSortField.CELL_LOCATION -> compareBy(nullsLast()) { it.cellLocation }
     SearchSortField.DEADLINE_DATE -> compareBy(nullsLast()) { it.deadlineDate }
     SearchSortField.PLAN_STATUS -> compareBy { person -> customPlanStatusOrder[person.planStatus] }
+    SearchSortField.IN_EDUCATION -> compareBy(reverseOrder()) { it.inEducation }
+    SearchSortField.HAS_ADDITIONAL_NEED -> compareBy(reverseOrder()) { it.hasAdditionalNeed }
   }
 
   return when (searchCriteria.sortDirection) {
