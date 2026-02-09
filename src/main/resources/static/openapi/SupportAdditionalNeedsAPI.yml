@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.17.0'
+  version: '0.17.1'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1076,6 +1076,8 @@ components:
         - RELEASE_DATE
         - DEADLINE_DATE
         - PLAN_STATUS
+        - HAS_ADDITIONAL_NEED
+        - IN_EDUCATION
 
     SearchSortDirection:
       type: string
