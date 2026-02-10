@@ -143,15 +143,15 @@ private fun List<Person>.filterByCriteria(searchCriteria: SearchCriteria): List<
     )
 }
 
-val customPlanStatusOrder = listOf(
-  PlanStatus.NEEDS_PLAN,
-  PlanStatus.PLAN_DUE,
-  PlanStatus.REVIEW_DUE,
+private val customPlanStatusOrder = listOf(
   PlanStatus.ACTIVE_PLAN,
+  PlanStatus.PLAN_DUE,
+  PlanStatus.NEEDS_PLAN,
+  PlanStatus.REVIEW_DUE,
   PlanStatus.PLAN_OVERDUE,
   PlanStatus.REVIEW_OVERDUE,
-  PlanStatus.INACTIVE_PLAN,
   PlanStatus.PLAN_DECLINED,
+  PlanStatus.INACTIVE_PLAN,
   PlanStatus.NO_PLAN,
 ).withIndex().associate { it.value to it.index }
 

@@ -12,7 +12,7 @@ fun aValidPrisoner(
   isRecall: Boolean = false,
   firstName: String = "Bob",
   lastName: String = "Smith",
-  cellLocation: String = "B-2-022",
+  cellLocation: String? = "B-2-022",
   dateOfBirth: LocalDate = LocalDate.now().minusYears(20),
   releaseType: String = "ARD",
 ): Prisoner = Prisoner(
