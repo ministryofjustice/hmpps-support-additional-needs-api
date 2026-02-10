@@ -6,9 +6,20 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.web.util.DefaultUriBuilderFactory
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.ACTIVE_PLAN
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.INACTIVE_PLAN
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.NEEDS_PLAN
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.NO_PLAN
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.PLAN_DECLINED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.PLAN_DUE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.PLAN_OVERDUE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.REVIEW_DUE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.REVIEW_OVERDUE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchByPrisonResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import java.time.LocalDate
@@ -20,12 +31,62 @@ class SearchByPrisonTest : IntegrationTestBase() {
 
     private val today = LocalDate.now()
 
-    private val PRISONER_1 = aValidPrisoner(lastName = "PRISONER_1", prisonerNumber = randomValidPrisonNumber(), releaseDate = today.plusDays(1), cellLocation = "Z-3")
-    private val PRISONER_2 = aValidPrisoner(lastName = "PRISONER_2", prisonerNumber = randomValidPrisonNumber(), releaseDate = today.plusDays(100), cellLocation = "Z-1")
-    private val PRISONER_3 = aValidPrisoner(lastName = "PRISONER_3", prisonerNumber = randomValidPrisonNumber(), releaseDate = today.plusDays(10), cellLocation = "A-1")
-    private val PRISONER_4 = aValidPrisoner(lastName = "PRISONER_4", prisonerNumber = randomValidPrisonNumber(), releaseDate = today.plusDays(50), cellLocation = "B-2")
-    private val PRISONER_5 = aValidPrisoner(lastName = "PRISONER_5", prisonerNumber = randomValidPrisonNumber(), releaseDate = today.plusDays(30), cellLocation = "Z-2")
-    private val PRISONERS_IN_PRISON = listOf(PRISONER_1, PRISONER_2, PRISONER_3, PRISONER_4, PRISONER_5)
+    private val PRISONER_1 = aValidPrisoner(
+      lastName = "PRISONER_1",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(1),
+      cellLocation = "Z-3",
+    )
+    private val PRISONER_2 = aValidPrisoner(
+      lastName = "PRISONER_2",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = null,
+      cellLocation = "Z-1",
+    )
+    private val PRISONER_3 = aValidPrisoner(
+      lastName = "PRISONER_3",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(10),
+      cellLocation = "A-1",
+    )
+    private val PRISONER_4 = aValidPrisoner(
+      lastName = "PRISONER_4",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(50),
+      cellLocation = "B-2",
+    )
+    private val PRISONER_5 = aValidPrisoner(
+      lastName = "PRISONER_5",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(30),
+      cellLocation = "Z-2",
+    )
+    private val PRISONER_6 = aValidPrisoner(
+      lastName = "PRISONER_6",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(80),
+      cellLocation = null,
+    )
+    private val PRISONER_7 = aValidPrisoner(
+      lastName = "PRISONER_7",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(60),
+      cellLocation = "C-2",
+    )
+    private val PRISONER_8 = aValidPrisoner(
+      lastName = "PRISONER_8",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(90),
+      cellLocation = "C-1",
+    )
+    private val PRISONER_9 = aValidPrisoner(
+      lastName = "PRISONER_9",
+      prisonerNumber = randomValidPrisonNumber(),
+      releaseDate = today.plusDays(20),
+      cellLocation = "Z-4",
+    )
+    private val PRISONERS_IN_PRISON =
+      listOf(PRISONER_1, PRISONER_2, PRISONER_3, PRISONER_4, PRISONER_5, PRISONER_6, PRISONER_7, PRISONER_8, PRISONER_9)
   }
 
   @BeforeEach
@@ -36,14 +97,66 @@ class SearchByPrisonTest : IntegrationTestBase() {
 
     educationEnrolmentRepository.deleteAll()
     educationRepository.deleteAll()
-    prisonerInEducation(PRISONER_3.prisonerNumber)
-    prisonerInEducation(PRISONER_2.prisonerNumber)
-    prisonerInEducation(PRISONER_5.prisonerNumber)
-
     conditionRepository.deleteAll()
+    planCreationScheduleRepository.deleteAll()
+    elspReviewRepository.deleteAll()
+    reviewScheduleRepository.deleteAll()
+
+    // set up each person to have a specific education, needs, and plan status
+    // needsPlan
+    // PRISONER_1
+    prisonerInEducation(PRISONER_1.prisonerNumber)
     prisonerHasNeed(PRISONER_1.prisonerNumber)
-    prisonerHasNeed(PRISONER_5.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_1.prisonerNumber, deadlineDate = IN_THE_FUTURE_DATE)
+
+    // PlanDue
+    // PRISONER_2
+    prisonerInEducation(PRISONER_2.prisonerNumber)
+    prisonerHasNeed(PRISONER_2.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_2.prisonerNumber, deadlineDate = today.plusDays(2))
+
+    // ReviewDue
+    // PRISONER_3
+    prisonerInEducation(PRISONER_3.prisonerNumber)
+    prisonerHasNeed(PRISONER_3.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = PRISONER_3.prisonerNumber, deadlineDate = today.plusDays(3))
+
+    // ActivePlan
+    // PRISONER_4
+    prisonerInEducation(PRISONER_4.prisonerNumber)
     prisonerHasNeed(PRISONER_4.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = PRISONER_4.prisonerNumber, deadlineDate = today.plusWeeks(2))
+    anElSPExists(PRISONER_4.prisonerNumber)
+
+    // PlanOverDue
+    // PRISONER_5
+    prisonerInEducation(PRISONER_5.prisonerNumber)
+    prisonerHasNeed(PRISONER_5.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_5.prisonerNumber, deadlineDate = today.minusDays(5))
+
+    // ReviewOverDue
+    // PRISONER_6
+    prisonerInEducation(PRISONER_6.prisonerNumber)
+    prisonerHasNeed(PRISONER_6.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = PRISONER_6.prisonerNumber, deadlineDate = today.minusDays(6))
+
+    // Inactive plan
+    // PRISONER_7
+    prisonerHasNeed(PRISONER_7.prisonerNumber)
+    anElSPExists(PRISONER_7.prisonerNumber)
+
+    // Declined plan
+    // PRISONER_8
+    prisonerHasNeed(PRISONER_8.prisonerNumber)
+    aValidPlanCreationScheduleExists(
+      prisonNumber = PRISONER_8.prisonerNumber,
+      deadlineDate = today.minusDays(8),
+      status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
+    )
+
+    // No plan
+    // PRISONER_9
+    // no data in san
   }
 
   @Test
@@ -66,8 +179,8 @@ class SearchByPrisonTest : IntegrationTestBase() {
       .hasPageSize(50)
       .isFirstPage()
       .isLastPage()
-      .hasTotalElements(5)
-      .currentPageHasNumberOfRecords(5)
+      .hasTotalElements(9)
+      .currentPageHasNumberOfRecords(9)
   }
 
   @Test
@@ -202,12 +315,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_3") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_4") })
-        .person(5, { it.hasSurname("PRISONER_2") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_1").hasReleaseDate(today.plusDays(1)) })
+        .person(2, { it.hasSurname("PRISONER_3").hasReleaseDate(today.plusDays(10)) })
+        .person(3, { it.hasSurname("PRISONER_9").hasReleaseDate(today.plusDays(20)) })
+        .person(4, { it.hasSurname("PRISONER_5").hasReleaseDate(today.plusDays(30)) })
+        .person(5, { it.hasSurname("PRISONER_4").hasReleaseDate(today.plusDays(50)) })
+        .person(6, { it.hasSurname("PRISONER_7").hasReleaseDate(today.plusDays(60)) })
+        .person(7, { it.hasSurname("PRISONER_6").hasReleaseDate(today.plusDays(80)) })
+        .person(8, { it.hasSurname("PRISONER_8").hasReleaseDate(today.plusDays(90)) })
+        .person(9, { it.hasSurname("PRISONER_2").hasNoReleaseDate() })
     }
 
     @Test
@@ -232,12 +349,84 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_2") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_3") })
-        .person(5, { it.hasSurname("PRISONER_1") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_2").hasNoReleaseDate() })
+        .person(2, { it.hasSurname("PRISONER_8").hasReleaseDate(today.plusDays(90)) })
+        .person(3, { it.hasSurname("PRISONER_6").hasReleaseDate(today.plusDays(80)) })
+        .person(4, { it.hasSurname("PRISONER_7").hasReleaseDate(today.plusDays(60)) })
+        .person(5, { it.hasSurname("PRISONER_4").hasReleaseDate(today.plusDays(50)) })
+        .person(6, { it.hasSurname("PRISONER_5").hasReleaseDate(today.plusDays(30)) })
+        .person(7, { it.hasSurname("PRISONER_9").hasReleaseDate(today.plusDays(20)) })
+        .person(8, { it.hasSurname("PRISONER_3").hasReleaseDate(today.plusDays(10)) })
+        .person(9, { it.hasSurname("PRISONER_1").hasReleaseDate(today.plusDays(1)) })
+    }
+
+    @Test
+    fun `sort by deadline date ascending`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("sortBy", "DEADLINE_DATE")
+            .queryParam("sortDirection", "ASC")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual)
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_6").hasDeadlineDate(today.minusDays(6)) })
+        .person(2, { it.hasSurname("PRISONER_5").hasDeadlineDate(today.minusDays(5)) })
+        .person(3, { it.hasSurname("PRISONER_2").hasDeadlineDate(today.plusDays(2)) })
+        .person(4, { it.hasSurname("PRISONER_3").hasDeadlineDate(today.plusDays(3)) })
+        .person(5, { it.hasSurname("PRISONER_4").hasDeadlineDate(today.plusWeeks(2)) })
+        .person(6, { it.hasSurname("PRISONER_1").hasNoDeadlineDate() })
+        .person(7, { it.hasSurname("PRISONER_7").hasNoDeadlineDate() })
+        .person(8, { it.hasSurname("PRISONER_8").hasNoDeadlineDate() })
+        .person(9, { it.hasSurname("PRISONER_9").hasNoDeadlineDate() })
+    }
+
+    @Test
+    fun `sort by deadline date descending`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("sortBy", "DEADLINE_DATE")
+            .queryParam("sortDirection", "DESC")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual)
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_1").hasNoDeadlineDate() })
+        .person(2, { it.hasSurname("PRISONER_7").hasNoDeadlineDate() })
+        .person(3, { it.hasSurname("PRISONER_8").hasNoDeadlineDate() })
+        .person(4, { it.hasSurname("PRISONER_9").hasNoDeadlineDate() })
+        .person(5, { it.hasSurname("PRISONER_4").hasDeadlineDate(today.plusWeeks(2)) })
+        .person(6, { it.hasSurname("PRISONER_3").hasDeadlineDate(today.plusDays(3)) })
+        .person(7, { it.hasSurname("PRISONER_2").hasDeadlineDate(today.plusDays(2)) })
+        .person(8, { it.hasSurname("PRISONER_5").hasDeadlineDate(today.minusDays(5)) })
+        .person(9, { it.hasSurname("PRISONER_6").hasDeadlineDate(today.minusDays(6)) })
     }
 
     @Test
@@ -262,12 +451,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
+        .hasTotalElements(9)
         .person(1, { it.hasSurname("PRISONER_1") })
         .person(2, { it.hasSurname("PRISONER_2") })
         .person(3, { it.hasSurname("PRISONER_3") })
         .person(4, { it.hasSurname("PRISONER_4") })
         .person(5, { it.hasSurname("PRISONER_5") })
+        .person(6, { it.hasSurname("PRISONER_6") })
+        .person(7, { it.hasSurname("PRISONER_7") })
+        .person(8, { it.hasSurname("PRISONER_8") })
+        .person(9, { it.hasSurname("PRISONER_9") })
     }
 
     @Test
@@ -292,12 +485,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_5") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_3") })
-        .person(4, { it.hasSurname("PRISONER_2") })
-        .person(5, { it.hasSurname("PRISONER_1") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_9") })
+        .person(2, { it.hasSurname("PRISONER_8") })
+        .person(3, { it.hasSurname("PRISONER_7") })
+        .person(4, { it.hasSurname("PRISONER_6") })
+        .person(5, { it.hasSurname("PRISONER_5") })
+        .person(6, { it.hasSurname("PRISONER_4") })
+        .person(7, { it.hasSurname("PRISONER_3") })
+        .person(8, { it.hasSurname("PRISONER_2") })
+        .person(9, { it.hasSurname("PRISONER_1") })
     }
 
     @Test
@@ -322,12 +519,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_3") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_2") })
-        .person(4, { it.hasSurname("PRISONER_5") })
-        .person(5, { it.hasSurname("PRISONER_1") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_3").hasCellLocation("A-1") })
+        .person(2, { it.hasSurname("PRISONER_4").hasCellLocation("B-2") })
+        .person(3, { it.hasSurname("PRISONER_8").hasCellLocation("C-1") })
+        .person(4, { it.hasSurname("PRISONER_7").hasCellLocation("C-2") })
+        .person(5, { it.hasSurname("PRISONER_2").hasCellLocation("Z-1") })
+        .person(6, { it.hasSurname("PRISONER_5").hasCellLocation("Z-2") })
+        .person(7, { it.hasSurname("PRISONER_1").hasCellLocation("Z-3") })
+        .person(8, { it.hasSurname("PRISONER_9").hasCellLocation("Z-4") })
+        .person(9, { it.hasSurname("PRISONER_6").hasNoCellLocation() })
     }
 
     @Test
@@ -352,12 +553,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_5") })
-        .person(3, { it.hasSurname("PRISONER_2") })
-        .person(4, { it.hasSurname("PRISONER_4") })
-        .person(5, { it.hasSurname("PRISONER_3") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_6").hasNoCellLocation() })
+        .person(2, { it.hasSurname("PRISONER_9").hasCellLocation("Z-4") })
+        .person(3, { it.hasSurname("PRISONER_1").hasCellLocation("Z-3") })
+        .person(4, { it.hasSurname("PRISONER_5").hasCellLocation("Z-2") })
+        .person(5, { it.hasSurname("PRISONER_2").hasCellLocation("Z-1") })
+        .person(6, { it.hasSurname("PRISONER_7").hasCellLocation("C-2") })
+        .person(7, { it.hasSurname("PRISONER_8").hasCellLocation("C-1") })
+        .person(8, { it.hasSurname("PRISONER_4").hasCellLocation("B-2") })
+        .person(9, { it.hasSurname("PRISONER_3").hasCellLocation("A-1") })
     }
 
     @Test
@@ -382,12 +587,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_2") })
-        .person(4, { it.hasSurname("PRISONER_3") })
-        .person(5, { it.hasSurname("PRISONER_5") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_7").isNotInEducation() })
+        .person(2, { it.hasSurname("PRISONER_8").isNotInEducation() })
+        .person(3, { it.hasSurname("PRISONER_9").isNotInEducation() })
+        .person(4, { it.hasSurname("PRISONER_1").isInEducation() })
+        .person(5, { it.hasSurname("PRISONER_2").isInEducation() })
+        .person(6, { it.hasSurname("PRISONER_3").isInEducation() })
+        .person(7, { it.hasSurname("PRISONER_4").isInEducation() })
+        .person(8, { it.hasSurname("PRISONER_5").isInEducation() })
+        .person(9, { it.hasSurname("PRISONER_6").isInEducation() })
     }
 
     @Test
@@ -412,12 +621,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_2") })
-        .person(2, { it.hasSurname("PRISONER_3") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_1") })
-        .person(5, { it.hasSurname("PRISONER_4") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_1").isInEducation() })
+        .person(2, { it.hasSurname("PRISONER_2").isInEducation() })
+        .person(3, { it.hasSurname("PRISONER_3").isInEducation() })
+        .person(4, { it.hasSurname("PRISONER_4").isInEducation() })
+        .person(5, { it.hasSurname("PRISONER_5").isInEducation() })
+        .person(6, { it.hasSurname("PRISONER_6").isInEducation() })
+        .person(7, { it.hasSurname("PRISONER_7").isNotInEducation() })
+        .person(8, { it.hasSurname("PRISONER_8").isNotInEducation() })
+        .person(9, { it.hasSurname("PRISONER_9").isNotInEducation() })
     }
 
     @Test
@@ -442,12 +655,16 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_2") })
-        .person(2, { it.hasSurname("PRISONER_3") })
-        .person(3, { it.hasSurname("PRISONER_1") })
-        .person(4, { it.hasSurname("PRISONER_4") })
-        .person(5, { it.hasSurname("PRISONER_5") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_9").doesNotHaveAdditionalNeed() })
+        .person(2, { it.hasSurname("PRISONER_1").hasAdditionalNeed() })
+        .person(3, { it.hasSurname("PRISONER_2").hasAdditionalNeed() })
+        .person(4, { it.hasSurname("PRISONER_3").hasAdditionalNeed() })
+        .person(5, { it.hasSurname("PRISONER_4").hasAdditionalNeed() })
+        .person(6, { it.hasSurname("PRISONER_5").hasAdditionalNeed() })
+        .person(7, { it.hasSurname("PRISONER_6").hasAdditionalNeed() })
+        .person(8, { it.hasSurname("PRISONER_7").hasAdditionalNeed() })
+        .person(9, { it.hasSurname("PRISONER_8").hasAdditionalNeed() })
     }
 
     @Test
@@ -472,12 +689,84 @@ class SearchByPrisonTest : IntegrationTestBase() {
       // Then
       val actual = response.responseBody.blockFirst()
       assertThat(actual)
-        .hasTotalElements(5)
-        .person(1, { it.hasSurname("PRISONER_1") })
-        .person(2, { it.hasSurname("PRISONER_4") })
-        .person(3, { it.hasSurname("PRISONER_5") })
-        .person(4, { it.hasSurname("PRISONER_2") })
-        .person(5, { it.hasSurname("PRISONER_3") })
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_1").hasAdditionalNeed() })
+        .person(2, { it.hasSurname("PRISONER_2").hasAdditionalNeed() })
+        .person(3, { it.hasSurname("PRISONER_3").hasAdditionalNeed() })
+        .person(4, { it.hasSurname("PRISONER_4").hasAdditionalNeed() })
+        .person(5, { it.hasSurname("PRISONER_5").hasAdditionalNeed() })
+        .person(6, { it.hasSurname("PRISONER_6").hasAdditionalNeed() })
+        .person(7, { it.hasSurname("PRISONER_7").hasAdditionalNeed() })
+        .person(8, { it.hasSurname("PRISONER_8").hasAdditionalNeed() })
+        .person(9, { it.hasSurname("PRISONER_9").doesNotHaveAdditionalNeed() })
+    }
+
+    @Test
+    fun `sort by plan status ascending`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("sortBy", "PLAN_STATUS")
+            .queryParam("sortDirection", "ASC")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual)
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_4").hasPlanStatus(ACTIVE_PLAN) })
+        .person(2, { it.hasSurname("PRISONER_2").hasPlanStatus(PLAN_DUE) })
+        .person(3, { it.hasSurname("PRISONER_1").hasPlanStatus(NEEDS_PLAN) })
+        .person(4, { it.hasSurname("PRISONER_3").hasPlanStatus(REVIEW_DUE) })
+        .person(5, { it.hasSurname("PRISONER_5").hasPlanStatus(PLAN_OVERDUE) })
+        .person(6, { it.hasSurname("PRISONER_6").hasPlanStatus(REVIEW_OVERDUE) })
+        .person(7, { it.hasSurname("PRISONER_8").hasPlanStatus(PLAN_DECLINED) })
+        .person(8, { it.hasSurname("PRISONER_7").hasPlanStatus(INACTIVE_PLAN) })
+        .person(9, { it.hasSurname("PRISONER_9").hasPlanStatus(NO_PLAN) })
+    }
+
+    @Test
+    fun `sort by plan status descending`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("sortBy", "PLAN_STATUS")
+            .queryParam("sortDirection", "DESC")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual)
+        .hasTotalElements(9)
+        .person(1, { it.hasSurname("PRISONER_9").hasPlanStatus(NO_PLAN) })
+        .person(2, { it.hasSurname("PRISONER_7").hasPlanStatus(INACTIVE_PLAN) })
+        .person(3, { it.hasSurname("PRISONER_8").hasPlanStatus(PLAN_DECLINED) })
+        .person(4, { it.hasSurname("PRISONER_6").hasPlanStatus(REVIEW_OVERDUE) })
+        .person(5, { it.hasSurname("PRISONER_5").hasPlanStatus(PLAN_OVERDUE) })
+        .person(6, { it.hasSurname("PRISONER_3").hasPlanStatus(REVIEW_DUE) })
+        .person(7, { it.hasSurname("PRISONER_1").hasPlanStatus(NEEDS_PLAN) })
+        .person(8, { it.hasSurname("PRISONER_2").hasPlanStatus(PLAN_DUE) })
+        .person(9, { it.hasSurname("PRISONER_4").hasPlanStatus(ACTIVE_PLAN) })
     }
 
     @Test
