@@ -39,8 +39,29 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
     aPrisonerExists(prisonNumber, prisonId = "CFI")
-    // person has a need:
+    // person has a need but no ALN need
     aValidChallengeExists(prisonNumber)
+
+    // Then
+    val educationStartDate = LocalDate.of(2025, 10, 2)
+    putInEducationAndValidate(prisonNumber, educationStartDate = educationStartDate)
+    val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
+    Assertions.assertThat(planCreationSchedule.createdAtPrison).isEqualTo("CFI")
+    // Even though the education start date is greater than PES date and the person had a Challenge need
+    // This person should have the in the future deadline date as per RR-2248
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+  }
+
+  @Test
+  fun `should process Curious Education domain event and mark the person as being in education with a deadline date`() {
+    // Given
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = "CFI")
+    // person has an ALN need
+    createALNAssessmentMessage(prisonNumber, assessmentDate = LocalDate.now().minusMonths(5), hasNeed = true)
 
     // Then
     val educationStartDate = LocalDate.of(2025, 10, 2)
@@ -49,7 +70,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(educationStartDate)
     Assertions.assertThat(planCreationSchedule.createdAtPrison).isEqualTo("CFI")
-    // because the education start date is greater than PES date then the deadline date is education start date + DEADLINE_DAYS_TO_ADD working days
+
     val expectedDate = workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, educationStartDate)
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
   }
@@ -83,11 +104,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     putInTwoEducationAndValidate(prisonNumber)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
-    Assertions.assertThat(planCreationSchedule.earliestStartDate).isEqualTo(LocalDate.of(2025, 6, 12))
-    // because the education start date is less than PES date then the deadline date is PES date + 5 working days
-    val expectedDate =
-      workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, LocalDate.of(2025, 10, 1))
-    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(expectedDate)
+    Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
+    // Even though the education start date is greater than PES date and the person had a Challenge need
+    // This person should have the in the future deadline date as per RR-2248
+    Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
   }
 
   @Test
