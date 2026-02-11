@@ -172,9 +172,6 @@ class EducationService(
     ?.takeIf { it.length == 3 }
     ?: DEFAULT_PRISON_ID
 
-  // Special rule only when the ALN screener has been processed but was after the education start date.
-  // The prisoner will be marked as has need when the education record is processed but shouldn't make the person
-  // in scope for KPI.
   fun subjectToKPIRules(
     prisonNumber: String,
     enrolmentDiff: EnrolmentProcessingResults,
@@ -187,6 +184,9 @@ class EducationService(
         .findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
         ?.screeningDate
 
+      // Special rule only when the ALN screener has been processed but was after the education start date.
+      // The prisoner will be marked as has need when the education record is processed but shouldn't make the person
+      // in scope for KPI.
       val enrolmentStart = enrolmentDiff.firstNewEnrolmentStart
       if (screeningDate != null && enrolmentStart != null) {
         // Not subject to KPI if enrolment starts before the screening date
@@ -194,7 +194,8 @@ class EducationService(
       }
     }
 
-    return true
+    // Not subject to KPI if the person has any other need sources than ALN_SCREENER
+    return NeedSource.ALN_SCREENER in needSources
   }
 
   private fun findNewlyActiveEducationForStart(dto: EducationDTO, start: LocalDate): Education? = dto.educationData.firstOrNull { it.learningStartDate == start && it.learningActualEndDate == null }
