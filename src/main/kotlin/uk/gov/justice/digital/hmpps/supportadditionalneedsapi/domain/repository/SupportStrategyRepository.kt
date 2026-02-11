@@ -11,4 +11,6 @@ interface SupportStrategyRepository : JpaRepository<SupportStrategyEntity, UUID>
   fun findAllByPrisonNumber(prisonNumber: String): List<SupportStrategyEntity>
 
   fun getSupportStrategyEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): SupportStrategyEntity?
+
+  fun existsByPrisonNumberAndActiveTrue(prisonNumber: String): Boolean
 }

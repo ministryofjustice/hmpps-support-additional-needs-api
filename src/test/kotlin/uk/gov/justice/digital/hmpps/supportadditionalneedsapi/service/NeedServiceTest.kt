@@ -115,14 +115,9 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasSANNeed returns true if any active challenge or condition exists`() {
+  fun `hasSANNeed returns true if any active non ALN challenge or condition exists`() {
     val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(
-        listOf(
-          getChallengeEntity(prisonNumber = prisonNumber),
-        ),
-      )
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber)).thenReturn(true)
 
     assertTrue(needService.hasActiveSANNeed(prisonNumber))
   }
@@ -130,10 +125,8 @@ class NeedServiceTest {
   @Test
   fun `hasSANNeed returns false if no active challenges or conditions exist`() {
     val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getChallengeEntity(prisonNumber, false)))
-    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getConditionEntity(prisonNumber, false)))
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber)).thenReturn(false)
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
 
     assertFalse(needService.hasActiveSANNeed(prisonNumber))
   }
@@ -141,42 +134,23 @@ class NeedServiceTest {
   @Test
   fun `hasNeed returns false if need is an ALN challenge`() {
     val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber))
       .thenReturn(
-        listOf(
-          getChallengeEntity(prisonNumber = prisonNumber),
-        ),
+        false,
       )
 
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
-  fun `hasNeed returns false if need is not an ALN challenge`() {
+  fun `hasNeed returns true if need is not an ALN challenge`() {
     val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber))
       .thenReturn(
-        listOf(
-          getChallengeEntity(prisonNumber = prisonNumber, alnScreener = false),
-        ),
+        true,
       )
 
     assertTrue(needService.hasNeed(prisonNumber))
-  }
-
-  @Test
-  fun `hasNeed returns false if no source reports need`() {
-    val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(emptyList())
-    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(emptyList())
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(null)
-    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(null)
-
-    assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
@@ -195,9 +169,11 @@ class NeedServiceTest {
       )
 
     // No active SAN needs
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
-    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
-
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber))
+      .thenReturn(
+        false,
+      )
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
     assertTrue(needService.hasNeed(prisonNumber))
   }
 
@@ -217,9 +193,11 @@ class NeedServiceTest {
       )
 
     // No active SAN needs
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
-    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
-
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber))
+      .thenReturn(
+        false,
+      )
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
@@ -236,8 +214,11 @@ class NeedServiceTest {
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
 
     // No active SAN needs
-    whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
-    whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
+    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber))
+      .thenReturn(
+        false,
+      )
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
 
     assertTrue(needService.hasNeed(prisonNumber))
   }
@@ -248,6 +229,7 @@ class NeedServiceTest {
 
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(AlnAssessmentEntity(prisonNumber, true, LocalDate.now(), curiousRef))
+    // No active SAN needs
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
 
