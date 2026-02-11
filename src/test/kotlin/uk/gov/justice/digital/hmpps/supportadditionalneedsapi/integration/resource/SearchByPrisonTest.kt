@@ -292,6 +292,157 @@ class SearchByPrisonTest : IntegrationTestBase() {
   }
 
   @Nested
+  inner class Filtering {
+    @Test
+    fun `should return results given no filtering`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(9) // Expect all records
+    }
+
+    @Test
+    fun `should return results given filtering by name`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("prisonerNameOrNumber", "_3")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(1)
+        .person(1, { it.hasSurname("PRISONER_3") })
+    }
+
+    @Test
+    fun `should return no results given filtering by name that matches no results`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("prisonerNameOrNumber", "non existent person")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(0)
+    }
+
+    @Test
+    fun `should return results given filtering by plan status`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("planStatus", "PLAN_DECLINED")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(1)
+        .person(1, { it.hasSurname("PRISONER_8").hasPlanStatus(PLAN_DECLINED) })
+    }
+
+    @Test
+    fun `should return results given filtering by name and plan status`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("prisonerNameOrNumber", "_9")
+            .queryParam("planStatus", "NO_PLAN")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(1)
+        .person(1, { it.hasSurname("PRISONER_9").hasPlanStatus(NO_PLAN) })
+    }
+
+    @Test
+    fun `should return no results given filtering by name and plan status that matches no results`() {
+      // Given
+
+      // When
+      val response = webTestClient.get()
+        .uri { uriBuilder ->
+          uriBuilder
+            .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
+            .queryParam("prisonerNameOrNumber", "PRISONER_6")
+            .queryParam("planStatus", "PLAN_DUE")
+            .build()
+        }
+        .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))
+        .exchange()
+        .expectStatus()
+        .isOk
+        .returnResult(SearchByPrisonResponse::class.java)
+
+      // Then
+      val actual = response.responseBody.blockFirst()
+      assertThat(actual) //
+        .hasTotalElements(0)
+    }
+  }
+
+  @Nested
   inner class Sorting {
     @Test
     fun `sort by release date ascending`() {
