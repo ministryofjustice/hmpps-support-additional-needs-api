@@ -78,7 +78,7 @@ class NeedService(
    * Staff instigated ones are considered.
    */
   fun hasActiveSANNeed(prisonNumber: String): Boolean = challengeRepository
-    .existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber) ||
+    .existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber) ||
     conditionRepository
       .existsByPrisonNumberAndActiveTrue(prisonNumber)
 

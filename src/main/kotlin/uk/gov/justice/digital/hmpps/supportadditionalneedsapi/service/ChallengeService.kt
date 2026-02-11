@@ -200,5 +200,5 @@ class ChallengeService(
     challengeRepository.saveAll(alnChallenges)
   }
 
-  fun hasActiveNonALNChallenge(prisonNumber: String): Boolean = challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber)
+  fun hasActiveNonALNChallenge(prisonNumber: String): Boolean = challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)
 }

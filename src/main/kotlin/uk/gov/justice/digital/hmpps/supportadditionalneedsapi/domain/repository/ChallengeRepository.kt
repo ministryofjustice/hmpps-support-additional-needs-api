@@ -12,5 +12,5 @@ interface ChallengeRepository : JpaRepository<ChallengeEntity, UUID> {
   fun findAllByPrisonNumberAndAlnScreenerIdIsNull(prisonNumber: String): List<ChallengeEntity>
   fun findAllByPrisonNumberAndAlnScreenerIdIsNotNull(prisonNumber: String): List<ChallengeEntity>
   fun getChallengeEntityByPrisonNumberAndReference(prisonNumber: String, reference: UUID): ChallengeEntity?
-  fun existsByPrisonNumberAndActiveTrueAndAlnScreenerIdNull(prisonNumber: String): Boolean
+  fun existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber: String): Boolean
 }
