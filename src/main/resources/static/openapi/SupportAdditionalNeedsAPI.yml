@@ -44,6 +44,7 @@ paths:
       parameters:
         - $ref: "#/components/parameters/prisonIdPathParameter"
         - $ref: "#/components/parameters/prisonNameOrNumberQueryStringParameter"
+        - $ref: "#/components/parameters/planStatusQueryStringParameter"
         - $ref: "#/components/parameters/sortByQueryStringParameter"
         - $ref: "#/components/parameters/sortDirectionQueryStringParameter"
         - $ref: "#/components/parameters/pageNumberQueryStringParameter"
@@ -3094,6 +3095,13 @@ components:
       schema:
         type: string
         example: 'Bloggs'
+    planStatusQueryStringParameter:
+      name: planStatus
+      in: query
+      description: Filter by Plan Status. Not specifying a value will not filter on Plan Status.
+      schema:
+        $ref: '#/components/schemas/PlanStatus'
+        example: 'PLAN_OVERDUE'
     sortByQueryStringParameter:
       name: sortBy
       in: query

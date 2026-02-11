@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PaginationMetaData
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchByPrisonResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
@@ -26,6 +27,7 @@ class SearchController(private val searchService: SearchService) {
   fun searchByPrison(
     @PathVariable prisonId: String,
     @RequestParam(required = false) prisonerNameOrNumber: String? = null,
+    @RequestParam(required = false) planStatus: PlanStatus? = null,
     @RequestParam(required = false) sortBy: SearchSortField = SearchSortField.PRISONER_NAME,
     @RequestParam(required = false) sortDirection: SearchSortDirection = SearchSortDirection.ASC,
     @RequestParam(required = false) @Min(1) page: Int = 1,
@@ -35,6 +37,7 @@ class SearchController(private val searchService: SearchService) {
       SearchCriteria(
         prisonId = prisonId,
         prisonerNameOrNumber = prisonerNameOrNumber,
+        planStatus = planStatus,
         sortBy = sortBy,
         sortDirection = sortDirection,
       ),

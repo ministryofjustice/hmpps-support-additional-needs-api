@@ -134,13 +134,18 @@ class SearchService(
 }
 
 private fun List<Person>.filterByCriteria(searchCriteria: SearchCriteria): List<Person> = this.filter { prisoner ->
-  // Filter by prisoner name or number
-  (
+
+  val matchesNameOrNumber =
     searchCriteria.prisonerNameOrNumber.isNullOrBlank() ||
       prisoner.forename.contains(searchCriteria.prisonerNameOrNumber, ignoreCase = true) ||
       prisoner.surname.contains(searchCriteria.prisonerNameOrNumber, ignoreCase = true) ||
       prisoner.prisonNumber.equals(searchCriteria.prisonerNameOrNumber, ignoreCase = true)
-    )
+
+  val matchesPlanStatus =
+    searchCriteria.planStatus == null ||
+      prisoner.planStatus == searchCriteria.planStatus
+
+  matchesNameOrNumber && matchesPlanStatus
 }
 
 private val customPlanStatusOrder = listOf(
@@ -176,6 +181,7 @@ private fun List<Person>.sortBy(searchCriteria: SearchCriteria): List<Person> {
 data class SearchCriteria(
   val prisonId: String,
   val prisonerNameOrNumber: String? = null,
+  val planStatus: PlanStatus? = null,
   val sortBy: SearchSortField,
   val sortDirection: SearchSortDirection,
 )
