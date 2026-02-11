@@ -74,16 +74,13 @@ class NeedService(
   fun hasLDDNeed(prisonNumber: String): Boolean? = lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed
 
   /**
-   * Was a challenge or condition created in the SAN database and is it active - these can either be
-   * Staff instigated or ALN screener instigated.
+   * Was a challenge or condition created in the SAN database and is it active - only the
+   * Staff instigated ones are considered.
    */
-  fun hasActiveSANNeed(prisonNumber: String, includingALN: Boolean = true): Boolean {
-    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
-
-    return challenges.any { it.active && it.fromALNScreener == includingALN } ||
-      conditions.any { it.active }
-  }
+  fun hasActiveSANNeed(prisonNumber: String): Boolean = challengeRepository
+    .existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber) ||
+    conditionRepository
+      .existsByPrisonNumberAndActiveTrue(prisonNumber)
 
   /**
    * Has need is only true if the person either has a non ALN SAN need OR
@@ -92,7 +89,7 @@ class NeedService(
    */
   fun hasNeed(prisonNumber: String): Boolean {
     val alnNeed = hasALNScreenerNeed(prisonNumber)
-    return hasActiveSANNeed(prisonNumber, includingALN = false) ||
+    return hasActiveSANNeed(prisonNumber) ||
       (alnNeed ?: hasLDDNeed(prisonNumber)) == true
   }
 
