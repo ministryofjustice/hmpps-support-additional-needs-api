@@ -93,6 +93,7 @@ class ReviewScheduleService(
     fundingType: String,
     prisonId: String,
   ) {
+    log.info("Creating or updating review schedule for $prisonNumber")
     val existing = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     val proposedDeadline = getDeadlineDate(startDate)
 
