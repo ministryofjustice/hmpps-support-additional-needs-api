@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize
+import tools.jackson.databind.annotation.JsonDeserialize
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.StringTrimDeserializer
 import java.time.LocalDate
 
