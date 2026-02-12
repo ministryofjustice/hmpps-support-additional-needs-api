@@ -119,14 +119,9 @@ abstract class IntegrationTestBase {
     @DynamicPropertySource
     fun properties(registry: DynamicPropertyRegistry) {
       pgContainer?.run {
-        registry.add("spring.datasource-primary.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource-primary.username", pgContainer::getUsername)
-        registry.add("spring.datasource-primary.password", pgContainer::getPassword)
-
-        // Replica datasource uses the same database in tests for now (no actual replication)
-        registry.add("spring.datasource-replica.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource-replica.username", pgContainer::getUsername)
-        registry.add("spring.datasource-replica.password", pgContainer::getPassword)
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
       }
 
       System.setProperty("aws.region", "eu-west-2")
