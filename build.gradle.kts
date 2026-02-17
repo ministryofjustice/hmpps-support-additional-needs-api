@@ -41,7 +41,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:$springdocOpenapiVersion")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:$hmppsSqsVersion")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.0")
 
   implementation("io.github.microutils:kotlin-logging:$kotlinLoggingVersion")
 

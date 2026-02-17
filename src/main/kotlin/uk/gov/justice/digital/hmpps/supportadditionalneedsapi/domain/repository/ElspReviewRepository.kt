@@ -11,6 +11,5 @@ interface ElspReviewRepository : JpaRepository<ElspReviewEntity, UUID> {
   @EntityGraph(attributePaths = ["otherContributors"])
   fun findAllByPrisonNumber(prisonNumber: String): List<ElspReviewEntity>
 
-  @EntityGraph(attributePaths = ["otherContributors"])
   fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): ElspReviewEntity?
 }
