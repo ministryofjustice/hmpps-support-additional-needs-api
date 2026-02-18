@@ -6,9 +6,9 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.3"
-  kotlin("plugin.spring") version "2.3.0"
-  kotlin("plugin.jpa") version "2.3.0"
-  id("org.openapi.generator") version "7.19.0"
+  kotlin("plugin.spring") version "2.3.10"
+  kotlin("plugin.jpa") version "2.3.10"
+  id("org.openapi.generator") version "7.20.0"
 
   `java-test-fixtures`
 }
@@ -27,7 +27,7 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val postgresqlVersion = "42.7.9"
+val postgresqlVersion = "42.7.10"
 val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.4"
 val buildDirectory: Directory = layout.buildDirectory.get()
@@ -58,7 +58,7 @@ dependencies {
   testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
   testImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.38") {
     exclude(group = "io.swagger.core.v3")
   }
   testImplementation("org.testcontainers:postgresql:$testContainersVersion")
