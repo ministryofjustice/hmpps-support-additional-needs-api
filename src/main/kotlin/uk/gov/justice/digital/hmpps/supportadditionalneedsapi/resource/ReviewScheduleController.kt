@@ -21,7 +21,6 @@ class ReviewScheduleController(private val reviewScheduleService: ReviewSchedule
     @PathVariable prisonNumber: String,
   ): ReviewSchedulesResponse = reviewScheduleService.getSchedules(prisonNumber)
 
-
   @Hidden
   @PreAuthorize(HAS_EDIT_ELSP)
   @PutMapping("/exempt")
@@ -30,7 +29,7 @@ class ReviewScheduleController(private val reviewScheduleService: ReviewSchedule
   ) {
     val schedule =
       reviewScheduleService.getSchedules(prisonNumber).reviewSchedules.firstOrNull { it.status == SCHEDULED }
-    if(schedule == null) throw IllegalStateException("SCHEDULED Review schedule not found for $prisonNumber")
+    if (schedule == null) throw IllegalStateException("SCHEDULED Review schedule not found for $prisonNumber")
     reviewScheduleService.exemptSchedule(
       prisonNumber = prisonNumber,
       status = ReviewScheduleStatus.EXEMPT_UNKNOWN,
