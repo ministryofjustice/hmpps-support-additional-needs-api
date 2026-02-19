@@ -28,7 +28,7 @@ class PrisonerSearchApiClient(
       "dateOfBirth",
       "cellLocation",
       "nonDtoReleaseDateType",
-    )
+    ).joinToString(separator = ",")
   }
 
   /**

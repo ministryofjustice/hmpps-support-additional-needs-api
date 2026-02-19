@@ -172,8 +172,6 @@ class HasNeedTest : IntegrationTestBase() {
     actual!!
 
     assertThat(actual.hasNeed).isEqualTo(scenario.expectedHasNeed)
-    assertThat(actual.needSources).containsExactlyInAnyOrderElementsOf(scenario.expectedNeedSources)
-
     assertThat(actual.url).isEqualTo("http://localhost:8081/profile/$prisonNumber/overview")
     assertThat(actual.modalUrl).isEqualTo("http://localhost:8081/code-fragment/$prisonNumber/additional-needs")
   }

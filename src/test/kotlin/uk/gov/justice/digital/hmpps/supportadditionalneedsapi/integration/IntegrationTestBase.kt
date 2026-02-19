@@ -8,9 +8,9 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.HttpHeaders
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -119,14 +119,9 @@ abstract class IntegrationTestBase {
     @DynamicPropertySource
     fun properties(registry: DynamicPropertyRegistry) {
       pgContainer?.run {
-        registry.add("spring.datasource-primary.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource-primary.username", pgContainer::getUsername)
-        registry.add("spring.datasource-primary.password", pgContainer::getPassword)
-
-        // Replica datasource uses the same database in tests for now (no actual replication)
-        registry.add("spring.datasource-replica.url", pgContainer::getJdbcUrl)
-        registry.add("spring.datasource-replica.username", pgContainer::getUsername)
-        registry.add("spring.datasource-replica.password", pgContainer::getPassword)
+        registry.add("spring.datasource.url", pgContainer::getJdbcUrl)
+        registry.add("spring.datasource.username", pgContainer::getUsername)
+        registry.add("spring.datasource.password", pgContainer::getPassword)
       }
 
       System.setProperty("aws.region", "eu-west-2")

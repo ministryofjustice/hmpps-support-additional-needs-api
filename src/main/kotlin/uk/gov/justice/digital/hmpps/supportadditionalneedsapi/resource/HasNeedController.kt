@@ -29,25 +29,27 @@ class HasNeedController(
   @PreAuthorize(HAS_VIEW_ELSP)
   @GetMapping
   fun hasNeed(@PathVariable prisonNumber: String): HasNeedResponse {
-    val needSources = planCreationScheduleHistoryMapper
-      .toNeedSources(needService.getNeedSources(prisonNumber))
-      .orEmpty()
+    val url = getUrl(prisonNumber)
+    val modalUrl = getModalUrl(prisonNumber)
 
-    val hasNeed = needSources.isNotEmpty()
+    // return early if no need
+    if (!needService.hasNeed(prisonNumber)) {
+      return HasNeedResponse(
+        hasNeed = false,
+        url = url,
+        modalUrl = modalUrl,
+      )
+    }
 
-    val hasPlan = planService.hasPlan(prisonNumber)
-    val hasActiveSupportStrategy =
-      supportStrategyService.getSupportStrategies(prisonNumber).supportStrategies.any { it.active }
-    val hasActiveManualChallenge =
-      challengeService.getChallenges(prisonNumber).challenges.any { it.active && !it.fromALNScreener }
-
-    val hasSANInformation = hasNeed && (hasPlan || hasActiveSupportStrategy || hasActiveManualChallenge)
+    val hasSanInformation =
+      planService.hasPlan(prisonNumber) ||
+        supportStrategyService.hasActiveSupportStrategies(prisonNumber) ||
+        challengeService.hasActiveNonALNChallenge(prisonNumber)
 
     return HasNeedResponse(
-      hasNeed = hasSANInformation,
-      url = getUrl(prisonNumber),
-      modalUrl = getModalUrl(prisonNumber),
-      needSources = needSources,
+      hasNeed = hasSanInformation,
+      url = url,
+      modalUrl = modalUrl,
     )
   }
 

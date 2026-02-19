@@ -33,6 +33,8 @@ class SupportStrategyService(
     return SupportStrategyListResponse(models)
   }
 
+  fun hasActiveSupportStrategies(prisonNumber: String): Boolean = supportStrategyRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)
+
   @Transactional
   @TimelineEvent(
     eventType = SUPPORT_STRATEGY_ADDED,

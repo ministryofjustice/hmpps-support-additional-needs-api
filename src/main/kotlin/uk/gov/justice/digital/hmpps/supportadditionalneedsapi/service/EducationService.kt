@@ -101,6 +101,7 @@ class EducationService(
 
     if (enrolmentDiff.anyChanges) {
       if (!inEducation) {
+        log.info("Prisoner not in education exempt schedules $prisonNumber")
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
         val prisonId = getPrisonIdForLatestInActiveEducation(filteredEducationDto)
@@ -116,8 +117,10 @@ class EducationService(
         )
       }
       if (needService.hasNeed(prisonNumber)) {
+        log.info("Prisoner has need $prisonNumber")
         // find out if this is a new enrolment
         if (enrolmentDiff.createdCount > 0 || enrolmentDiff.reopenedCount > 0) {
+          log.info("New or reopened education $prisonNumber")
           // does the person have an ELSP?
           val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)
           val startDate = enrolmentDiff.firstNewEnrolmentStart
