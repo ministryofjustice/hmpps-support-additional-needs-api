@@ -64,7 +64,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     createALNAssessmentMessage(prisonNumber, assessmentDate = LocalDate.now().minusMonths(5), hasNeed = true)
 
     // Then
-    val educationStartDate = LocalDate.of(2025, 10, 2)
+    val educationStartDate = LocalDate.now().minusMonths(4)
     putInEducationAndValidate(prisonNumber, educationStartDate = educationStartDate)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
