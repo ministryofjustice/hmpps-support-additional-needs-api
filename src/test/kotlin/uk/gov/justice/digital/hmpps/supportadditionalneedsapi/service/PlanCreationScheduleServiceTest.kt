@@ -125,7 +125,8 @@ class PlanCreationScheduleServiceTest {
     setUpService()
     whenever(needService.hasNeed(prisonNumber)).thenReturn(true)
     whenever(needService.getNeedSources(prisonNumber)).thenReturn(sortedSetOf(ALN_SCREENER))
-    whenever(planCreationScheduleRepository.saveAndFlush(any())).thenAnswer { it.arguments[0] }
+    whenever(planCreationScheduleRepository.saveAndFlush(any<PlanCreationScheduleEntity>()))
+      .thenAnswer { it.arguments[0] as PlanCreationScheduleEntity }
 
     val deadline = LocalDate.now().plusDays(5)
     val earliest = LocalDate.now()
