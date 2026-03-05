@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanActionStatus
@@ -36,6 +37,7 @@ class PlanActionStatusTest : IntegrationTestBase() {
     val PRISONER_9: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_10: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_11: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
+    val PRISONER_12: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
 
     val today = LocalDate.now()
   }
@@ -72,6 +74,7 @@ class PlanActionStatusTest : IntegrationTestBase() {
     Arguments.of(PRISONER_9, PlanStatus.NO_PLAN, null, null),
     Arguments.of(PRISONER_10, PlanStatus.NO_PLAN, null, null),
     Arguments.of(PRISONER_11, PlanStatus.NO_PLAN, null, null),
+    Arguments.of(PRISONER_12, PlanStatus.INACTIVE_PLAN, null, null),
   )
 
   // --- Helpers ----------------------------------------------------------------------------------
@@ -154,5 +157,14 @@ class PlanActionStatusTest : IntegrationTestBase() {
 
     // PRISONER_11 -> has need but not in education.
     prisonerHasNeed(PRISONER_11.prisonerNumber)
+
+    // reviewExempt -> PRISONER_12
+    prisonerInEducation(PRISONER_12.prisonerNumber)
+    prisonerHasNeed(PRISONER_12.prisonerNumber)
+    aValidReviewScheduleExists(
+      prisonNumber = PRISONER_12.prisonerNumber,
+      deadlineDate = today.plusDays(1),
+      status = ReviewScheduleStatus.EXEMPT_UNKNOWN,
+    )
   }
 }
