@@ -40,6 +40,9 @@ data class PrisonerOverviewEntity(
   @Column(name = "review_deadline_date")
   val reviewDeadlineDate: LocalDate? = null,
 
+  @Column(name = "review_status")
+  val reviewStatus: String? = null,
+
   @Column(name = "deadline_date")
   val deadlineDate: LocalDate? = null,
 

@@ -82,6 +82,9 @@ class SearchService(
       // Explicitly declined
       overview.planDeclined -> PlanStatus.PLAN_DECLINED
 
+      // review is exempt
+      overview.reviewStatus == "EXEMPT_UNKNOWN" -> PlanStatus.INACTIVE_PLAN
+
       // No need or not in education and no plan = NO_PLAN
       (!overview.inEducation || !overview.hasNeed) && !overview.hasPlan -> PlanStatus.NO_PLAN
 
