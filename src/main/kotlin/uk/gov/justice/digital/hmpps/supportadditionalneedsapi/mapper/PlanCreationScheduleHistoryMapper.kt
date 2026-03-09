@@ -68,7 +68,15 @@ class PlanCreationScheduleHistoryMapper(
 
   fun toNeedSources(needSources: Set<NeedSource>): List<NeedSourceModel>? = needSources
     .takeIf { it.isNotEmpty() }
-    ?.map { NeedSourceModel.valueOf(it.name) }
+    ?.map { toNeedSource(it) }
+
+  private fun toNeedSource(source: NeedSource): NeedSourceModel = when (source) {
+    NeedSource.LDD_SCREENER -> NeedSourceModel.LDD_SCREENER
+    NeedSource.ALN_SCREENER -> NeedSourceModel.ALN_SCREENER
+    NeedSource.CONDITION_SELF_DECLARED -> NeedSourceModel.CONDITION_SELF_DECLARED
+    NeedSource.CONDITION_CONFIRMED_DIAGNOSIS -> NeedSourceModel.CONDITION_CONFIRMED_DIAGNOSIS
+    NeedSource.CHALLENGE_NOT_ALN_SCREENER -> NeedSourceModel.CHALLENGE_NOT_ALN_SCREENER
+  }
 
   private fun toPlanCreationStatus(status: PlanCreationStatusEntity): PlanCreationStatusModel = when (status) {
     PlanCreationStatusEntity.SCHEDULED -> PlanCreationStatusModel.SCHEDULED
