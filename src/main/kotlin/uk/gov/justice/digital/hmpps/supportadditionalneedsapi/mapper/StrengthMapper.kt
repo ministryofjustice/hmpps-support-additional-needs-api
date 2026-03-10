@@ -36,5 +36,4 @@ class StrengthMapper(
       alnScreenerDate = if (fromALNScreener) screenerDate else null,
     )
   }
-
 }
