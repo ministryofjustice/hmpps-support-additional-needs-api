@@ -5,9 +5,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Stre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 import java.time.LocalDate
-import java.util.SortedSet
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource as IdentificationSourceEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource as IdentificationSourceModel
 
 @Component
 class StrengthMapper(
@@ -32,7 +29,7 @@ class StrengthMapper(
       updatedAtPrison = updatedAtPrison,
       strengthType = strengthType.toModel(),
       symptoms = symptoms,
-      howIdentified = toModel(howIdentified),
+      howIdentified = IdentificationSourceMapper.toModel(howIdentified),
       howIdentifiedOther = howIdentifiedOther,
       active = active,
       archiveReason = archiveReason,
@@ -40,12 +37,4 @@ class StrengthMapper(
     )
   }
 
-  private fun toModel(identificationSources: Set<IdentificationSourceEntity>): List<IdentificationSourceModel>? = identificationSources
-    .takeIf { it.isNotEmpty() }
-    ?.map { IdentificationSourceModel.valueOf(it.name) }
-
-  fun toEntity(identificationSources: List<IdentificationSourceModel>?): SortedSet<IdentificationSourceEntity> = identificationSources
-    ?.map { IdentificationSourceEntity.valueOf(it.name) }
-    ?.toSortedSet()
-    ?: sortedSetOf()
 }
