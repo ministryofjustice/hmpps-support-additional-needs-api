@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -69,7 +70,7 @@ class StrengthService(
         createdAtPrison = requestItem.prisonId,
         updatedAtPrison = requestItem.prisonId,
         symptoms = requestItem.symptoms,
-        howIdentified = strengthMapper.toEntity(requestItem.howIdentified),
+        howIdentified = IdentificationSourceMapper.toEntity(requestItem.howIdentified),
         howIdentifiedOther = requestItem.howIdentifiedOther,
         active = true,
       )
@@ -130,7 +131,7 @@ class StrengthService(
     }
 
     strength.symptoms = request.symptoms
-    strength.howIdentified = strengthMapper.toEntity(request.howIdentified)
+    strength.howIdentified = IdentificationSourceMapper.toEntity(request.howIdentified)
     strength.howIdentifiedOther = request.howIdentifiedOther
     strength.updatedAtPrison = request.prisonId
 

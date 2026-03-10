@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -73,7 +74,7 @@ class ChallengeService(
         createdAtPrison = requestItem.prisonId,
         updatedAtPrison = requestItem.prisonId,
         symptoms = requestItem.symptoms,
-        howIdentified = challengeMapper.toEntity(requestItem.howIdentified),
+        howIdentified = IdentificationSourceMapper.toEntity(requestItem.howIdentified),
         howIdentifiedOther = requestItem.howIdentifiedOther,
         active = true,
       )
@@ -139,7 +140,7 @@ class ChallengeService(
       ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
 
     challenge.symptoms = request.symptoms
-    challenge.howIdentified = challengeMapper.toEntity(request.howIdentified)
+    challenge.howIdentified = IdentificationSourceMapper.toEntity(request.howIdentified)
     challenge.howIdentifiedOther = request.howIdentifiedOther
     challenge.updatedAtPrison = request.prisonId
 
