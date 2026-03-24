@@ -21,7 +21,7 @@ class ElspPlanMapper(
   ): EducationSupportPlanResponse = with(entity) {
     EducationSupportPlanResponse(
       hasCurrentEhcp = ehcpStatusEntity.hasCurrentEhcp,
-      planCreatedBy = planCreatedByName?.let { PlanContributor(planCreatedByName, planCreatedByJobRole!!) },
+      planCreatedBy = planCreatedByName?.let { PlanContributor(it, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
       examAccessArrangements = examAccessArrangements,
