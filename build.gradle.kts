@@ -3,12 +3,14 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
-
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.0"
   kotlin("plugin.spring") version "2.3.20"
   kotlin("plugin.jpa") version "2.3.20"
   id("org.openapi.generator") version "7.20.0"
+
+  id("jacoco")
+  id("name.remal.integration-tests") version "5.0.6"
 
   `java-test-fixtures`
 }
@@ -21,6 +23,10 @@ allOpen {
     "javax.persistence.MappedSuperclass",
     "javax.persistence.Embeddable",
   )
+}
+
+jacoco {
+  toolVersion = "0.8.14"
 }
 
 configurations {
@@ -52,20 +58,21 @@ dependencies {
   implementation("org.hibernate.orm:hibernate-envers")
   implementation("org.springframework.data:spring-data-envers")
 
-  // Test dependencies
-  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
-  testImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
-  testImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
-  testImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.39") {
+  // Integration test dependencies
+  integrationTestImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
+  integrationTestImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
+  integrationTestImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
+  integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
+  integrationTestImplementation("org.wiremock:wiremock-standalone:3.13.2")
+  integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.39") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("org.testcontainers:postgresql:$testContainersVersion")
-  testImplementation("org.testcontainers:localstack:$testContainersVersion")
+  integrationTestImplementation("org.testcontainers:postgresql:$testContainersVersion")
+  integrationTestImplementation("org.testcontainers:localstack:$testContainersVersion")
 
   // Test fixtures dependencies
   testFixturesImplementation("org.assertj:assertj-core")
+  testFixturesImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 
 kotlin {
@@ -167,5 +174,37 @@ kotlin {
 ktlint {
   filter {
     exclude { projectDir.toURI().relativize(it.file.toURI()).path.contains("/generated/") }
+  }
+
+  tasks.named("check") {
+    dependsOn("integrationTest")
+  }
+
+  // Jacoco code coverage
+  tasks.named("test") {
+    finalizedBy("jacocoTestReport")
+  }
+  tasks.named<Test>("integrationTest") {
+    finalizedBy("jacocoIntegrationTestReport")
+  }
+
+  tasks.named<JacocoReport>("jacocoTestReport") {
+    reports {
+      html.required.set(true)
+    }
+  }
+  tasks.named<JacocoReport>("jacocoIntegrationTestReport") {
+    reports {
+      html.required.set(true)
+    }
+  }
+
+  tasks.register<JacocoReport>("combineJacocoReports") {
+    executionData(fileTree(buildDirectory).include("jacoco/*.exec"))
+    classDirectories.setFrom(files(project.sourceSets.main.get().output))
+    sourceDirectories.setFrom(files(project.sourceSets.main.get().allSource))
+    reports {
+      html.required.set(true)
+    }
   }
 }
