@@ -111,6 +111,8 @@ springdoc:
   # swagger specification file served via /swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config
   swagger-ui:
     url: '/openapi/SupportAdditionalNeedsAPI.yml'
+    tags-sorter: alpha
+    version: 5.32.1
 
 apis:
   prisoner-search-api:

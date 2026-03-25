@@ -92,38 +92,31 @@ class SearchService(
       overview.hasPlan && (!overview.inEducation || !overview.hasNeed) -> PlanStatus.INACTIVE_PLAN
 
       // Overdue review
-      overview.reviewDeadlineDate != null &&
-        overview.deadlineDate != null &&
-        overview.deadlineDate.isEqual(overview.reviewDeadlineDate) &&
-        overview.reviewDeadlineDate < today -> PlanStatus.REVIEW_OVERDUE
+      overview.reviewDeadlineDate?.isBefore(today) == true &&
+        overview.deadlineDate?.isEqual(overview.reviewDeadlineDate) == true
+      -> PlanStatus.REVIEW_OVERDUE
 
       // Overdue plan creation
-      overview.planCreationDeadlineDate != null &&
-        overview.deadlineDate != null &&
-        overview.deadlineDate.isEqual(overview.planCreationDeadlineDate) &&
-        overview.planCreationDeadlineDate < today -> PlanStatus.PLAN_OVERDUE
+      overview.planCreationDeadlineDate?.isBefore(today) == true &&
+        overview.deadlineDate?.isEqual(overview.planCreationDeadlineDate) == true
+      -> PlanStatus.PLAN_OVERDUE
 
       // Needs plan (has needs and education, no deadline, and no plan yet)
       !overview.hasPlan &&
-        overview.planCreationDeadlineDate != null &&
-        overview.planCreationDeadlineDate.isEqual(Constants.IN_THE_FUTURE_DATE)
+        overview.planCreationDeadlineDate?.isEqual(Constants.IN_THE_FUTURE_DATE) == true
       -> PlanStatus.NEEDS_PLAN
 
       // Review due soon (within 5 working days)
-      overview.reviewDeadlineDate != null &&
-        overview.deadlineDate != null &&
-        overview.deadlineDate.isEqual(overview.reviewDeadlineDate) &&
-        !overview.reviewDeadlineDate.isBefore(today) &&
-        !overview.reviewDeadlineDate.isAfter(todayPlus5WorkingDays) -> PlanStatus.REVIEW_DUE
+      overview.reviewDeadlineDate?.isBetweenInclusive(today, todayPlus5WorkingDays) == true &&
+        overview.deadlineDate?.isEqual(overview.reviewDeadlineDate) == true
+      -> PlanStatus.REVIEW_DUE
 
       // Plan is due soon (within 5 working days)
-      overview.planCreationDeadlineDate != null &&
-        overview.deadlineDate != null &&
-        overview.deadlineDate.isEqual(overview.planCreationDeadlineDate) &&
+      overview.planCreationDeadlineDate?.isBetweenInclusive(today, todayPlus5WorkingDays) == true &&
+        overview.deadlineDate?.isEqual(overview.planCreationDeadlineDate) == true &&
         !overview.hasPlan &&
-        !overview.planDeclined &&
-        !overview.planCreationDeadlineDate.isBefore(today) &&
-        !overview.planCreationDeadlineDate.isAfter(todayPlus5WorkingDays) -> PlanStatus.PLAN_DUE
+        !overview.planDeclined
+      -> PlanStatus.PLAN_DUE
 
       // Has a plan and is active
       overview.hasPlan -> PlanStatus.ACTIVE_PLAN
@@ -188,3 +181,5 @@ data class SearchCriteria(
   val sortBy: SearchSortField,
   val sortDirection: SearchSortDirection,
 )
+
+private fun LocalDate.isBetweenInclusive(start: LocalDate, end: LocalDate): Boolean = !this.isBefore(start) && !this.isAfter(end)

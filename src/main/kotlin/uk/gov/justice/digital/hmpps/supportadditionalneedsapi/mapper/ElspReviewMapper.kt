@@ -16,7 +16,7 @@ class ElspReviewMapper(
     entity: ElspReviewEntity,
   ): EducationSupportPlanReviewResponse = with(entity) {
     EducationSupportPlanReviewResponse(
-      reviewCreatedBy = reviewCreatedByName?.let { ReviewContributor(reviewCreatedByName, reviewCreatedByJobRole!!) },
+      reviewCreatedBy = reviewCreatedByName?.let { ReviewContributor(it, reviewCreatedByJobRole!!) },
       reviewerFeedback = reviewerFeedback ?: "",
       prisonerFeedback = prisonerFeedback ?: "",
       prisonerDeclinedFeedback = prisonerDeclinedFeedback,
