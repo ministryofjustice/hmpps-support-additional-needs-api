@@ -7,7 +7,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.0"
   kotlin("plugin.spring") version "2.3.20"
   kotlin("plugin.jpa") version "2.3.20"
-  id("org.openapi.generator") version "7.20.0"
+  id("org.openapi.generator") version "7.21.0"
 
   id("jacoco")
   id("name.remal.integration-tests") version "5.0.6"
@@ -38,7 +38,7 @@ val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "1.21.4"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "3.0.2"
-val hmppsSqsStarterVersion = "7.2.0"
+val hmppsSqsStarterVersion = "7.3.0"
 val hmppsKotlinSpringBootStarterVersion = "2.1.0"
 val awaitilityVersion = "4.3.0"
 
