@@ -105,11 +105,10 @@ tasks.named("jar") {
   enabled = true
 }
 
-val test by testing.suites.existing(JvmTestSuite::class)
-
 tasks.register<Test>("initialiseDatabase") {
-  testClassesDirs = files(test.map { it.sources.output.classesDirs })
-  classpath = files(test.map { it.sources.runtimeClasspath })
+  val integrationTest = tasks.named<Test>("integrationTest").get()
+  testClassesDirs = integrationTest.testClassesDirs
+  classpath = integrationTest.classpath
   include("**/InitialiseDatabase.class")
   onlyIf { gradle.startParameter.taskNames.contains("initialiseDatabase") }
 }
@@ -175,36 +174,36 @@ ktlint {
   filter {
     exclude { projectDir.toURI().relativize(it.file.toURI()).path.contains("/generated/") }
   }
+}
 
-  tasks.named("check") {
-    dependsOn("integrationTest")
-  }
+tasks.named("check") {
+  dependsOn("integrationTest")
+}
 
-  // Jacoco code coverage
-  tasks.named("test") {
-    finalizedBy("jacocoTestReport")
-  }
-  tasks.named<Test>("integrationTest") {
-    finalizedBy("jacocoIntegrationTestReport")
-  }
+// Jacoco code coverage
+tasks.named("test") {
+  finalizedBy("jacocoTestReport")
+}
+tasks.named<Test>("integrationTest") {
+  finalizedBy("jacocoIntegrationTestReport")
+}
 
-  tasks.named<JacocoReport>("jacocoTestReport") {
-    reports {
-      html.required.set(true)
-    }
+tasks.named<JacocoReport>("jacocoTestReport") {
+  reports {
+    html.required.set(true)
   }
-  tasks.named<JacocoReport>("jacocoIntegrationTestReport") {
-    reports {
-      html.required.set(true)
-    }
+}
+tasks.named<JacocoReport>("jacocoIntegrationTestReport") {
+  reports {
+    html.required.set(true)
   }
+}
 
-  tasks.register<JacocoReport>("combineJacocoReports") {
-    executionData(fileTree(buildDirectory).include("jacoco/*.exec"))
-    classDirectories.setFrom(files(project.sourceSets.main.get().output))
-    sourceDirectories.setFrom(files(project.sourceSets.main.get().allSource))
-    reports {
-      html.required.set(true)
-    }
+tasks.register<JacocoReport>("combineJacocoReports") {
+  executionData(fileTree(buildDirectory).include("jacoco/*.exec"))
+  classDirectories.setFrom(files(project.sourceSets.main.get().output))
+  sourceDirectories.setFrom(files(project.sourceSets.main.get().allSource))
+  reports {
+    html.required.set(true)
   }
 }
