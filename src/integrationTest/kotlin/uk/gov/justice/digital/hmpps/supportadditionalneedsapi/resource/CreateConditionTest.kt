@@ -1,0 +1,248 @@
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
+
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Test
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
+import java.util.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source as EntitySource
+
+class CreateConditionTest : IntegrationTestBase() {
+  companion object {
+    private const val URI_TEMPLATE = "/profile/{prisonNumber}/conditions"
+  }
+
+  @Test
+  fun `Create a list of conditions for a given prisoner`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val savedConditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(savedConditions.size).isEqualTo(3)
+    val adhdCondition = savedConditions.find { it.conditionType.key.code == "ADHD" }
+    assertThat(adhdCondition!!.prisonNumber).isEqualTo(prisonNumber)
+    assertThat(adhdCondition.conditionType.key.code).isEqualTo("ADHD")
+    assertThat(adhdCondition.source).isEqualTo(EntitySource.SELF_DECLARED)
+    assertThat(adhdCondition.createdAtPrison).isEqualTo("BXI")
+    assertThat(adhdCondition.conditionDetails).isEqualTo("Bob struggles to sit still for longer than one hour")
+
+    val dyslexiaCondition = savedConditions.find { it.conditionType.key.code == "DYSLEXIA" }
+    assertThat(dyslexiaCondition!!.prisonNumber).isEqualTo(prisonNumber)
+    assertThat(dyslexiaCondition.conditionType.key.code).isEqualTo("DYSLEXIA")
+    assertThat(dyslexiaCondition.source).isEqualTo(EntitySource.SELF_DECLARED)
+    assertThat(dyslexiaCondition.createdAtPrison).isEqualTo("BXI")
+
+    val mentalHealthCondition = savedConditions.find { it.conditionType.key.code == "MENTAL_HEALTH" }
+    assertThat(mentalHealthCondition!!.prisonNumber).isEqualTo(prisonNumber)
+    assertThat(mentalHealthCondition.conditionType.key.code).isEqualTo("MENTAL_HEALTH")
+    assertThat(mentalHealthCondition.source).isEqualTo(EntitySource.CONFIRMED_DIAGNOSIS)
+    assertThat(mentalHealthCondition.createdAtPrison).isEqualTo("BXI")
+    assertThat(mentalHealthCondition.conditionName).isEqualTo("Social anxiety")
+
+    // check the timeline entries:
+    val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
+    assertThat(timelineEntries[0].additionalInfo).isEqualTo("ConditionType:ADHD")
+    assertThat(timelineEntries[1].additionalInfo).isEqualTo("ConditionType:DYSLEXIA")
+    assertThat(timelineEntries[2].additionalInfo).isEqualTo("ConditionType:MENTAL_HEALTH")
+  }
+
+  @Test
+  fun `Create a list of conditions for a prisoner where a person is in education - generate plan creation schedule`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+    prisonerInEducation(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val planCreationScheduleEntity = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(planCreationScheduleEntity?.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+    assertThat(planCreationScheduleEntity?.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `Create a list of conditions for a prisoner where a person is in education - and has a plan creation schedule`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+    prisonerInEducation(prisonNumber)
+    aValidPlanCreationScheduleExists(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val planCreationScheduleEntity = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    // check that this new need doesn't change the deadline date
+    assertThat(planCreationScheduleEntity?.deadlineDate).isNotNull()
+    assertThat(planCreationScheduleEntity?.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `Create conditions for a prisoner where a person is in education and has an ELSP - generate review schedule`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+    prisonerInEducation(prisonNumber)
+    anElSPExists(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    assertThat(reviewScheduleEntity?.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+    assertThat(reviewScheduleEntity?.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `Create conditions for a prisoner where a person is in education and has an ELSP and review schedule - no change to review schedule`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+    prisonerInEducation(prisonNumber)
+    anElSPExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    assertThat(reviewScheduleEntity?.deadlineDate).isNotNull()
+    assertThat(reviewScheduleEntity?.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should set the creation status to SCHEDULED when previously EXEMPT due to no need and a new condition is added`() {
+    // Given
+    stubForBankHoliday()
+    val prisonNumber = randomValidPrisonNumber()
+    stubGetTokenFromHmppsAuth()
+    val curiousReference = UUID.randomUUID()
+    // in education
+    prisonerInEducation(prisonNumber)
+    // give then an ALN assessment need
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
+    val elspBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspBefore!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+    // remove the ALN assessment need
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
+    val elspDuring = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspDuring!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NO_NEED)
+
+    // then add a condition
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+
+    webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    val elspAfter = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspAfter!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+
+    assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
+    assertThat(needService.hasNeed(prisonNumber)).isTrue()
+  }
+
+  private fun createConditionsList(): CreateConditionsRequest = CreateConditionsRequest(
+    listOf(
+      ConditionRequest(
+        source = Source.SELF_DECLARED,
+        prisonId = "BXI",
+        conditionTypeCode = "ADHD",
+        conditionDetails = "Bob struggles to sit still for longer than one hour",
+      ),
+      ConditionRequest(
+        source = Source.SELF_DECLARED,
+        prisonId = "BXI",
+        conditionTypeCode = "DYSLEXIA",
+      ),
+      ConditionRequest(
+        source = Source.CONFIRMED_DIAGNOSIS,
+        prisonId = "BXI",
+        conditionTypeCode = "MENTAL_HEALTH",
+        conditionName = "Social anxiety",
+      ),
+    ),
+  )
+}
