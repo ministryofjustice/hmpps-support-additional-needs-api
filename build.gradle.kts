@@ -68,7 +68,7 @@ dependencies {
     exclude(group = "io.swagger.core.v3")
   }
   integrationTestImplementation("org.testcontainers:postgresql:$testContainersVersion")
-  integrationTestImplementation("org.testcontainers:localstack:$testContainersVersion")
+  integrationTestImplementation("org.testcontainers:testcontainers-localstack:2.0.3")
 
   // Test fixtures dependencies
   testFixturesImplementation("org.assertj:assertj-core")
