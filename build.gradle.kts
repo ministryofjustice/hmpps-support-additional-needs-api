@@ -35,7 +35,7 @@ configurations {
 
 val postgresqlVersion = "42.7.10"
 val kotlinLoggingVersion = "3.0.5"
-val testContainersVersion = "1.21.4"
+val testContainersVersion = "2.0.3"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "3.0.2"
 val hmppsSqsStarterVersion = "7.3.0"
@@ -67,8 +67,8 @@ dependencies {
   integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.39") {
     exclude(group = "io.swagger.core.v3")
   }
-  integrationTestImplementation("org.testcontainers:postgresql:$testContainersVersion")
-  integrationTestImplementation("org.testcontainers:localstack:$testContainersVersion")
+  integrationTestImplementation("org.testcontainers:testcontainers-postgresql:$testContainersVersion")
+  integrationTestImplementation("org.testcontainers:testcontainers-localstack:$testContainersVersion")
 
   // Test fixtures dependencies
   testFixturesImplementation("org.assertj:assertj-core")
