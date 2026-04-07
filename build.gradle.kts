@@ -41,6 +41,7 @@ val springdocOpenapiVersion = "3.0.2"
 val hmppsSqsStarterVersion = "7.3.0"
 val hmppsKotlinSpringBootStarterVersion = "2.1.0"
 val awaitilityVersion = "4.3.0"
+val sarTestSupportLibraryVersion = "2.1.3"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")
@@ -63,6 +64,7 @@ dependencies {
   integrationTestImplementation("org.springframework.boot:spring-boot-starter-webclient-test")
   integrationTestImplementation("org.awaitility:awaitility-kotlin:$awaitilityVersion")
   integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
+  integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:$sarTestSupportLibraryVersion")
   integrationTestImplementation("org.wiremock:wiremock-standalone:3.13.2")
   integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.39") {
     exclude(group = "io.swagger.core.v3")
