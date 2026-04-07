@@ -35,7 +35,7 @@ configurations {
 
 val postgresqlVersion = "42.7.10"
 val kotlinLoggingVersion = "3.0.5"
-val testContainersVersion = "2.0.3"
+val testContainersVersion = "2.0.4"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "3.0.2"
 val hmppsSqsStarterVersion = "7.3.0"
