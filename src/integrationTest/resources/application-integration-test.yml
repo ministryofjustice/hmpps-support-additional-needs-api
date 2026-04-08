@@ -66,13 +66,8 @@ pes_contract_date: "2025-10-01"
 hmpps:
   sar:
     tests:
-      expected-api-response:
-        path: /sar/sar-api-response.json
       expected-render-result:
-        path: /sar/sar-generated-report.html
-      expected-jpa-entity-schema:
-        path: /sar/entity-schema.json
-      attachments-expected: false
+        path: /sar/expected-report.html
 
 ENABLE_TEST_ENDPOINTS: true
 

@@ -78,7 +78,7 @@ spring:
 hmpps:
   sar:
     template:
-      path: /templates/template_hmpps-support-additional-needs-api.mustache
+      path: /static/sar/template.mustache
       enabled: true
 
 server:
