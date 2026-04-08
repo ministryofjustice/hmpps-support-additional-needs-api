@@ -63,6 +63,12 @@ service:
 
 pes_contract_date: "2025-10-01"
 
+hmpps:
+  sar:
+    tests:
+      expected-render-result:
+        path: /sar/expected-report.html
+
 ENABLE_TEST_ENDPOINTS: true
 
 DPR_USER: DPR_USER

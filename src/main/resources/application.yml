@@ -75,6 +75,12 @@ spring:
     codecs:
       max-in-memory-size: 10MB
 
+hmpps:
+  sar:
+    template:
+      path: /static/sar/template.mustache
+      enabled: true
+
 server:
   port: 8080
   servlet:
