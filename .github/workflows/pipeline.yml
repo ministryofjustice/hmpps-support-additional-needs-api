@@ -75,7 +75,7 @@ jobs:
         run: |
           export JAVA_OPTS="${{ inputs.java_options }}"
           ./gradlew initialiseDatabase
-      - uses: ministryofjustice/hmpps-github-actions/.github/actions/database_schema_report@v2 # WORKFLOW_VERSION
+      - uses: ministryofjustice/hmpps-github-shared-actions/.github/actions/database_schema_report@7277152a31c152f8d65ccdea0df7cceca7ab3856 # v1
         with:
           schema: public
           user: '${{secrets.SCHEMA_SPY_USERNAME}}'
