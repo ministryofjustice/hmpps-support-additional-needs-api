@@ -435,8 +435,9 @@ abstract class IntegrationTestBase {
       lnspSupportHours = 2,
       detail = "detail",
       createdAtPrison = "BXI",
-      createdAt = Instant.now().minus(90, ChronoUnit.DAYS),
-    )
+    ).apply {
+      createdAt = Instant.now().minus(90, ChronoUnit.DAYS)
+    }
     val ehcp = EhcpStatusEntity(prisonNumber = prisonNumber, hasCurrentEhcp = true, createdAtPrison = "BXI", updatedAtPrison = "BXI")
     ehcpStatusRepository.save(ehcp)
     return elspPlanRepository.saveAndFlush(elsp)
