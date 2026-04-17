@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
+import java.time.Clock
 import java.time.LocalDate
 import java.util.*
 
@@ -37,6 +38,7 @@ class EducationService(
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val elspPlanRepository: ElspPlanRepository,
   private val alnAssessmentRepository: AlnAssessmentRepository,
+  private val clock: Clock,
 ) {
 
   fun hasActiveEducationEnrollment(prisonNumber: String): Boolean = educationEnrolmentRepository.existsWithNoEndDate(prisonNumber)
@@ -156,7 +158,7 @@ class EducationService(
     // close all education records for all establishments that are not the same as the current establishment
     log.info("Ending current education enrollments for $prisonNumber that are not currently in establishment $currentEstablishment")
     val educationEnrollments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
-    educationEnrollments.filter { it.establishmentId != currentEstablishment }.forEach { it.endDate = LocalDate.now() }
+    educationEnrollments.filter { it.establishmentId != currentEstablishment }.forEach { it.endDate = LocalDate.now(clock) }
     educationEnrolmentRepository.saveAll(educationEnrollments)
   }
 
@@ -294,7 +296,7 @@ class EducationService(
     endedKeys.forEach { key ->
       val entity = openByKey.getValue(key)
       val src = allCuriousByKey[key]
-      val endDate = src?.learningActualEndDate ?: LocalDate.now()
+      val endDate = src?.learningActualEndDate ?: LocalDate.now(clock)
       if (entity.endDate != endDate || entity.completionStatus != src?.completionStatus) {
         entity.endDate = endDate
         entity.completionStatus = src?.completionStatus ?: entity.completionStatus

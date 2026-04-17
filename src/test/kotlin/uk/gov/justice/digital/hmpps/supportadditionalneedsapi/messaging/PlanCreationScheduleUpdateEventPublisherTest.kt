@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.sns.model.PublishResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ServiceProperties
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
+import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
 import java.util.concurrent.CompletableFuture
@@ -25,10 +26,13 @@ class PlanCreationScheduleUpdateEventPublisherTest {
   private val snsClient: SnsAsyncClient = mock()
   private val objectMapper: ObjectMapper = mock()
   private val serviceProperties = ServiceProperties(baseUrl = "http://localhost:8080", uiBaseUrl = "http://localhost:8080")
-  private val service = EventPublisher(hmppsQueueService, objectMapper, serviceProperties)
+  private val fixedTimestamp = Instant.parse("2026-04-17T09:13:22.123Z")
+  private val clock = Clock.fixed(fixedTimestamp, ZoneId.of("UTC"))
+  private val service = EventPublisher(hmppsQueueService, objectMapper, serviceProperties, clock)
 
   @Test
   fun `publish creates to plan creation schedule update event`() {
+    // Given
     whenever(objectMapper.writeValueAsString(any())).thenReturn("messageAsJson")
     whenever(hmppsQueueService.findByTopicId("domainevents")).thenReturn(HmppsTopic("id", "topicUrn", snsClient))
 
@@ -38,7 +42,11 @@ class PlanCreationScheduleUpdateEventPublisherTest {
     val occurredAt = Instant.now()
 
     whenever(snsClient.publish(any<PublishRequest>())).thenReturn(completedFuture(publishResponse))
-    service.createAndPublishPlanCreationSchedule("A1234AC", occurredAt)
+
+    // When
+    service.createAndPublishPlanCreationSchedule("A1234AC")
+
+    // Then
     verify(objectMapper).writeValueAsString(
       check<EventPublisher.HmppsDomainEvent> {
         assertThat(it).isEqualTo(
@@ -46,7 +54,7 @@ class PlanCreationScheduleUpdateEventPublisherTest {
             eventType = "san.plan-creation-schedule.updated",
             detailUrl = "http://localhost:8080/profile/A1234AC/plan-creation-schedule",
             description = "A Support for Additional Needs plan creation schedule created or amended",
-            occurredAt = occurredAt
+            occurredAt = fixedTimestamp
               .atZone(ZoneId.of("Europe/London")).toLocalDateTime(),
             personReference = EventPublisher.PersonReference(
               identifiers = listOf(
@@ -64,12 +72,16 @@ class PlanCreationScheduleUpdateEventPublisherTest {
 
   @Test
   fun `send event sends to the sns client`() {
+    // Given
     whenever(objectMapper.writeValueAsString(any())).thenReturn("messageAsJson")
     whenever(hmppsQueueService.findByTopicId("domainevents")).thenReturn(HmppsTopic("id", "topicArn", snsClient))
     val publishResponse = mock<PublishResponse>()
     whenever(snsClient.publish(any<PublishRequest>())).thenReturn(completedFuture(publishResponse))
 
+    // When
     service.createAndPublishPlanCreationSchedule("A1234AC")
+
+    // Then
     verify(snsClient).publish(
       PublishRequest.builder().message("messageAsJson")
         .topicArn("topicArn")

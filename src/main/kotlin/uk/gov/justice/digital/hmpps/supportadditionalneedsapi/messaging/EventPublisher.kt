@@ -9,6 +9,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
 import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
 import java.net.URI
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -20,15 +21,16 @@ class EventPublisher(
   private val hmppsQueueService: HmppsQueueService,
   private val objectMapper: ObjectMapper,
   private val serviceProperties: ServiceProperties,
+  private val clock: Clock,
 ) {
 
   internal val eventTopic by lazy { hmppsQueueService.findByTopicId("domainevents") as HmppsTopic }
 
-  fun createAndPublishPlanCreationSchedule(prisonNumber: String, occurredAt: Instant = Instant.now()) {
+  fun createAndPublishPlanCreationSchedule(prisonNumber: String) {
     log.info { "Publishing plan creation schedule for prisoner [$prisonNumber]" }
     createAndPublishEvent(
       prisonNumber = prisonNumber,
-      occurredAt = occurredAt,
+      occurredAt = Instant.now(clock),
       eventType = "san.plan-creation-schedule.updated",
       description = "A Support for Additional Needs plan creation schedule created or amended",
       detailPath = "profile/{prisonerNumber}/plan-creation-schedule",
@@ -39,7 +41,7 @@ class EventPublisher(
     log.info { "Publishing review schedule for prisoner [$prisonNumber]" }
     createAndPublishEvent(
       prisonNumber = prisonNumber,
-      occurredAt = Instant.now(),
+      occurredAt = Instant.now(clock),
       eventType = "san.review-schedule.updated",
       description = "A prisoner learning plan review schedule created or amended",
       detailPath = "profile/{prisonerNumber}/reviews/review-schedules",
