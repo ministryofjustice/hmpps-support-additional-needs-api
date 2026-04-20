@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
+import java.time.Clock
 import java.time.LocalDate
 
 @Service
@@ -17,6 +18,7 @@ class SearchService(
   private val prisonerSearchApiService: PrisonerSearchApiService,
   private val prisonerOverviewRepository: PrisonerOverviewRepository,
   private val workingDayService: WorkingDayService,
+  private val clock: Clock,
 ) {
   private fun isPrisonNumber(prisonerNameOrNumber: String?): Boolean {
     if (prisonerNameOrNumber.isNullOrBlank()) return false
@@ -72,7 +74,7 @@ class SearchService(
   }
 
   fun determinePlanStatus(overview: PrisonerOverviewEntity?): PlanStatus {
-    val today = LocalDate.now()
+    val today = LocalDate.now(clock)
     val todayPlus5WorkingDays = plus5WorkingDays()
 
     return when {

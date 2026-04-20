@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.Addition
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.DomainEventService
+import java.time.Clock
 import java.time.Instant
 import java.util.*
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation as EducationStatusUpdateAdditionalInformation1
@@ -27,6 +28,7 @@ private val log = KotlinLogging.logger {}
 @RequestMapping("/profile/{prisonNumber}")
 class AdminToolsController(
   private val testDataService: DomainEventService,
+  private val clock: Clock,
 ) {
 
   @PreAuthorize(HAS_EDIT_ELSP)
@@ -76,8 +78,8 @@ class AdminToolsController(
   fun domainEventMessage(
     prisonNumber: String,
     eventType: EventType = EventType.EDUCATION_STATUS_UPDATE,
-    occurredAt: Instant = Instant.now().minusSeconds(10),
-    publishedAt: Instant = Instant.now(),
+    occurredAt: Instant = Instant.now(clock).minusSeconds(10),
+    publishedAt: Instant = Instant.now(clock),
     description: String = "EDUCATION_STOPPED",
     version: String = "1.0",
     additionalInformation: AdditionalInformation,

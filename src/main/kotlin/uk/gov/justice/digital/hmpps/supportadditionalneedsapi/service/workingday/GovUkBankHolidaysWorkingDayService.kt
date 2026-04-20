@@ -2,15 +2,19 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingda
 
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholidays.BankHolidaysApiClient
+import java.time.Clock
 import java.time.LocalDate
 
 /**
  * Implementation of [WorkingDayService] backed by the Bank Holidays data from the GovUK Bank Holidays service.
  */
 @Service
-class GovUkBankHolidaysWorkingDayService(private val bankHolidaysApiClient: BankHolidaysApiClient) : WorkingDayService {
+class GovUkBankHolidaysWorkingDayService(
+  private val bankHolidaysApiClient: BankHolidaysApiClient,
+  private val clock: Clock,
+) : WorkingDayService {
 
-  override fun getNextWorkingDayNDaysFromToday(numberOfDays: Long): LocalDate = getNextWorkingDayNDaysFromDate(numberOfDays, LocalDate.now())
+  override fun getNextWorkingDayNDaysFromToday(numberOfDays: Long): LocalDate = getNextWorkingDayNDaysFromDate(numberOfDays, LocalDate.now(clock))
 
   override fun getNextWorkingDayNDaysFromDate(numberOfDays: Long, fromDate: LocalDate): LocalDate {
     // SAN requirements are that we only need to consider Bank Holidays and England & Wales.

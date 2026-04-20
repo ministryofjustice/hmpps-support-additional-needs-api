@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholiday
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholidays.BankHolidays
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholidays.BankHolidaysApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.bankholidays.RegionBankHolidays
+import java.time.Clock
 import java.time.LocalDate
 
 @ExtendWith(MockitoExtension::class)
@@ -22,6 +23,9 @@ class GovUkBankHolidaysWorkingDayServiceTest {
 
   @Mock
   private lateinit var bankHolidaysApiClient: BankHolidaysApiClient
+
+  @Mock
+  private lateinit var clock: Clock
 
   @ParameterizedTest(name = "[{index}] {0}")
   @MethodSource("dateCalculationTestCases")

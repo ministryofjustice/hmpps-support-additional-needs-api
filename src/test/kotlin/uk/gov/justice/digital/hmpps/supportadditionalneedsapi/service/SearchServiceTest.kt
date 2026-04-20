@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Spy
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
@@ -20,10 +21,16 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortDirection
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchSortField
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
+import java.time.Clock
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 @ExtendWith(MockitoExtension::class)
 class SearchServiceTest {
+  @InjectMocks
+  private lateinit var service: SearchService
+
   @Mock
   private lateinit var prisonerSearchApiService: PrisonerSearchApiService
 
@@ -33,8 +40,8 @@ class SearchServiceTest {
   @Mock
   private lateinit var workingDayService: WorkingDayService
 
-  @InjectMocks
-  private lateinit var service: SearchService
+  @Spy
+  private val clock: Clock = Clock.fixed(Instant.now(), ZoneId.of("UTC"))
 
   @Nested
   inner class FilterByCriteria {
