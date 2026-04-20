@@ -7,11 +7,11 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import org.hibernate.annotations.CreationTimestamp
 import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
@@ -36,7 +36,7 @@ data class TimelineEntity(
   @Column(updatable = false)
   var createdBy: String? = null,
 
-  @CreationTimestamp
+  @CreatedDate
   @Column(updatable = false)
   var createdAt: Instant? = null,
 

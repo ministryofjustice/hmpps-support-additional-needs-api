@@ -8,11 +8,11 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.envers.Audited
 import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.time.LocalDate
@@ -58,7 +58,7 @@ data class ReviewScheduleEntity(
   @Column(updatable = false)
   var createdBy: String? = null,
 
-  @CreationTimestamp
+  @CreatedDate
   @Column(updatable = false)
   var createdAt: Instant? = null,
 
@@ -66,7 +66,7 @@ data class ReviewScheduleEntity(
   @Column
   var updatedBy: String? = null,
 
-  @UpdateTimestamp
+  @LastModifiedDate
   @Column
   var updatedAt: Instant? = null,
 )

@@ -7,12 +7,12 @@ import jakarta.persistence.GeneratedValue
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import org.hibernate.Hibernate
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
 import org.hibernate.annotations.UuidGenerator
 import org.hibernate.envers.Audited
 import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.Instant
 import java.util.UUID
@@ -43,7 +43,7 @@ data class EhcpStatusEntity(
   var id: UUID? = null
 
   @Column(updatable = false)
-  @CreationTimestamp
+  @CreatedDate
   var createdAt: Instant? = null
 
   @Column(updatable = false)
@@ -51,7 +51,7 @@ data class EhcpStatusEntity(
   var createdBy: String? = null
 
   @Column
-  @UpdateTimestamp
+  @LastModifiedDate
   var updatedAt: Instant? = null
 
   @Column
