@@ -3,10 +3,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity
 import jakarta.persistence.Column
 import jakarta.persistence.Id
 import jakarta.persistence.MappedSuperclass
-import org.hibernate.annotations.CreationTimestamp
-import org.hibernate.annotations.UpdateTimestamp
 import org.springframework.data.annotation.CreatedBy
+import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedBy
+import org.springframework.data.annotation.LastModifiedDate
 import java.time.Instant
 import java.util.UUID
 
@@ -23,7 +23,7 @@ abstract class BaseAuditableEntity {
   @Column(updatable = false)
   var createdBy: String? = null
 
-  @CreationTimestamp
+  @CreatedDate
   @Column(updatable = false)
   var createdAt: Instant? = null
 
@@ -31,7 +31,7 @@ abstract class BaseAuditableEntity {
   @Column
   var updatedBy: String? = null
 
-  @UpdateTimestamp
+  @LastModifiedDate
   @Column
   var updatedAt: Instant? = null
 }
