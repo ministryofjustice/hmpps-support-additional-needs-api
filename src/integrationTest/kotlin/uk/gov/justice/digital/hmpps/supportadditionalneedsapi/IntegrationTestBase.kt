@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelpe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.LegalStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ClockConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.PostgresContainer
@@ -107,7 +108,7 @@ import java.util.concurrent.TimeUnit.SECONDS
   ManageUsersApiExtension::class,
   BankHolidaysApiExtension::class,
 )
-@Import(SarIntegrationTestHelperConfig::class)
+@Import(ClockConfig::class, SarIntegrationTestHelperConfig::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("integration-test")
 @AutoConfigureWebTestClient(timeout = "PT15M")
@@ -456,10 +457,10 @@ abstract class IntegrationTestBase {
     return elspReviewRepository.save(review)
   }
 
-  fun aValidAlnScreenerExists(prisonNumber: String): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
+  fun aValidAlnScreenerExists(prisonNumber: String, screeningDate: LocalDate = LocalDate.now()): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
     ALNScreenerEntity(
       prisonNumber,
-      screeningDate = LocalDate.now(),
+      screeningDate = screeningDate,
       createdAtPrison = "BXI",
       updatedAtPrison = "BXI",
       hasChallenges = true,
