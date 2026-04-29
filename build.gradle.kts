@@ -4,10 +4,10 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.2.3"
   kotlin("plugin.spring") version "2.3.21"
   kotlin("plugin.jpa") version "2.3.21"
-  id("org.openapi.generator") version "7.21.0"
+  id("org.openapi.generator") version "7.22.0"
 
   id("jacoco")
   id("name.remal.integration-tests") version "5.0.6"
@@ -33,13 +33,13 @@ configurations {
   testImplementation { exclude(group = "org.junit.vintage") }
 }
 
-val postgresqlVersion = "42.7.10"
+val postgresqlVersion = "42.7.11"
 val kotlinLoggingVersion = "3.0.5"
 val testContainersVersion = "2.0.5"
 val buildDirectory: Directory = layout.buildDirectory.get()
-val springdocOpenapiVersion = "3.0.2"
-val hmppsSqsStarterVersion = "7.3.0"
-val hmppsKotlinSpringBootStarterVersion = "2.1.0"
+val springdocOpenapiVersion = "3.0.3"
+val hmppsSqsStarterVersion = "7.3.1"
+val hmppsKotlinSpringBootStarterVersion = "2.2.0"
 val awaitilityVersion = "4.3.0"
 val sarTestSupportLibraryVersion = "2.3.0"
 
@@ -66,7 +66,7 @@ dependencies {
   integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
   integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:$sarTestSupportLibraryVersion")
   integrationTestImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.40") {
+  integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.41") {
     exclude(group = "io.swagger.core.v3")
   }
   integrationTestImplementation("org.testcontainers:testcontainers-postgresql:$testContainersVersion")
