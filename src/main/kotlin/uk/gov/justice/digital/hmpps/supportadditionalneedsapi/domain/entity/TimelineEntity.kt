@@ -44,6 +44,7 @@ data class TimelineEntity(
 
 enum class TimelineEventType {
   CONDITION_ADDED,
+  CONDITION_DELETED,
   CHALLENGE_ADDED,
   ALN_CHALLENGE_ADDED,
   ALN_STRENGTH_ADDED,
