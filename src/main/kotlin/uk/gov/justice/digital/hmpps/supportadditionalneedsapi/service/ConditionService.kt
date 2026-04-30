@@ -3,10 +3,12 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CONDITION_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CONDITION_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -115,5 +117,27 @@ class ConditionService(
       log.info("The condition update did not change the overall need of $prisonNumber")
     }
     log.info("Processed Archive condition for $prisonNumber")
+  }
+
+  @Transactional
+  @TimelineEvent(
+    eventType = CONDITION_DELETED,
+    additionalInfoField = "conditionReference,reason",
+  )
+  fun deleteCondition(prisonNumber: String, conditionReference: UUID, prisonId: String, reason: DeletionReason) {
+    val condition = conditionRepository.getConditionEntityByPrisonNumberAndReference(prisonNumber, conditionReference)
+      ?: throw ConditionNotFoundException(prisonNumber, conditionReference)
+
+    conditionRepository.delete(condition)
+
+    // has this changed the prisoner's need? do we need to update MN?
+    val hasNeed = needService.hasNeed(prisonNumber = prisonNumber)
+    if (!hasNeed) {
+      log.info("Prisoner $prisonNumber no longer has a need due to deleted condition.")
+      scheduleService.processNeedChange(prisonNumber, hasNeed, prisonId = prisonId)
+    } else {
+      log.info("The condition deletion did not change the overall need of $prisonNumber")
+    }
+    log.info("Processed Delete condition for $prisonNumber")
   }
 }

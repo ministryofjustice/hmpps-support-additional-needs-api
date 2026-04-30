@@ -36,7 +36,7 @@ class TimelineAspect(
     val prisonCode = resolvePrisonCode(argMap, itemList.first())
 
     val entries = itemList.map { item ->
-      val additionalInfo = resolveAdditionalInfo(item, timelineEvent)
+      val additionalInfo = resolveAdditionalInfo(item, argMap, timelineEvent)
       TimelineEntity(
         id = UUID.randomUUID(),
         prisonNumber = prisonNumber,
@@ -55,9 +55,26 @@ class TimelineAspect(
     ?: extractField(fallbackItem, "prisonId")
     ?: DEFAULT_PRISON_ID
 
-  private fun resolveAdditionalInfo(item: Any, timelineEvent: TimelineEvent): String = extractField(item, timelineEvent.additionalInfoField)
-    ?.let { "${timelineEvent.additionalInfoPrefix}$it" }
-    ?: "UNKNOWN_TYPE"
+  private fun resolveAdditionalInfo(item: Any, argMap: Map<String, Any?>, timelineEvent: TimelineEvent): String {
+    val fieldNames = timelineEvent.additionalInfoField
+      .split(",")
+      .map(String::trim)
+      .filter { it.isNotEmpty() }
+    if (fieldNames.isEmpty()) return "UNKNOWN_TYPE"
+
+    val resolved = fieldNames.mapNotNull { name ->
+      (extractField(item, name) ?: argMap[name]?.toString())?.let { name to it }
+    }
+    if (resolved.isEmpty()) return "UNKNOWN_TYPE"
+
+    if (fieldNames.size == 1) {
+      val (_, value) = resolved.first()
+      return "${timelineEvent.additionalInfoPrefix}$value"
+    }
+
+    val body = resolved.joinToString("|") { (name, value) -> "$name=$value" }
+    return "${timelineEvent.additionalInfoPrefix}$body"
+  }
 
   private fun resolveItemList(argMap: Map<String, Any?>): List<Any>? {
     // Case 1: a raw list (e.g. List<ChallengeRequest>)

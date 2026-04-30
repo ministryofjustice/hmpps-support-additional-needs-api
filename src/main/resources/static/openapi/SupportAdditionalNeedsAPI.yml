@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.17.2'
+  version: '0.18.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -300,6 +300,41 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Condition not found
+    delete:
+      summary: Deletes a single condition by UUID.
+      description: |
+        Hard-deletes the specified condition. Whether the condition was previously archived
+        (`active = false`) or still live, it is deleted in the same way. If the condition was
+        the prisoner's only "need" source, the prisoner's plan-creation/review schedules are
+        marked `EXEMPT_NO_NEED` and an `san.plan-creation-schedule.updated` /
+        `san.review-schedule.updated` event is published so MN can pick up the change.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Condition
+      operationId: delete-condition
+      parameters:
+        - name: prisonId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The prison code making the change (drives `updatedAtPrison` on cascaded schedule updates and `createdAtPrison` on the timeline row).
+        - name: reason
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeletionReason'
+          description: The reason for deletion. Stored in the timeline event's `additionalInfo`.
+      responses:
+        '204':
+          description: The condition was successfully deleted.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
 
   '/profile/{prisonNumber}/ehcp-status':
     parameters:
@@ -2630,6 +2665,13 @@ components:
       required:
         - archiveReason
         - prisonId
+
+    DeletionReason:
+      type: string
+      enum:
+        - DATA_PROCESSING_OBJECTION
+        - ENTERED_IN_ERROR
+      description: Reason for deleting a record.
 
 
     SupportStrategyRequest:
