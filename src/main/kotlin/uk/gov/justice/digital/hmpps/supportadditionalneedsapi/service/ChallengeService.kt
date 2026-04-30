@@ -4,11 +4,13 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_CHALLENGE_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CHALLENGE_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CHALLENGE_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
@@ -189,6 +191,33 @@ class ChallengeService(
       log.info("The challenge update did not change the overall need of $prisonNumber")
     }
     log.info("Processed Archive challenge for $prisonNumber")
+  }
+
+  @Transactional
+  @TimelineEvent(
+    eventType = CHALLENGE_DELETED,
+    additionalInfoField = "challengeReference,reason",
+  )
+  fun deleteChallenge(prisonNumber: String, challengeReference: UUID, prisonId: String, reason: DeletionReason) {
+    val challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
+
+    // only non-screener (manually-added) challenges can be deleted
+    if (challenge.alnScreenerId != null) {
+      throw ChallengeAlnScreenerException(prisonNumber, challengeReference)
+    }
+
+    challengeRepository.delete(challenge)
+
+    // has this changed the prisoner's need? do we need to update MN?
+    val hasNeed = needService.hasNeed(prisonNumber = prisonNumber)
+    if (!hasNeed) {
+      log.info("Prisoner $prisonNumber no longer has a need due to deleted challenge.")
+      scheduleService.processNeedChange(prisonNumber, hasNeed, prisonId = prisonId)
+    } else {
+      log.info("The challenge deletion did not change the overall need of $prisonNumber")
+    }
+    log.info("Processed Delete challenge for $prisonNumber")
   }
 
   @Transactional

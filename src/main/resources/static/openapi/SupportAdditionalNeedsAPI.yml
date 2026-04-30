@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.18.0'
+  version: '0.19.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -495,6 +495,45 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Challenge not found
+    delete:
+      summary: Deletes a single manually-added challenge by UUID.
+      description: |
+        Hard-deletes the specified challenge. Whether the challenge was previously archived
+        (`active = false`) or still live, it is deleted in the same way. **Only manually-added
+        challenges can be deleted** — challenges sourced from an ALN screener return 409.
+
+        If the challenge was the prisoner's only "need" source, the plan-creation/review
+        schedules are marked `EXEMPT_NO_NEED` and an `san.plan-creation-schedule.updated` /
+        `san.review-schedule.updated` event is published so MN can pick up the change.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Challenge
+      operationId: delete-challenge
+      parameters:
+        - name: prisonId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The prison code making the change (drives `updatedAtPrison` on cascaded schedule updates and `createdAtPrison` on the timeline row).
+        - name: reason
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeletionReason'
+          description: The reason for deletion. Stored in the timeline event's `additionalInfo`.
+      responses:
+        '204':
+          description: The challenge was successfully deleted.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
 
   '/profile/{prisonNumber}/challenges/{challengeReference}/archive':
     parameters:
