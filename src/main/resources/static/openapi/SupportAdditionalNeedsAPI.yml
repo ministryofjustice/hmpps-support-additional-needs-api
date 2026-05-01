@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.20.0'
+  version: '0.21.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -700,6 +700,44 @@ paths:
           $ref: '#/components/responses/400Error'
         '404':
           description: Strength not found
+    delete:
+      summary: Deletes a single manually-added strength by UUID.
+      description: |
+        Hard-deletes the specified strength. Whether the strength was previously archived
+        (`active = false`) or still live, it is deleted in the same way. **Only manually-added
+        strengths can be deleted** — strengths sourced from an ALN screener return 409.
+
+        Strengths do not contribute to a prisoner's "need" status, so deletion has no effect on
+        plan-creation/review schedules.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Strength
+      operationId: delete-strength
+      parameters:
+        - name: prisonId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The prison code making the change. Stored as `createdAtPrison` on the timeline row.
+        - name: reason
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeletionReason'
+          description: The reason for deletion. Stored in the timeline event's `additionalInfo`.
+      responses:
+        '204':
+          description: The strength was successfully deleted.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
   '/profile/{prisonNumber}/strengths/{strengthReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"

@@ -2,12 +2,14 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_STRENGTH_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.STRENGTH_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.STRENGTH_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.StrengthRepository
@@ -170,6 +172,23 @@ class StrengthService(
     strength.archiveReason = request.archiveReason
     strength.updatedAtPrison = request.prisonId
     strengthRepository.save(strength)
+  }
+
+  @Transactional
+  @TimelineEvent(
+    eventType = STRENGTH_DELETED,
+    additionalInfoField = "strengthReference,reason",
+  )
+  fun deleteStrength(prisonNumber: String, strengthReference: UUID, prisonId: String, reason: DeletionReason) {
+    val strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
+      ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
+
+    // only non-screener (manually-added) strengths can be deleted
+    if (strength.alnScreenerId != null) {
+      throw StrengthAlnScreenerException(prisonNumber, strengthReference)
+    }
+
+    strengthRepository.delete(strength)
   }
 
   @Transactional
