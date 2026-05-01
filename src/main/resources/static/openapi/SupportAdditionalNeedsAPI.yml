@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.19.0'
+  version: '0.20.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -980,6 +980,41 @@ paths:
           $ref: '#/components/responses/404Error'
         '409':
           $ref: '#/components/responses/409Error'
+    delete:
+      summary: Deletes a single support strategy by UUID.
+      description: |
+        Hard-deletes the specified support strategy. Whether the support strategy was previously
+        archived (`active = false`) or still live, it is deleted in the same way.
+
+        Support strategies do not contribute to a prisoner's "need" status, so deletion has no
+        effect on plan-creation/review schedules.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - Support Strategy
+      operationId: delete-support-strategy
+      parameters:
+        - name: prisonId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The prison code making the change. Stored as `createdAtPrison` on the timeline row.
+        - name: reason
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeletionReason'
+          description: The reason for deletion. Stored in the timeline event's `additionalInfo`.
+      responses:
+        '204':
+          description: The support strategy was successfully deleted.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
   '/profile/{prisonNumber}/support-strategies/{supportStrategyReference}/archive':
     parameters:
       - $ref: "#/components/parameters/prisonNumberPathParameter"

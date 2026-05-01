@@ -3,14 +3,17 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateSupportStrategiesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
@@ -64,5 +67,17 @@ class SupportStrategyController(
     @Valid @RequestBody request: ArchiveSupportStrategyRequest,
   ) {
     supportStrategyService.archiveSupportStrategy(prisonNumber, supportStrategyReference, request)
+  }
+
+  @DeleteMapping("/{supportStrategyReference}")
+  @PreAuthorize(HAS_EDIT_ELSP)
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  fun deleteSupportStrategy(
+    @PathVariable prisonNumber: String,
+    @PathVariable supportStrategyReference: UUID,
+    @RequestParam prisonId: String,
+    @RequestParam reason: DeletionReason,
+  ) {
+    supportStrategyService.deleteSupportStrategy(prisonNumber, supportStrategyReference, prisonId, reason)
   }
 }

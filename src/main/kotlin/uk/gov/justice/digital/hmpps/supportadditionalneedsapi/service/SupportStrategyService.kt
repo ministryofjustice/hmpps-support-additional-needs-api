@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.SUPPORT_STRATEGY_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.SUPPORT_STRATEGY_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.SupportStrategyRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
@@ -114,5 +116,25 @@ class SupportStrategyService(
     supportStrategy.updatedAtPrison = request.prisonId
     supportStrategy.archiveReason = request.archiveReason
     supportStrategyRepository.save(supportStrategy)
+  }
+
+  @Transactional
+  @TimelineEvent(
+    eventType = SUPPORT_STRATEGY_DELETED,
+    additionalInfoField = "supportStrategyReference,reason",
+  )
+  fun deleteSupportStrategy(
+    prisonNumber: String,
+    supportStrategyReference: UUID,
+    prisonId: String,
+    reason: DeletionReason,
+  ) {
+    val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
+      prisonNumber,
+      supportStrategyReference,
+    )
+      ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
+
+    supportStrategyRepository.delete(supportStrategy)
   }
 }
