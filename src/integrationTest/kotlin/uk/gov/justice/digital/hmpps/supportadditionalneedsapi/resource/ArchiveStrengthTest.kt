@@ -143,7 +143,7 @@ class ArchiveStrengthTest : IntegrationTestBase() {
     val actual = response.responseBody.blockFirst()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
-      .hasUserMessage("Strength with reference [${entity.reference}] cannot be archived as it is an ALN screener strength for prisoner [$prisonNumber]")
+      .hasUserMessage("Strength with reference [${entity.reference}] cannot be modified as it is an ALN screener strength for prisoner [$prisonNumber]")
   }
 
   @Test
