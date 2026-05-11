@@ -118,7 +118,6 @@ springdoc:
   swagger-ui:
     url: '/openapi/SupportAdditionalNeedsAPI.yml'
     tags-sorter: alpha
-    version: 5.32.1
 
 apis:
   prisoner-search-api:
