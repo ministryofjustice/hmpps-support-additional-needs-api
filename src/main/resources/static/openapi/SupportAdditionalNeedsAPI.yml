@@ -3341,6 +3341,7 @@ components:
       schema:
         type: string
         format: date
+        example: '2023-01-01'
     toDate:
       name: toDate
       in: query
@@ -3348,3 +3349,4 @@ components:
       schema:
         type: string
         format: date
+        example: '2023-12-31'
