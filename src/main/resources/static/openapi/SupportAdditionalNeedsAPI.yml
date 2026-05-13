@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: Support For Additional Needs API
-  version: '0.21.0'
+  version: '0.22.0'
   description: Support For Additional Needs API
   contact:
     name: Learning and Work Progress team
@@ -1085,6 +1085,31 @@ paths:
           $ref: '#/components/responses/404Error'
         '409':
           $ref: '#/components/responses/409Error'
+
+  #
+  # Subject access request
+  # --------------------------------------------------------------------------------
+  '/subject-access-request':
+    get:
+      summary: Retrieves SAN SAR data
+      tags:
+        - Subject Access Request
+      parameters:
+        - $ref: "#/components/parameters/prisonNumberPathParameter"
+        - $ref: "#/components/parameters/fromDate"
+        - $ref: "#/components/parameters/toDate"
+      responses:
+        '200':
+          $ref: '#/components/responses/SarContentFound'
+        '204':
+          description: Request successfully processed - no content found
+        '209':
+          description: Subject Identifier is not recognised by this service
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          description: The client does not have authorisation to make this request
+
 components:
   securitySchemes:
     bearerAuth:
@@ -2833,6 +2858,20 @@ components:
       required:
         - supportStrategies
 
+    ### SAR endpoint ###
+    SarSuccessResponse:
+      type: object
+      properties:
+        content:
+          $ref: '#/components/schemas/SubjectAccessRequestContent'
+
+    SubjectAccessRequestContent:
+      type: object
+      properties:
+        replace-me:
+            type: string
+            description: TODO - this property will be replaced with the actual content of the SAR response once the SAR endpoint is designed and implemented.
+
 
   #
   # Response Body Definitions
@@ -2897,6 +2936,13 @@ components:
           example:
             status: 409
             userMessage: 'A resource with reference [c88a6c48-97e2-4c04-93b5-98619966447b] already exists for prisoner [A1234BC]'
+
+    SarContentFound:
+      description: Request successfully processed - content found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SarSuccessResponse'
 
     SearchByPrison:
       description: Response body containing a Search by prison results response.
@@ -3288,3 +3334,19 @@ components:
         minimum: 1
         default: 50
         example: 50
+    fromDate:
+      name: fromDate
+      in: query
+      description: Optional parameter denoting minimum date of event occurrence which should be returned in the response
+      schema:
+        type: string
+        format: date
+        example: '2023-01-01'
+    toDate:
+      name: toDate
+      in: query
+      description: Optional parameter denoting maximum date of event occurrence which should be returned in the response
+      schema:
+        type: string
+        format: date
+        example: '2023-12-31'
