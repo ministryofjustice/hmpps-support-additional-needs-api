@@ -7,9 +7,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.ALN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_ADDED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ALNScreenerNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNScreenerMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
@@ -56,6 +59,41 @@ class ALNScreenerService(
       challengeService.createAlnChallenges(prisonNumber, challenges, prisonId, alnScreener.id)
       strengthService.createAlnStrengths(prisonNumber, strengths, prisonId, alnScreener.id)
       alnScreenerRepository.saveAndFlush(alnScreener)
+    }
+  }
+
+  @Transactional
+  @TimelineEvent(
+    eventType = ALN_SCREENER_DELETED,
+    additionalInfoPrefix = "reason:",
+    additionalInfoField = "reason",
+  )
+  fun deleteCurrentScreener(prisonNumber: String, prisonId: String, reason: DeletionReason) {
+    val currentScreener = alnScreenerRepository
+      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+      ?: throw ALNScreenerNotFoundException(prisonNumber)
+
+    // Hard delete the current screener.
+    alnScreenerRepository.delete(currentScreener)
+    alnScreenerRepository.flush()
+
+    // Promote the previous screener (now the latest) by re-activating its
+    // children, which were archived when the deleted screener was created.
+    alnScreenerRepository
+      .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
+      ?.let { unarchiveScreenerChildren(it) }
+
+    log.info("Processed delete current ALN screener for $prisonNumber")
+  }
+
+  private fun unarchiveScreenerChildren(screener: ALNScreenerEntity) {
+    screener.challenges.forEach {
+      it.active = true
+      it.archiveReason = null
+    }
+    screener.strengths.forEach {
+      it.active = true
+      it.archiveReason = null
     }
   }
 

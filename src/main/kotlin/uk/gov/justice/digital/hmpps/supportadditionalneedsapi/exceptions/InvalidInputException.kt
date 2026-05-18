@@ -40,6 +40,8 @@ class ChallengeArchivedException(prisonNumber: String, reference: UUID) : Runtim
 
 class ChallengeAlnScreenerException(prisonNumber: String, reference: UUID) : RuntimeException("Challenge with reference [$reference] cannot be modified as it is an ALN screener challenge for prisoner [$prisonNumber]")
 
+class ALNScreenerNotFoundException(prisonNumber: String) : RuntimeException("ALN Screener not found for prisoner [$prisonNumber]")
+
 class PersonAlreadyHasAPlanException(prisonNumber: String) : RuntimeException("Prisoner [$prisonNumber] already has a plan")
 
 class PlanNotFoundException(prisonNumber: String) : RuntimeException("ELSP plan not found for prisoner [$prisonNumber]")
