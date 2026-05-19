@@ -1,8 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -17,17 +17,21 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthAlnScreenerException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateStrengthsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class StrengthService(
@@ -180,6 +184,8 @@ class StrengthService(
     additionalInfoField = "strengthReference,reason",
   )
   fun deleteStrength(prisonNumber: String, strengthReference: UUID, prisonId: String, reason: DeletionReason) {
+    val deletionReason = DeletionReasonMapper.toEntity(reason)
+
     val strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
@@ -189,6 +195,7 @@ class StrengthService(
     }
 
     strengthRepository.delete(strength)
+    log.info("Processed Delete strength for $prisonNumber (reason=$deletionReason)")
   }
 
   @Transactional
