@@ -3,7 +3,6 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -15,11 +14,13 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ConditionMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
@@ -125,6 +126,8 @@ class ConditionService(
     additionalInfoField = "conditionReference,reason",
   )
   fun deleteCondition(prisonNumber: String, conditionReference: UUID, prisonId: String, reason: DeletionReason) {
+    val deletionReason = DeletionReasonMapper.toEntity(reason)
+
     val condition = conditionRepository.getConditionEntityByPrisonNumberAndReference(prisonNumber, conditionReference)
       ?: throw ConditionNotFoundException(prisonNumber, conditionReference)
 
@@ -138,6 +141,6 @@ class ConditionService(
     } else {
       log.info("The condition deletion did not change the overall need of $prisonNumber")
     }
-    log.info("Processed Delete condition for $prisonNumber")
+    log.info("Processed Delete condition for $prisonNumber (reason=$deletionReason)")
   }
 }

@@ -4,7 +4,6 @@ import jakarta.transaction.Transactional
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -19,6 +18,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.Challen
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ChallengeMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
@@ -199,6 +200,8 @@ class ChallengeService(
     additionalInfoField = "challengeReference,reason",
   )
   fun deleteChallenge(prisonNumber: String, challengeReference: UUID, prisonId: String, reason: DeletionReason) {
+    val deletionReason = DeletionReasonMapper.toEntity(reason)
+
     val challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
 
@@ -217,7 +220,7 @@ class ChallengeService(
     } else {
       log.info("The challenge deletion did not change the overall need of $prisonNumber")
     }
-    log.info("Processed Delete challenge for $prisonNumber")
+    log.info("Processed Delete challenge for $prisonNumber (reason=$deletionReason)")
   }
 
   @Transactional

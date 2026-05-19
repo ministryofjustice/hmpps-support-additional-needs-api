@@ -1,8 +1,8 @@
-package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
+Lpackage uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
+import mu.KotlinLogging
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -13,15 +13,19 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SupportStrategyMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateSupportStrategiesRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.util.*
+
+private val log = KotlinLogging.logger {}
 
 @Service
 class SupportStrategyService(
@@ -129,6 +133,8 @@ class SupportStrategyService(
     prisonId: String,
     reason: DeletionReason,
   ) {
+    val deletionReason = DeletionReasonMapper.toEntity(reason)
+
     val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
       prisonNumber,
       supportStrategyReference,
@@ -136,5 +142,6 @@ class SupportStrategyService(
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
 
     supportStrategyRepository.delete(supportStrategy)
+    log.info("Processed Delete support strategy for $prisonNumber (reason=$deletionReason)")
   }
 }
