@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 
 @RestController

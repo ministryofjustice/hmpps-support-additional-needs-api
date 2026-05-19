@@ -656,18 +656,13 @@ paths:
     delete:
       summary: Deletes the current (latest) ALN screener for a prisoner.
       description: |
-        Hard-deletes the prisoner's latest ALN screener, along with any strengths and
-        challenges that belong to it (database FK ON DELETE CASCADE). If the prisoner
-        had a previous ALN screener, it becomes the current one and any of its
-        strengths and challenges that were archived when the now-deleted screener was
-        created are re-activated.
+        Permanently deletes the prisoner's most recent ALN screener, together with
+        the strengths and challenges that were recorded as part of it. If the
+        prisoner has an earlier ALN screener, that screener becomes the current one
+        and its strengths and challenges are restored.
 
         This endpoint always operates on the latest screener — there is no path or
         query parameter to target a specific screener by reference.
-
-        Note: this endpoint does **not** delete `AlnAssessmentEntity` records (which
-        are sourced from Curious). It only touches the `aln_screener` table and its
-        FK-cascade children.
 
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
@@ -681,13 +676,13 @@ paths:
           required: true
           schema:
             type: string
-          description: The prison code making the change (used as `createdAtPrison` on the timeline row).
+          description: The prison code identifying the establishment where the deletion is being made.
         - name: reason
           in: query
           required: true
           schema:
             $ref: '#/components/schemas/DeletionReason'
-          description: The reason for deletion. Stored in the timeline event's `additionalInfo`.
+          description: The reason for deletion.
       responses:
         '204':
           description: The current ALN screener was successfully deleted.

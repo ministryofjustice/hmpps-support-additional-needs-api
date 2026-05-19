@@ -7,17 +7,18 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.ALN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_ADDED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ALN_SCREENER_DELETED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_ASSESSMENT_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ALNScreenerNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNScreenerMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
 import java.time.LocalDate
 
@@ -69,6 +70,8 @@ class ALNScreenerService(
     additionalInfoField = "reason",
   )
   fun deleteCurrentScreener(prisonNumber: String, prisonId: String, reason: DeletionReason) {
+    val deletionReason = DeletionReasonMapper.toEntity(reason)
+
     val currentScreener = alnScreenerRepository
       .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
       ?: throw ALNScreenerNotFoundException(prisonNumber)
@@ -83,7 +86,7 @@ class ALNScreenerService(
       .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
       ?.let { unarchiveScreenerChildren(it) }
 
-    log.info("Processed delete current ALN screener for $prisonNumber")
+    log.info("Processed delete current ALN screener for $prisonNumber (reason=$deletionReason)")
   }
 
   private fun unarchiveScreenerChildren(screener: ALNScreenerEntity) {
