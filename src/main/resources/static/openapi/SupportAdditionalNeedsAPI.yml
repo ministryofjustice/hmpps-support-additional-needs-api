@@ -636,11 +636,11 @@ paths:
     get:
       summary: Retrieve the ALN screener information for a person.
       description: |
-        Endpoint to retrieve the Additional Learning Needs (ALN) screener information 
-        for a person in custody, based on their prison number. Returns the date the 
+        Endpoint to retrieve the Additional Learning Needs (ALN) screener information
+        for a person in custody, based on their prison number. Returns the date the
         screener was completed along with any associated challenge and strength codes.
-        Note that a person may have more than one screener. 
-        
+        Note that a person may have more than one screener.
+
         **Role Requirements:**
         Access to this endpoint requires one of the following roles:
           - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RO` (Read-Only)
@@ -653,6 +653,43 @@ paths:
         '400':
           $ref: '#/components/responses/400Error'
       operationId: get-aln-screener
+    delete:
+      summary: Deletes the current (latest) ALN screener for a prisoner.
+      description: |
+        Permanently deletes the prisoner's most recent ALN screener, together with
+        the strengths and challenges that were recorded as part of it. If the
+        prisoner has an earlier ALN screener, that screener becomes the current one
+        and its strengths and challenges are restored.
+
+        This endpoint always operates on the latest screener — there is no path or
+        query parameter to target a specific screener by reference.
+
+        **Role Requirements:**
+        Access to this endpoint requires one of the following roles:
+          - `ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW` (Read-Write)
+      tags:
+        - ALN Screener
+      operationId: delete-aln-screener
+      parameters:
+        - name: prisonId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The prison code identifying the establishment where the deletion is being made.
+        - name: reason
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/DeletionReason'
+          description: The reason for deletion.
+      responses:
+        '204':
+          description: The current ALN screener was successfully deleted.
+        '400':
+          $ref: '#/components/responses/400Error'
+        '404':
+          $ref: '#/components/responses/404Error'
 
   '/profile/{prisonNumber}/strengths/{strengthReference}':
     parameters:

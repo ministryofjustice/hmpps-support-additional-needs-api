@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.context.request.RequestAttributes
 import org.springframework.web.context.request.WebRequest
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ALNScreenerNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.CannotCompleteReviewWithNoSchedule
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeAlnScreenerException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
@@ -171,6 +172,7 @@ class GlobalExceptionHandler(private val errorAttributes: ApiRequestErrorAttribu
       SupportStrategyNotFoundException::class,
       PlanNotFoundException::class,
       PlanCreationScheduleNotFoundException::class,
+      ALNScreenerNotFoundException::class,
     ],
   )
   fun handleExceptionReturnNotFoundErrorResponse(
