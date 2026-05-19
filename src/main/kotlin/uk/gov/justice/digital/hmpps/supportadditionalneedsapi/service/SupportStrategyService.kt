@@ -1,4 +1,4 @@
-Lpackage uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
 import jakarta.transaction.Transactional
 import mu.KotlinLogging
