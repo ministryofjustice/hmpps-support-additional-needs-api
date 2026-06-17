@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.awspring.cloud.sqs.annotation.SqsListener
 import mu.KotlinLogging
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 
 private val log = KotlinLogging.logger {}
@@ -14,6 +15,7 @@ private const val NOTIFICATION = "Notification"
  * processing.
  */
 @Component
+@ConditionalOnProperty(name = ["hmpps.sqs.enabled"], havingValue = "true")
 class InboundEventsListener(
   private val mapper: ObjectMapper,
   private val inboundEventsService: InboundEventsService,
