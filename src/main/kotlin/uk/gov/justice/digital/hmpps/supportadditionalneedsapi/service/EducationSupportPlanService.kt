@@ -4,10 +4,12 @@ import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ELSP_CREATED
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PersonAlreadyHasAPlanException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.PlanNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.EhcpStatusMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanHistoryMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ElspPlanMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
@@ -17,8 +19,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.T
 @Service
 class EducationSupportPlanService(
   private val elspPlanRepository: ElspPlanRepository,
+  private val elspPlanHistoryRepository: ElspPlanHistoryRepository,
   private val ehcpStatusRepository: EhcpStatusRepository,
   private val elspPlanMapper: ElspPlanMapper,
+  private val elspPlanHistoryMapper: ElspPlanHistoryMapper,
   private val ehcpStatusMapper: EhcpStatusMapper,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val planReviewScheduleService: ReviewScheduleService,
@@ -27,6 +31,19 @@ class EducationSupportPlanService(
     val entity = elspPlanRepository.findByPrisonNumber(prisonNumber) ?: throw PlanNotFoundException(prisonNumber)
     val ehcpStatusEntity = ehcpStatusRepository.findByPrisonNumber(prisonNumber)
     return elspPlanMapper.toModel(entity, ehcpStatusEntity)
+  }
+
+  /**
+   * Returns the original (initial) version of the person's Education Support Plan, sourced from the plan history.
+   * The live plan reflects the latest state after any review-driven changes, so the original is only available via the
+   * earliest history revision. Returns null if the person has never had a plan.
+   */
+  fun getOriginalPlan(prisonNumber: String): EducationSupportPlanResponse? {
+    val originalPlan = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
+      .minByOrNull { it.id.revisionNumber }
+      ?: return null
+    val ehcpStatusEntity = ehcpStatusRepository.findByPrisonNumber(prisonNumber)
+    return elspPlanHistoryMapper.toModel(originalPlan, ehcpStatusEntity)
   }
 
   @Transactional
