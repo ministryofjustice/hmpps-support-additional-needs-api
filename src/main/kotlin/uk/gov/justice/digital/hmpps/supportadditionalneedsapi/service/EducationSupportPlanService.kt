@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.ELSP_CREATED
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -21,6 +22,7 @@ class EducationSupportPlanService(
   private val elspPlanRepository: ElspPlanRepository,
   private val elspPlanHistoryRepository: ElspPlanHistoryRepository,
   private val ehcpStatusRepository: EhcpStatusRepository,
+  private val ehcpStatusHistoryRepository: EhcpStatusHistoryRepository,
   private val elspPlanMapper: ElspPlanMapper,
   private val elspPlanHistoryMapper: ElspPlanHistoryMapper,
   private val ehcpStatusMapper: EhcpStatusMapper,
@@ -42,8 +44,11 @@ class EducationSupportPlanService(
     val originalPlan = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
       .minByOrNull { it.id.revisionNumber }
       ?: return null
-    val ehcpStatusEntity = ehcpStatusRepository.findByPrisonNumber(prisonNumber)
-    return elspPlanHistoryMapper.toModel(originalPlan, ehcpStatusEntity)
+    // Source the EHCP status from its own history at the original revision (created in the same transaction as the
+    // original plan), so every field on the response comes from the same first version of the plan.
+    val originalEhcpStatus = ehcpStatusHistoryRepository.findAllByPrisonNumber(prisonNumber)
+      .minByOrNull { it.id.revisionNumber }
+    return elspPlanHistoryMapper.toModel(originalPlan, originalEhcpStatus)
   }
 
   @Transactional

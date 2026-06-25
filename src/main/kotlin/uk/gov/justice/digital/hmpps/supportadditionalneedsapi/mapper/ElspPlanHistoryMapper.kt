@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
@@ -15,10 +15,10 @@ class ElspPlanHistoryMapper(
 
   fun toModel(
     entity: ElspPlanHistoryEntity,
-    ehcpStatusEntity: EhcpStatusEntity,
+    ehcpStatusHistoryEntity: EhcpStatusHistoryEntity?,
   ): EducationSupportPlanResponse = with(entity) {
     EducationSupportPlanResponse(
-      hasCurrentEhcp = ehcpStatusEntity.hasCurrentEhcp,
+      hasCurrentEhcp = ehcpStatusHistoryEntity?.hasCurrentEhcp ?: false,
       planCreatedBy = planCreatedByName?.let { PlanContributor(it, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
