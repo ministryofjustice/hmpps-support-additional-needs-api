@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 data class SupportAdditionalNeedsContent(
-  // TODO Add in the EHCP status
   val educationSupportPlans: List<EducationSupportPlanReport>,
   val reviews: List<ReviewReport>,
   val challenges: List<ChallengeReport>,

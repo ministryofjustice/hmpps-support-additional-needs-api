@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Elsp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleHistoryEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspReviewHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleHistoryRepository
@@ -31,6 +32,7 @@ class SubjectAccessReportService(
   private val conditionService: ConditionService,
   private val elspPlanHistoryRepository: ElspPlanHistoryRepository,
   private val elspReviewHistoryRepository: ElspReviewHistoryRepository,
+  private val ehcpStatusRepository: EhcpStatusRepository,
   private val planCreationScheduleHistoryRepository: PlanCreationScheduleHistoryRepository,
   private val reviewScheduleHistoryRepository: ReviewScheduleHistoryRepository,
   private val alnScreenerService: ALNScreenerService,
@@ -50,6 +52,7 @@ class SubjectAccessReportService(
       ?.atOffset(ZoneOffset.UTC)
 
     // get raw data for the date range
+    val hasCurrentEhcp = ehcpStatusRepository.findFirstByPrisonNumberOrderByCreatedAtDesc(prn)?.hasCurrentEhcp
     val educationSupportPlans = getEducationSupportPlans(prn, fromDateInstance, toDateInstance)
     val reviews = getReviews(prn, fromDateInstance, toDateInstance)
     val challenges = getChallenges(prn, fromDateInstance, toDateInstance)
@@ -61,7 +64,7 @@ class SubjectAccessReportService(
 
     // convert the raw data into SAR report
     val sanContent = SupportAdditionalNeedsContent(
-      educationSupportPlans = educationSupportPlans.map { it.toReportModel() },
+      educationSupportPlans = educationSupportPlans.map { it.toReportModel(hasCurrentEhcp) },
       reviews = reviews.map { it.toReportModel() },
       challenges = challenges.map { it.toReportModel() },
       strengths = strengths.map { it.toReportModel() },
@@ -85,6 +88,7 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): List<ElspPlanHistoryEntity> = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber = prn)
     .filter { it.updatedAt.inRange(fromDateInstance, toDateInstance) }
+    .sortedBy { it.createdAt }
 
   private fun getReviews(
     prn: String,

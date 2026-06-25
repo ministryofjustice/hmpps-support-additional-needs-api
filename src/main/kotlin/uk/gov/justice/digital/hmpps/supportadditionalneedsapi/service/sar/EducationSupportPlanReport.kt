@@ -11,15 +11,24 @@ data class EducationSupportPlanReport(
   val updatedBy: String,
   val updatedAt: Instant,
   val updatedAtPrison: String,
+  val hasCurrentEhcp: Boolean? = null,
   val teachingAdjustments: String? = null,
   val specificTeachingSkills: String? = null,
   val examAccessArrangements: String? = null,
   val lnspSupport: String? = null,
   val lnspSupportHours: Int? = null,
   val detail: String? = null,
+  val planCreatedByName: String? = null,
+  val planCreatedByJobRole: String? = null,
+  val otherContributors: List<OtherContributorReport> = emptyList(),
 )
 
-fun ElspPlanHistoryEntity.toReportModel(): EducationSupportPlanReport = EducationSupportPlanReport(
+data class OtherContributorReport(
+  val name: String,
+  val jobRole: String,
+)
+
+fun ElspPlanHistoryEntity.toReportModel(hasCurrentEhcp: Boolean?): EducationSupportPlanReport = EducationSupportPlanReport(
   individualSupport = individualSupport,
   createdBy = createdBy,
   createdAt = createdAt,
@@ -27,10 +36,14 @@ fun ElspPlanHistoryEntity.toReportModel(): EducationSupportPlanReport = Educatio
   updatedBy = updatedBy,
   updatedAt = updatedAt,
   updatedAtPrison = updatedAtPrison,
+  hasCurrentEhcp = hasCurrentEhcp,
   teachingAdjustments = teachingAdjustments,
   specificTeachingSkills = specificTeachingSkills,
   examAccessArrangements = examAccessArrangements,
   lnspSupport = lnspSupport,
   lnspSupportHours = lnspSupportHours,
   detail = detail,
+  planCreatedByName = planCreatedByName,
+  planCreatedByJobRole = planCreatedByJobRole,
+  otherContributors = otherContributors.map { OtherContributorReport(name = it.name, jobRole = it.jobRole) },
 )

@@ -3,23 +3,25 @@
     <h2>Education Support Plans</h2>
     {{#educationSupportPlans}}
         <h3>Plan</h3>
-        <table class="data-table">
-            <tr>
-                <td class="data-column-40">Has education health case plan</td>
-                <td class="data-column-60">Learning needs support practitioner support hours</td>
-            </tr>
-            <tr>
-                <td>{{ optionalValue hasCurrentEhcp }}</td>
-                <td>{{ optionalValue lnspSupportHours }}</td>
-            </tr>
-        </table>
         <table class="summary-list">
+            <tr><td>Has Education, Health and Care Plan</td><td>{{ convertBoolean hasCurrentEhcp }}</td></tr>
             <tr><td>Individual support</td><td>{{ optionalValue individualSupport }}</td></tr>
             <tr><td>Teaching adjustments</td><td>{{ optionalValue teachingAdjustments }}</td></tr>
             <tr><td>Specific teaching skills</td><td>{{ optionalValue specificTeachingSkills }}</td></tr>
             <tr><td>Exam access arrangements</td><td>{{ optionalValue examAccessArrangements }}</td></tr>
             <tr><td>Learning needs support practitioner support</td><td>{{ optionalValue lnspSupport }}</td></tr>
+            <tr><td>Learning needs support practitioner support hours</td><td>{{ optionalValue lnspSupportHours }}</td></tr>
             <tr><td>Detail</td><td>{{ optionalValue detail }}</td></tr>
+            <tr><td>Created by</td><td>{{ optionalValue planCreatedByName }}</td></tr>
+            <tr><td>Created by job role</td><td>{{ optionalValue planCreatedByJobRole }}</td></tr>
+            {{#otherContributors}}
+            <tr><td>Other contributor name</td><td>{{ optionalValue name }}</td></tr>
+            <tr><td>Other contributor job role</td><td>{{ optionalValue jobRole }}</td></tr>
+            {{/otherContributors}}
+            {{^otherContributors}}
+            <tr><td>Other contributor name</td><td>No Data Held</td></tr>
+            <tr><td>Other contributor job role</td><td>No Data Held</td></tr>
+            {{/otherContributors}}
         </table>
         <table class="data-table">
             <tr>
