@@ -2904,10 +2904,14 @@ components:
 
     SubjectAccessRequestContent:
       type: object
+      description: The content of a Support for Additional Needs Subject Access Request response.
       properties:
-        replace-me:
-            type: string
-            description: TODO - this property will be replaced with the actual content of the SAR response once the SAR endpoint is designed and implemented.
+        originalEducationSupportPlan:
+          description: |
+            The original (initial) version of the person's Education Support Plan, if one exists.
+            This is deliberately the first version of the plan as it was created (sourced from the plan history), rather
+            than the current plan. Subsequent changes to the plan are represented by its reviews.
+          $ref: '#/components/schemas/EducationSupportPlanResponse'
 
 
   #
