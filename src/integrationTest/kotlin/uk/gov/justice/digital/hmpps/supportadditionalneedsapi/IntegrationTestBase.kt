@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ClockConfig
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.ReviewConfig
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.TaskExecutorConfiguration
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
@@ -94,6 +95,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.MissingQueueException
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import uk.gov.justice.hmpps.test.kotlin.auth.JwtAuthorisationHelper
+import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -108,7 +110,7 @@ import java.util.concurrent.TimeUnit.SECONDS
   ManageUsersApiExtension::class,
   BankHolidaysApiExtension::class,
 )
-@Import(ClockConfig::class, SarIntegrationTestHelperConfig::class)
+@Import(ClockConfig::class, TaskExecutorConfiguration::class, SarIntegrationTestHelperConfig::class)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles("integration-test")
 @AutoConfigureWebTestClient(timeout = "PT15M")
@@ -139,6 +141,9 @@ abstract class IntegrationTestBase {
     Awaitility.setDefaultPollInterval(500, MILLISECONDS)
     Awaitility.setDefaultTimeout(5, SECONDS)
   }
+
+  @Autowired
+  lateinit var clock: Clock
 
   @Autowired
   lateinit var ehcpStatusRepository: EhcpStatusRepository
