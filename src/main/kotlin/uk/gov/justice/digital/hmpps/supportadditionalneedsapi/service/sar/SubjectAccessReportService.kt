@@ -23,12 +23,12 @@ class SubjectAccessReportService(
     val fromDateInstance = fromDate?.atStartOfDay()?.atOffset(ZoneOffset.UTC)
     val toDateInstance = toDate?.atStartOfDay()?.plusDays(1)?.atOffset(ZoneOffset.UTC)
 
-    val educationSupportPlan = getEducationSupportPlan(prn, fromDateInstance, toDateInstance)
+    val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
 
-    return if (educationSupportPlan != null) {
+    return if (originalEducationSupportPlan != null) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
-          educationSupportPlan = educationSupportPlan,
+          originalEducationSupportPlan = originalEducationSupportPlan,
         ),
       )
     } else {
@@ -36,7 +36,7 @@ class SubjectAccessReportService(
     }
   }
 
-  private fun getEducationSupportPlan(
+  private fun getOriginalEducationSupportPlan(
     prn: String,
     fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,

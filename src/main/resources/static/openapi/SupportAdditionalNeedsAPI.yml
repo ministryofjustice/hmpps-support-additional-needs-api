@@ -2906,8 +2906,11 @@ components:
       type: object
       description: The content of a Support for Additional Needs Subject Access Request response.
       properties:
-        educationSupportPlan:
-          description: The person's Education Support Plan, if one exists.
+        originalEducationSupportPlan:
+          description: |
+            The original (initial) version of the person's Education Support Plan, if one exists.
+            This is deliberately the first version of the plan as it was created (sourced from the plan history), rather
+            than the current plan. Subsequent changes to the plan are represented by its reviews.
           $ref: '#/components/schemas/EducationSupportPlanResponse'
 
 

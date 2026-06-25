@@ -63,7 +63,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should get education support plan for specific prisoner without date filtering`() {
+  fun `should get original education support plan for specific prisoner without date filtering`() {
     // Given
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
@@ -82,8 +82,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     assertThat(actual).isNotNull()
     val content = objectMapper.convertValue(actual!!.content, SubjectAccessRequestContent::class.java)
 
-    assertThat(content.educationSupportPlan).isNotNull
-    content.educationSupportPlan!!.let { p ->
+    assertThat(content.originalEducationSupportPlan).isNotNull
+    content.originalEducationSupportPlan!!.let { p ->
       assertThat(p.hasCurrentEhcp).isTrue()
       assertThat(p.individualSupport).isEqualTo("support")
       assertThat(p.teachingAdjustments).isEqualTo("teachingAdjustments")

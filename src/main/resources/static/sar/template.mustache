@@ -1,7 +1,7 @@
 <h1 class="title">Support for Additional Needs</h1>
 {{#.}}
     <h2>Education Support Plans</h2>
-    {{#educationSupportPlan}}
+    {{#originalEducationSupportPlan}}
         <h3>Plan</h3>
         <table class="summary-list">
             <tr><td>Has Education, Health and Care Plan</td><td>{{ convertBoolean hasCurrentEhcp }}</td></tr>
@@ -47,8 +47,8 @@
                 <td>{{ getPrisonName updatedAtPrison }}</td>
             </tr>
         </table>
-    {{/educationSupportPlan}}
-    {{^educationSupportPlan}}
+    {{/originalEducationSupportPlan}}
+    {{^originalEducationSupportPlan}}
         <p>No Data Held</p>
-    {{/educationSupportPlan}}
+    {{/originalEducationSupportPlan}}
 {{/.}}
