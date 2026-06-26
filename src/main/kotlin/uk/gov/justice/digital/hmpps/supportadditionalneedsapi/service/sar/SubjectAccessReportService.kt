@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStrategyService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
@@ -13,6 +15,7 @@ import java.time.ZoneOffset
 @Service
 class SubjectAccessReportService(
   private val educationSupportPlanService: EducationSupportPlanService,
+  private val supportStrategyService: SupportStrategyService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -24,11 +27,13 @@ class SubjectAccessReportService(
     val toDateInstance = toDate?.atStartOfDay()?.plusDays(1)?.atOffset(ZoneOffset.UTC)
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
+    val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
 
-    return if (originalEducationSupportPlan != null) {
+    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty()) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
+          supportStrategies = supportStrategies,
         ),
       )
     } else {
@@ -42,6 +47,14 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): EducationSupportPlanResponse? = educationSupportPlanService.getOriginalPlan(prn)
     ?.takeIf { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+
+  private fun getSupportStrategies(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<SupportStrategyResponse> = supportStrategyService.getSupportStrategies(prn).supportStrategies
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+    .sortedBy { it.createdAt }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&
