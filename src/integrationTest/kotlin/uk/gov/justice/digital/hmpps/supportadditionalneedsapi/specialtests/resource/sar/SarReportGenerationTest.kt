@@ -43,5 +43,6 @@ class SarReportGenerationTest :
   override fun setupTestData() {
     stubGetDisplayName("testuser")
     anElSPExists(prisonNumber)
+    aValidSupportStrategyExists(prisonNumber)
   }
 }

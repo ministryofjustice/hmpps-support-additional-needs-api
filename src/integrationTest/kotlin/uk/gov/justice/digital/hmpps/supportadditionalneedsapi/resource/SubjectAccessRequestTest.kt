@@ -68,6 +68,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     anElSPExists(prisonNumber)
+    aValidSupportStrategyExists(prisonNumber)
 
     // Then
     val response = webTestClient.get()
@@ -99,6 +100,14 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
         assertThat(contributor.name).isEqualTo("Bob Smith")
         assertThat(contributor.jobRole).isEqualTo("Teacher")
       }
+    }
+
+    assertThat(content.supportStrategies).hasSize(1)
+    content.supportStrategies!!.first().let { s ->
+      assertThat(s.active).isTrue()
+      assertThat(s.archiveReason).isNull()
+      assertThat(s.supportStrategyType.categoryDescription).isEqualTo("Processing speed")
+      assertThat(s.detail).isNull()
     }
   }
 }
