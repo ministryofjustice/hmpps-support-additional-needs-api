@@ -1,11 +1,13 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
@@ -22,6 +24,7 @@ class SubjectAccessReportService(
   private val supportStrategyService: SupportStrategyService,
   private val strengthService: StrengthService,
   private val challengeService: ChallengeService,
+  private val alnScreenerService: ALNScreenerService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -36,12 +39,14 @@ class SubjectAccessReportService(
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
+    val alnScreeners = getAlnScreeners(prn, fromDateInstance, toDateInstance)
 
     return if (
       originalEducationSupportPlan != null ||
       supportStrategies.isNotEmpty() ||
       nonAlnStrengths.isNotEmpty() ||
-      nonAlnChallenges.isNotEmpty()
+      nonAlnChallenges.isNotEmpty() ||
+      alnScreeners.isNotEmpty()
     ) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
@@ -49,6 +54,7 @@ class SubjectAccessReportService(
           supportStrategies = supportStrategies,
           nonAlnStrengths = nonAlnStrengths,
           nonAlnChallenges = nonAlnChallenges,
+          alnScreeners = alnScreeners,
         ),
       )
     } else {
@@ -89,6 +95,13 @@ class SubjectAccessReportService(
   ): List<ChallengeResponse> = challengeService.getChallenges(prisonNumber = prn, includeAln = false).challenges
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedByDescending { it.createdAt }
+
+  private fun getAlnScreeners(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<ALNScreenerResponse> = alnScreenerService.getScreeners(prn).screeners
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&
