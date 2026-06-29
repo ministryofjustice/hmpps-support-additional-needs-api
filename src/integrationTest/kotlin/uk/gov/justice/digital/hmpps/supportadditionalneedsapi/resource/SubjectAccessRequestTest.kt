@@ -121,7 +121,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(s.howIdentified).isEqualTo("wider prison, conversations")
       assertThat(s.howIdentifiedOther).isNull()
     }
-    
+
     assertThat(content.challenges).hasSize(1)
     content.challenges!!.first().let { s ->
       assertThat(s.active).isTrue()

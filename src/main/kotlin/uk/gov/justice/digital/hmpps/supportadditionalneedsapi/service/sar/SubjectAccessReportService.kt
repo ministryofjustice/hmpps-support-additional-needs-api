@@ -78,8 +78,8 @@ class SubjectAccessReportService(
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedBy { it.createdAt }
     .map { sarStrengthMapper.fromResponse(it) }
-    
-    /**
+
+  /**
    * Obtain manually added challenges of the prisoner (excluding challenges from ALN screener)
    */
   private fun getChallenges(
