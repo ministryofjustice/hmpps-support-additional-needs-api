@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.sar.SarStrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarStrengthResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
@@ -20,7 +19,6 @@ class SubjectAccessReportService(
   private val educationSupportPlanService: EducationSupportPlanService,
   private val supportStrategyService: SupportStrategyService,
   private val strengthService: StrengthService,
-  private val sarStrengthMapper: SarStrengthMapper,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -33,14 +31,14 @@ class SubjectAccessReportService(
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
-    val strengths = getStrengths(prn, fromDateInstance, toDateInstance)
+    val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
 
-    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty() || strengths.isNotEmpty()) {
+    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty() || nonAlnStrengths.isNotEmpty()) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
           supportStrategies = supportStrategies,
-          strengths = strengths,
+          nonAlnStrengths = nonAlnStrengths,
         ),
       )
     } else {
@@ -63,14 +61,13 @@ class SubjectAccessReportService(
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedBy { it.createdAt }
 
-  private fun getStrengths(
+  private fun getNonAlnStrengths(
     prn: String,
     fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,
-  ): List<SarStrengthResponse> = strengthService.getStrengths(prn, includeAln = false).strengths
+  ): List<StrengthResponse> = strengthService.getStrengths(prn, includeAln = false).strengths
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedBy { it.createdAt }
-    .map { sarStrengthMapper.fromResponse(it) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&

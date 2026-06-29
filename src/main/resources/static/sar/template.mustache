@@ -91,14 +91,17 @@
     {{/supportStrategies}}
 
     <h2>Strengths</h2>
-    {{#strengths}}
+    {{#nonAlnStrengths}}
         <h3>Strength</h3>
         <table class="summary-list">
             <tr><td>Active</td><td>{{ convertBoolean active }}</td></tr>
             <tr><td>Archive reason</td><td>{{ optionalValue archiveReason }}</td></tr>
             <tr><td>Strength type</td><td>{{ optionalValue strengthType.categoryDescription }}</td></tr>
-            <tr><td>Strength description</td><td>{{ optionalValue strengthDescription }}</td></tr>
-            <tr><td>How identified</td><td>{{ optionalValue howIdentified }}</td></tr>
+            <tr><td>Strength description</td><td>{{ optionalValue symptoms }}</td></tr>
+            <tr>
+                <td>How identified</td>
+                <td>{{#howIdentified}}{{ . }}{{#unless @last}}, {{/unless}}{{/howIdentified}}</td>
+            </tr>
             <tr><td>How identified other</td><td>{{ optionalValue howIdentifiedOther }}</td></tr>
         </table>
         <table class="data-table">
@@ -125,8 +128,8 @@
                 <td>{{ getPrisonName updatedAtPrison }}</td>
             </tr>
         </table>
-    {{/strengths}}
-    {{^strengths}}
+    {{/nonAlnStrengths}}
+    {{^nonAlnStrengths}}
         <p>No Data Held</p>
-    {{/strengths}}
+    {{/nonAlnStrengths}}
 {{/.}}

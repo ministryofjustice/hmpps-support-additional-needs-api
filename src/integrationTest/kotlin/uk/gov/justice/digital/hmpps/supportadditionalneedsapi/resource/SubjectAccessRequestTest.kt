@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 
@@ -104,20 +105,20 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     }
 
     assertThat(content.supportStrategies).hasSize(1)
-    content.supportStrategies!!.first().let { s ->
+    content.supportStrategies.first().let { s ->
       assertThat(s.active).isTrue()
       assertThat(s.archiveReason).isNull()
       assertThat(s.supportStrategyType.categoryDescription).isEqualTo("Processing speed")
       assertThat(s.detail).isNull()
     }
 
-    assertThat(content.strengths).hasSize(1)
-    content.strengths!!.first().let { s ->
+    assertThat(content.nonAlnStrengths).hasSize(1)
+    content.nonAlnStrengths.first().let { s ->
       assertThat(s.active).isTrue()
       assertThat(s.archiveReason).isNull()
       assertThat(s.strengthType.categoryDescription).isEqualTo("Memory")
-      assertThat(s.strengthDescription).isEqualTo("StrengthSymptoms")
-      assertThat(s.howIdentified).isEqualTo("wider prison, conversations")
+      assertThat(s.symptoms).isEqualTo("StrengthSymptoms")
+      assertThat(s.howIdentified).isEqualTo(listOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS))
       assertThat(s.howIdentifiedOther).isNull()
     }
   }
