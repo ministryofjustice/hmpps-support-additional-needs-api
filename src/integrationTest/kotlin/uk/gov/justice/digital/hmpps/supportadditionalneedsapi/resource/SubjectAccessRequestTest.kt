@@ -68,6 +68,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
     anElSPExists(prisonNumber)
+    aValidSupportStrategyExists(prisonNumber)
+    aValidStrengthExists(prisonNumber)
     aValidChallengeExists(prisonNumber)
 
     // Then
@@ -102,6 +104,24 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       }
     }
 
+    assertThat(content.supportStrategies).hasSize(1)
+    content.supportStrategies!!.first().let { s ->
+      assertThat(s.active).isTrue()
+      assertThat(s.archiveReason).isNull()
+      assertThat(s.supportStrategyType.categoryDescription).isEqualTo("Processing speed")
+      assertThat(s.detail).isNull()
+    }
+
+    assertThat(content.strengths).hasSize(1)
+    content.strengths!!.first().let { s ->
+      assertThat(s.active).isTrue()
+      assertThat(s.archiveReason).isNull()
+      assertThat(s.strengthType.categoryDescription).isEqualTo("Memory")
+      assertThat(s.strengthDescription).isEqualTo("StrengthSymptoms")
+      assertThat(s.howIdentified).isEqualTo("wider prison, conversations")
+      assertThat(s.howIdentifiedOther).isNull()
+    }
+    
     assertThat(content.challenges).hasSize(1)
     content.challenges!!.first().let { s ->
       assertThat(s.active).isTrue()
