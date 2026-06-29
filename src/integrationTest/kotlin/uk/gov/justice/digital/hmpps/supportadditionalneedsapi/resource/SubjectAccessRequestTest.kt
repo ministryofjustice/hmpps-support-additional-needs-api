@@ -69,6 +69,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     anElSPExists(prisonNumber)
     aValidSupportStrategyExists(prisonNumber)
+    aValidStrengthExists(prisonNumber)
 
     // Then
     val response = webTestClient.get()
@@ -108,6 +109,16 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(s.archiveReason).isNull()
       assertThat(s.supportStrategyType.categoryDescription).isEqualTo("Processing speed")
       assertThat(s.detail).isNull()
+    }
+
+    assertThat(content.strengths).hasSize(1)
+    content.strengths!!.first().let { s ->
+      assertThat(s.active).isTrue()
+      assertThat(s.archiveReason).isNull()
+      assertThat(s.strengthType.categoryDescription).isEqualTo("Memory")
+      assertThat(s.strengthDescription).isEqualTo("StrengthSymptoms")
+      assertThat(s.howIdentified).isEqualTo("wider prison, conversations")
+      assertThat(s.howIdentifiedOther).isNull()
     }
   }
 }
