@@ -44,5 +44,6 @@ class SarReportGenerationTest :
     stubGetDisplayName("testuser")
     anElSPExists(prisonNumber)
     aValidSupportStrategyExists(prisonNumber)
+    aValidStrengthExists(prisonNumber)
   }
 }

@@ -1,10 +1,13 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.sar.SarStrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarStrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStrategyService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
@@ -16,6 +19,8 @@ import java.time.ZoneOffset
 class SubjectAccessReportService(
   private val educationSupportPlanService: EducationSupportPlanService,
   private val supportStrategyService: SupportStrategyService,
+  private val strengthService: StrengthService,
+  private val sarStrengthMapper: SarStrengthMapper,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -28,12 +33,14 @@ class SubjectAccessReportService(
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
+    val strengths = getStrengths(prn, fromDateInstance, toDateInstance)
 
-    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty()) {
+    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty() || strengths.isNotEmpty()) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
           supportStrategies = supportStrategies,
+          strengths = strengths,
         ),
       )
     } else {
@@ -55,6 +62,15 @@ class SubjectAccessReportService(
   ): List<SupportStrategyResponse> = supportStrategyService.getSupportStrategies(prn).supportStrategies
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedBy { it.createdAt }
+
+  private fun getStrengths(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<SarStrengthResponse> = strengthService.getStrengths(prn, includeAln = false).strengths
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+    .sortedBy { it.createdAt }
+    .map { sarStrengthMapper.fromResponse(it) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&
