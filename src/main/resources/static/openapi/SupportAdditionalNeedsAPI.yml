@@ -2912,7 +2912,40 @@ components:
             This is deliberately the first version of the plan as it was created (sourced from the plan history), rather
             than the current plan. Subsequent changes to the plan are represented by its reviews.
           $ref: '#/components/schemas/EducationSupportPlanResponse'
+        challenges:
+          description: The person's manually added challenges, both active and archived. Challenges sourced from an ALN screener are not included.
+          type: array
+          items:
+            $ref: '#/components/schemas/SarChallengeResponse'
 
+    SarChallengeResponse:
+      title: SarChallengeResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A manually added challenge a person has, shaped for the Subject Access Request report.
+      properties:
+        active:
+          type: boolean
+          description: Whether or not this challenge is active.
+        archiveReason:
+          type: string
+          description: The reason this challenge was archived, if it has been archived.
+        challengeType:
+          $ref: '#/components/schemas/ReferenceData'
+        challengeDescription:
+          type: string
+          description: A description of the challenge
+        howIdentified:
+          type: string
+          description: A human-readable, comma-separated list of how the challenge was identified.
+        howIdentifiedOther:
+          type: string
+          description: Details of how the challenge was identified when the OTHER option is chosen.
+      required:
+        - active
+        - challengeType
 
   #
   # Response Body Definitions
