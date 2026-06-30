@@ -244,4 +244,41 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     }
     return this
   }
+
+  fun hasNoAlnStrengths(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!alnStrengths.isEmpty()) {
+        failWithMessage("Expected no ALN strengths but has ${alnStrengths.size} screeners")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfAlnStrengths(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (alnStrengths.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected ALN strengths, but has ${alnStrengths.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [StrengthResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [StrengthResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `strengthNumber` parameter is not zero indexed to make for better readability in tests. IE. the first strength
+   * should be referenced as `.nonAlnStrength(1) { .... }`
+   */
+  fun alnStrength(strengthNumber: Int, consumer: Consumer<StrengthResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val alnStrength = alnStrengths[strengthNumber - 1]
+      consumer.accept(assertThat(alnStrength))
+    }
+    return this
+  }
 }

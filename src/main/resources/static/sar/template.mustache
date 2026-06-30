@@ -210,4 +210,30 @@
     {{^alnScreeners}}
         <p>No Data Held</p>
     {{/alnScreeners}}
+
+    <h2>Additional Learning Needs Strengths</h2>
+    {{#alnStrengths}}
+        <h3>Strength</h3>
+        <table class="summary-list">
+            <tr><td>From additional learning needs screener</td><td>{{ convertBoolean fromALNScreener }}</td></tr>
+            <tr><td>Additional learning needs screener date</td><td>{{ formatDate alnScreenerDate }}</td></tr>
+            <tr><td>Active</td><td>{{ convertBoolean active }}</td></tr>
+            <tr><td>Strength type</td><td>{{ optionalValue strengthType.categoryDescription }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+    {{/alnStrengths}}
+    {{^alnStrengths}}
+        <p>No Data Held</p>
+    {{/alnStrengths}}
 {{/.}}

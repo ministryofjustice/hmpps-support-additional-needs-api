@@ -42,6 +42,7 @@ class SubjectAccessReportService(
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
     val alnScreeners = getAlnScreeners(prn, fromDateInstance, toDateInstance)
+    val alnStrengths = getAlnStrengths(prn, fromDateInstance, toDateInstance)
 
     return if (
       originalEducationSupportPlan != null ||
@@ -57,6 +58,7 @@ class SubjectAccessReportService(
           nonAlnStrengths = nonAlnStrengths,
           nonAlnChallenges = nonAlnChallenges,
           alnScreeners = alnScreeners,
+          alnStrengths = alnStrengths,
         ),
       )
     } else {
@@ -103,6 +105,13 @@ class SubjectAccessReportService(
     fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,
   ): List<ALNScreenerResponse> = alnScreenerService.getScreeners(prn).screeners
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+
+  private fun getAlnStrengths(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<StrengthResponse> = strengthService.getAllScreenerStrengths(prn).strengths
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
 }
 

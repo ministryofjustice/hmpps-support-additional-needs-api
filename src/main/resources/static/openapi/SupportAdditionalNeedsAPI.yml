@@ -2932,11 +2932,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ALNScreenerResponse'
+        alnStrengths:
+          description: The person's ALN screeners' strengths
+          type: array
+          items:
+            $ref: '#/components/schemas/StrengthResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges
         - alnScreeners
+        - alnStrengths
 
   #
   # Response Body Definitions
