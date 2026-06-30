@@ -1,0 +1,247 @@
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model
+
+import org.assertj.core.api.AbstractObjectAssert
+import java.util.function.Consumer
+
+fun assertThat(actual: SubjectAccessRequestContent?) = SubjectAccessRequestContentAssert(actual)
+
+/**
+ * AssertJ custom assertion for a single [SubjectAccessRequestContent]
+ */
+class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : AbstractObjectAssert<SubjectAccessRequestContentAssert, SubjectAccessRequestContent?>(actual, SubjectAccessRequestContentAssert::class.java) {
+
+  fun hasNoOriginalEducationSupportPlan(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (originalEducationSupportPlan != null) {
+        failWithMessage("Expected original education support plan to be null but was: $originalEducationSupportPlan")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the child [EducationSupportPlanResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [EducationSupportPlanResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   */
+  fun originalEducationSupportPlan(consumer: Consumer<EducationSupportPlanResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      consumer.accept(assertThat(originalEducationSupportPlan))
+    }
+    return this
+  }
+
+  fun hasNoSupportStrategies(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (supportStrategies.isNotEmpty()) {
+        failWithMessage("Expected no support strategies but has ${supportStrategies.size} support strategies")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfSupportStrategies(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (supportStrategies.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected support strategies, but has ${supportStrategies.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [SupportStrategyResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [SupportStrategyResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `supportStrategyNumber` parameter is not zero indexed to make for better readability in tests. IE. the first support strategy
+   * should be referenced as `.supportStrategy(1) { .... }`
+   */
+  fun supportStrategy(supportStrategyNumber: Int, consumer: Consumer<SupportStrategyResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val supportStrategy = supportStrategies[supportStrategyNumber - 1]
+      consumer.accept(assertThat(supportStrategy))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [SupportStrategyResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [SupportStrategyResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [SupportStrategyResponse]s must pass as true.
+   */
+  fun allSupportStrategies(consumer: Consumer<SupportStrategyResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      supportStrategies.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+
+  fun hasNoNonAlnStrengths(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!nonAlnStrengths.isEmpty()) {
+        failWithMessage("Expected no strengths but has ${nonAlnStrengths.size} strengths")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfNonAlnStrengths(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (nonAlnStrengths.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected strengths, but has ${nonAlnStrengths.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [StrengthResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [StrengthResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `strengthNumber` parameter is not zero indexed to make for better readability in tests. IE. the first strength
+   * should be referenced as `.nonAlnStrength(1) { .... }`
+   */
+  fun nonAlnStrength(strengthNumber: Int, consumer: Consumer<StrengthResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val nonAlnStrength = nonAlnStrengths[strengthNumber - 1]
+      consumer.accept(assertThat(nonAlnStrength))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [StrengthResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [StrengthResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [StrengthResponse]s must pass as true.
+   */
+  fun allNonAlnStrengths(consumer: Consumer<StrengthResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      nonAlnStrengths.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+
+  fun hasNoNonAlnChallenges(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!nonAlnChallenges.isEmpty()) {
+        failWithMessage("Expected no challenges but has ${nonAlnChallenges.size} challenges")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfNonAlnChallenges(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (nonAlnChallenges.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected challenges, but has ${nonAlnChallenges.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ChallengeResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ChallengeResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `challengeNumber` parameter is not zero indexed to make for better readability in tests. IE. the first challenge
+   * should be referenced as `.nonAlnChallenge(1) { .... }`
+   */
+  fun nonAlnChallenge(challengeNumber: Int, consumer: Consumer<ChallengeResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val nonAlnChallenge = nonAlnChallenges[challengeNumber - 1]
+      consumer.accept(assertThat(nonAlnChallenge))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ChallengeResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ChallengeResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [ChallengeResponse]s must pass as true.
+   */
+  fun allNonAlnChallenges(consumer: Consumer<ChallengeResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      nonAlnChallenges.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+
+  fun hasNoAlnScreeners(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!alnScreeners.isEmpty()) {
+        failWithMessage("Expected no ALN Screeners but has ${alnScreeners.size} screeners")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfAlnScreeners(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (alnScreeners.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected ALN Screeners, but has ${alnScreeners.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ALNScreenerResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNScreenerResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `screenerNumber` parameter is not zero indexed to make for better readability in tests. IE. the first screener
+   * should be referenced as `.alnScreener(1) { .... }`
+   */
+  fun alnScreener(screenerNumber: Int, consumer: Consumer<ALNScreenerResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val screener = alnScreeners[screenerNumber - 1]
+      consumer.accept(assertThat(screener))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ALNScreenerResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNScreenerResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [ALNScreenerResponse]s must pass as true.
+   */
+  fun allAlnScreeners(consumer: Consumer<ALNScreenerResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      alnScreeners.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+}
