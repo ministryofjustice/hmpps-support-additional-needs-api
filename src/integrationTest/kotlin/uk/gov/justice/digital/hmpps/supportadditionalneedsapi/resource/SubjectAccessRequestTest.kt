@@ -81,8 +81,10 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidChallengeExists(prisonNumber)
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-15"))
       .also { aValidStrengthExists(prisonNumber, it.id) }
+      .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-10"))
       .also { aValidStrengthExists(prisonNumber, it.id) }
+      .also { aValidChallengeExists(prisonNumber, it.id) }
 
     // When
     val response = webTestClient.get()
@@ -144,6 +146,12 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
               .hasCode("MEMORY")
               .hasAlnScreenerDate(LocalDate.parse("2026-02-15"))
           }
+          .hasNumberOfChallenges(1)
+          .challenge(1) {
+            it.isActive()
+              .hasCode("SENSORY_PROCESSING")
+              .hasAlnScreenerDate(LocalDate.parse("2026-02-15"))
+          }
       }
       .alnScreener(2) {
         it.hasScreenerDate(LocalDate.parse("2026-01-10"))
@@ -151,6 +159,12 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .strength(1) {
             it.isActive()
               .hasCode("MEMORY")
+              .hasAlnScreenerDate(LocalDate.parse("2026-01-10"))
+          }
+          .hasNumberOfChallenges(1)
+          .challenge(1) {
+            it.isActive()
+              .hasCode("SENSORY_PROCESSING")
               .hasAlnScreenerDate(LocalDate.parse("2026-01-10"))
           }
       }
