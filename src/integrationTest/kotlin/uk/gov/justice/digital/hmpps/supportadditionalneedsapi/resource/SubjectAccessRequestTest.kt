@@ -71,6 +71,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     anElSPExists(prisonNumber)
     aValidSupportStrategyExists(prisonNumber)
     aValidStrengthExists(prisonNumber)
+    aValidChallengeExists(prisonNumber)
 
     // Then
     val response = webTestClient.get()
@@ -119,6 +120,19 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(s.strengthType.categoryDescription).isEqualTo("Memory")
       assertThat(s.symptoms).isEqualTo("StrengthSymptoms")
       assertThat(s.howIdentified).isEqualTo(listOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS))
+      assertThat(s.howIdentifiedOther).isNull()
+    }
+
+    assertThat(content.nonAlnChallenges).hasSize(1)
+    content.nonAlnChallenges.first().let { s ->
+      assertThat(s.active).isTrue()
+      assertThat(s.archiveReason).isNull()
+      assertThat(s.challengeType.categoryDescription).isEqualTo("Sensory")
+      assertThat(s.symptoms).isEqualTo("symptoms")
+      assertThat(s.howIdentified).containsExactly(
+        IdentificationSource.COLLEAGUE_INFO,
+        IdentificationSource.OTHER_SCREENING_TOOL,
+      )
       assertThat(s.howIdentifiedOther).isNull()
     }
   }

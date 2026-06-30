@@ -2922,9 +2922,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/StrengthResponse'
+        nonAlnChallenges:
+          description: The person's manually added challenges, both active and archived. Challenges sourced from an ALN screener are not included.
+          type: array
+          items:
+            $ref: '#/components/schemas/ChallengeResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
+        - nonAlnChallenges
 
   #
   # Response Body Definitions

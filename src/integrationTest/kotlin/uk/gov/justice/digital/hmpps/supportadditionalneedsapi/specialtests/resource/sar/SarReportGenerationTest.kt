@@ -45,5 +45,6 @@ class SarReportGenerationTest :
     anElSPExists(prisonNumber)
     aValidSupportStrategyExists(prisonNumber)
     aValidStrengthExists(prisonNumber)
+    aValidChallengeExists(prisonNumber)
   }
 }
