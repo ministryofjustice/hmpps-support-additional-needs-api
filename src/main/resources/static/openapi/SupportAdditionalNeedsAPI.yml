@@ -1132,7 +1132,7 @@ paths:
       tags:
         - Subject Access Request
       parameters:
-        - $ref: "#/components/parameters/prisonNumberPathParameter"
+        - $ref: "#/components/parameters/prnQueryStringParameter"
         - $ref: "#/components/parameters/fromDate"
         - $ref: "#/components/parameters/toDate"
       responses:
@@ -3360,6 +3360,13 @@ components:
       schema:
         type: string
         example: 'Bloggs'
+    prnQueryStringParameter:
+      name: prn
+      in: query
+      required: true
+      description: NOMIS Prison Reference Number
+      schema:
+        type: string
     planStatusQueryStringParameter:
       name: planStatus
       in: query
