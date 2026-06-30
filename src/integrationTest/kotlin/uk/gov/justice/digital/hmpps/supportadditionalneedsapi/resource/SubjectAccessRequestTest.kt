@@ -1,12 +1,14 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
-import org.assertj.core.api.Assertions.assertThat
+import com.fasterxml.jackson.module.kotlin.convertValue
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
 
@@ -50,18 +52,22 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
 
   @Test
   fun `should return 400 error if called without prn or crn param`() {
+    // Given
     stubGetTokenFromHmppsAuth()
+
+    // When
     val response = webTestClient.get()
       .uri(URI_TEMPLATE)
       .headers(setAuthorisation(roles = listOf("ROLE_SAR_DATA_ACCESS")))
       .exchange()
-      .returnResult(ErrorResponse::class.java)
+      .returnResult<ErrorResponse>()
 
     // Then
     val actual = response.responseBody.blockFirst()
-    assertThat(actual!!.status).isEqualTo(400)
-    assertThat(actual.userMessage).isEqualTo("One of prn or crn must be supplied.")
-    assertThat(actual.developerMessage).isEqualTo("One of prn or crn must be supplied.")
+    assertThat(actual)
+      .hasStatus(400)
+      .hasUserMessage("One of prn or crn must be supplied.")
+      .hasDeveloperMessage("One of prn or crn must be supplied.")
   }
 
   @Test
@@ -76,72 +82,59 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-15"))
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-10"))
 
-    // Then
+    // When
     val response = webTestClient.get()
       .uri { it.path(URI_TEMPLATE).queryParam("prn", prisonNumber).build() }
       .headers(setAuthorisation(roles = listOf("ROLE_SAR_DATA_ACCESS")))
       .exchange()
       .expectStatus()
       .isOk
-      .returnResult(HmppsSubjectAccessRequestContent::class.java)
+      .returnResult<HmppsSubjectAccessRequestContent>()
 
-    val actual = response.responseBody.blockFirst()
-    assertThat(actual).isNotNull()
-    val content = objectMapper.convertValue(actual!!.content, SubjectAccessRequestContent::class.java)
-
-    assertThat(content.originalEducationSupportPlan).isNotNull
-    content.originalEducationSupportPlan!!.let { p ->
-      assertThat(p.hasCurrentEhcp).isTrue()
-      assertThat(p.individualSupport).isEqualTo("support")
-      assertThat(p.teachingAdjustments).isEqualTo("teachingAdjustments")
-      assertThat(p.specificTeachingSkills).isEqualTo("specificTeachingSkills")
-      assertThat(p.examAccessArrangements).isEqualTo("examAccessArrangements")
-      assertThat(p.lnspSupport).isEqualTo("lnspSupport")
-      assertThat(p.lnspSupportHours).isEqualTo(2)
-      assertThat(p.detail).isEqualTo("detail")
-      assertThat(p.planCreatedBy?.name).isEqualTo("Tom Brown")
-      assertThat(p.planCreatedBy?.jobRole).isEqualTo("Education coordinator")
-      assertThat(p.otherContributors).hasSize(1)
-      p.otherContributors!!.first().let { contributor ->
-        assertThat(contributor.name).isEqualTo("Bob Smith")
-        assertThat(contributor.jobRole).isEqualTo("Teacher")
+    // Then
+    val actual = objectMapper.convertValue<SubjectAccessRequestContent>(response.responseBody.blockFirst()!!.content)
+    assertThat(actual)
+      .originalEducationSupportPlan {
+        it.hasCurrentEhcp()
+          .hasIndividualSupport("support")
+          .hasTeachingAdjustments("teachingAdjustments")
+          .hasSpecificTeachingSkills("specificTeachingSkills")
+          .hasExamAccessArrangements("examAccessArrangements")
+          .hasLearningNeedsSupportPractitionerSupport("lnspSupport")
+          .hasLearningNeedsSupportPractitionerHours(2)
+          .hasOtherDetail("detail")
+          .planWasCreatedByPlanContributor {
+            it.hasName("Tom Brown")
+              .hasJobRole("Education coordinator")
+          }
+          .planWasCreatedWithNumberOfOtherContributors(1)
+          .planCreationContributor(1) {
+            it.hasName("Bob Smith")
+              .hasJobRole("Teacher")
+          }
       }
-    }
-
-    assertThat(content.supportStrategies).hasSize(1)
-    content.supportStrategies.first().let { s ->
-      assertThat(s.active).isTrue()
-      assertThat(s.archiveReason).isNull()
-      assertThat(s.supportStrategyType.categoryDescription).isEqualTo("Processing speed")
-      assertThat(s.detail).isNull()
-    }
-
-    assertThat(content.nonAlnStrengths).hasSize(1)
-    content.nonAlnStrengths.first().let { s ->
-      assertThat(s.active).isTrue()
-      assertThat(s.archiveReason).isNull()
-      assertThat(s.strengthType.categoryDescription).isEqualTo("Memory")
-      assertThat(s.symptoms).isEqualTo("StrengthSymptoms")
-      assertThat(s.howIdentified).isEqualTo(listOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS))
-      assertThat(s.howIdentifiedOther).isNull()
-    }
-
-    assertThat(content.nonAlnChallenges).hasSize(1)
-    content.nonAlnChallenges.first().let { s ->
-      assertThat(s.active).isTrue()
-      assertThat(s.archiveReason).isNull()
-      assertThat(s.challengeType.categoryDescription).isEqualTo("Sensory")
-      assertThat(s.symptoms).isEqualTo("symptoms")
-      assertThat(s.howIdentified).containsExactly(
-        IdentificationSource.COLLEAGUE_INFO,
-        IdentificationSource.OTHER_SCREENING_TOOL,
-      )
-      assertThat(s.howIdentifiedOther).isNull()
-    }
-
-    // All stored screeners are returned, ordered most recent first
-    assertThat(content.alnScreeners).hasSize(2)
-    assertThat(content.alnScreeners.map { it.screenerDate })
-      .containsExactly(LocalDate.parse("2026-02-15"), LocalDate.parse("2026-01-10"))
+      .hasNumberOfSupportStrategies(1)
+      .supportStrategy(1) {
+        it.isActive()
+          .hasCode("PROCESSING_SPEED")
+          .hasNoDetail()
+      }
+      .hasNumberOfNonAlnStrengths(1)
+      .nonAlnStrength(1) {
+        it.isActive()
+          .hasCode("MEMORY")
+          .hasSymptoms("StrengthSymptoms")
+          .wasIdentifiedBy(setOf(IdentificationSource.WIDER_PRISON, IdentificationSource.CONVERSATIONS))
+      }
+      .hasNumberOfNonAlnChallenges(1)
+      .nonAlnChallenge(1) {
+        it.isActive()
+          .hasCode("SENSORY_PROCESSING")
+          .hasSymptoms("symptoms")
+          .wasIdentifiedBy(setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL))
+      }
+      .hasNumberOfAlnScreeners(2)
+      .alnScreener(1) { it.hasScreenerDate(LocalDate.parse("2026-02-15")) }
+      .alnScreener(2) { it.hasScreenerDate(LocalDate.parse("2026-01-10")) }
   }
 }

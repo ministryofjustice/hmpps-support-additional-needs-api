@@ -15,6 +15,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStr
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonSubjectAccessRequestService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
 
@@ -33,7 +35,7 @@ class SubjectAccessReportService(
     toDate: LocalDate?,
   ): HmppsSubjectAccessRequestContent? {
     val fromDateInstance = fromDate?.atStartOfDay()?.atOffset(ZoneOffset.UTC)
-    val toDateInstance = toDate?.atStartOfDay()?.plusDays(1)?.atOffset(ZoneOffset.UTC)
+    val toDateInstance = toDate?.atEndOfDay()?.atOffset(ZoneOffset.UTC)
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
@@ -104,5 +106,11 @@ class SubjectAccessReportService(
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
 }
 
-private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&
-  (to == null || this.isBefore(to))
+private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || this.isEqualOrAfter(from)) &&
+  (to == null || this.isEqualOrBefore(to))
+
+private fun OffsetDateTime.isEqualOrAfter(other: OffsetDateTime): Boolean = (this == other || isAfter(other))
+
+private fun OffsetDateTime.isEqualOrBefore(other: OffsetDateTime): Boolean = (this == other || this.isBefore(other))
+
+private fun LocalDate.atEndOfDay(): LocalDateTime = LocalDateTime.of(this, LocalTime.parse("23:59:59.999"))
