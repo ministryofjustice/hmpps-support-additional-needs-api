@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Err
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
+import java.time.LocalDate
 
 class SubjectAccessRequestTest : IntegrationTestBase() {
   companion object {
@@ -72,6 +73,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidSupportStrategyExists(prisonNumber)
     aValidStrengthExists(prisonNumber)
     aValidChallengeExists(prisonNumber)
+    aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-15"))
+    aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-10"))
 
     // Then
     val response = webTestClient.get()
@@ -135,5 +138,10 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       )
       assertThat(s.howIdentifiedOther).isNull()
     }
+
+    // All stored screeners are returned, ordered most recent first
+    assertThat(content.alnScreeners).hasSize(2)
+    assertThat(content.alnScreeners.map { it.screenerDate })
+      .containsExactly(LocalDate.parse("2026-02-15"), LocalDate.parse("2026-01-10"))
   }
 }

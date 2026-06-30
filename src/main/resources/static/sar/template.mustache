@@ -175,4 +175,39 @@
     {{^nonAlnChallenges}}
         <p>No Data Held</p>
     {{/nonAlnChallenges}}
+
+    <h2>ALN Screener result entered in SAN</h2>
+    {{#alnScreeners}}
+        <h3>Screener</h3>
+        <table class="summary-list">
+            <tr><td>Screening date</td><td>{{ optionalValue (formatDate screenerDate) }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Updated by</td>
+                <td class="data-column-35">Updated at</td>
+                <td class="data-column-30">Updated at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName updatedBy }}</td>
+                <td>{{ optionalValue (formatDate updatedAt) }}</td>
+                <td>{{ getPrisonName updatedAtPrison }}</td>
+            </tr>
+        </table>
+    {{/alnScreeners}}
+    {{^alnScreeners}}
+        <p>No Data Held</p>
+    {{/alnScreeners}}
 {{/.}}

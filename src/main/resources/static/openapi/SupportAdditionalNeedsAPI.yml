@@ -2927,10 +2927,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ChallengeResponse'
+        alnScreeners:
+          description: All of the person's ALN screeners entered in SAN, ordered most recent first.
+          type: array
+          items:
+            $ref: '#/components/schemas/ALNScreenerResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges
+        - alnScreeners
 
   #
   # Response Body Definitions
