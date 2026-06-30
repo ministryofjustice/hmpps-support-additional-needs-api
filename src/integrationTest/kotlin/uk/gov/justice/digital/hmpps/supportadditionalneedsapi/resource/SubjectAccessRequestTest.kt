@@ -123,13 +123,16 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       assertThat(s.howIdentifiedOther).isNull()
     }
 
-    assertThat(content.challenges).hasSize(1)
-    content.challenges!!.first().let { s ->
+    assertThat(content.nonAlnChallenges).hasSize(1)
+    content.nonAlnChallenges.first().let { s ->
       assertThat(s.active).isTrue()
       assertThat(s.archiveReason).isNull()
       assertThat(s.challengeType.categoryDescription).isEqualTo("Sensory")
-      assertThat(s.challengeDescription).isEqualTo("symptoms")
-      assertThat(s.howIdentified).isEqualTo("colleague info, other screening tool")
+      assertThat(s.symptoms).isEqualTo("symptoms")
+      assertThat(s.howIdentified).containsExactly(
+        IdentificationSource.COLLEAGUE_INFO,
+        IdentificationSource.OTHER_SCREENING_TOOL,
+      )
       assertThat(s.howIdentifiedOther).isNull()
     }
   }

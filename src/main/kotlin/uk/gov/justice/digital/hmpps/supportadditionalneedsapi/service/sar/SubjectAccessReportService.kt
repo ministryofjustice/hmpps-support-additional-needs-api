@@ -1,9 +1,8 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.sar.SarChallengeMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
@@ -23,7 +22,6 @@ class SubjectAccessReportService(
   private val supportStrategyService: SupportStrategyService,
   private val strengthService: StrengthService,
   private val challengeService: ChallengeService,
-  private val sarChallengeMapper: SarChallengeMapper,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -37,15 +35,20 @@ class SubjectAccessReportService(
     val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
-    val challenges = getChallenges(prn, fromDateInstance, toDateInstance)
+    val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
 
-    return if (originalEducationSupportPlan != null || supportStrategies.isNotEmpty() || nonAlnStrengths.isNotEmpty()) {
+    return if (
+      originalEducationSupportPlan != null ||
+      supportStrategies.isNotEmpty() ||
+      nonAlnStrengths.isNotEmpty() ||
+      nonAlnChallenges.isNotEmpty()
+    ) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
           supportStrategies = supportStrategies,
           nonAlnStrengths = nonAlnStrengths,
-          challenges = challenges,
+          nonAlnChallenges = nonAlnChallenges,
         ),
       )
     } else {
@@ -79,14 +82,13 @@ class SubjectAccessReportService(
   /**
    * Obtain manually added challenges of the prisoner (excluding challenges from ALN screener)
    */
-  private fun getChallenges(
+  private fun getNonAlnChallenges(
     prn: String,
     fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,
-  ): List<SarChallengeResponse> = challengeService.getChallenges(prisonNumber = prn, includeAln = false).challenges
+  ): List<ChallengeResponse> = challengeService.getChallenges(prisonNumber = prn, includeAln = false).challenges
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedByDescending { it.createdAt }
-    .map { sarChallengeMapper.fromResponse(it) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || !this.isBefore(from)) &&
