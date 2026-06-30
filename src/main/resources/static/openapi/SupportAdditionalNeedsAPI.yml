@@ -3357,6 +3357,7 @@ components:
     prnQueryStringParameter:
       name: prn
       in: query
+      required: true
       description: NOMIS Prison Reference Number
       schema:
         type: string
