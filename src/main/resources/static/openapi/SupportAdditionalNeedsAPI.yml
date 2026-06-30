@@ -2917,45 +2917,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SupportStrategyResponse'
-        strengths:
+        nonAlnStrengths:
           description: The person's manually added strengths, both active and archived. Strengths sourced from an ALN screener are not included.
           type: array
           items:
-            $ref: '#/components/schemas/SarStrengthResponse'
+            $ref: '#/components/schemas/StrengthResponse'
         challenges:
           description: The person's manually added challenges, both active and archived. Challenges sourced from an ALN screener are not included.
           type: array
           items:
             $ref: '#/components/schemas/SarChallengeResponse'
-
-    SarStrengthResponse:
-      title: SarStrengthResponse
-      type: object
-      allOf:
-        - $ref: '#/components/schemas/AuditedResource'
-      description: |
-        A manually added strength a person has, shaped for the Subject Access Request report.
-      properties:
-        active:
-          type: boolean
-          description: Whether or not this strength is active.
-        archiveReason:
-          type: string
-          description: The reason this strength was archived, if it has been archived.
-        strengthType:
-          $ref: '#/components/schemas/ReferenceData'
-        strengthDescription:
-          type: string
-          description: A description of the strength (previously named "symptoms" in the data dictionary).
-        howIdentified:
-          type: string
-          description: A human-readable, comma-separated list of how the strength was identified.
-        howIdentifiedOther:
-          type: string
-          description: Details of how the strength was identified when the OTHER option is chosen.
       required:
-        - active
-        - strengthType
+        - supportStrategies
+        - nonAlnStrengths
 
     SarChallengeResponse:
       title: SarChallengeResponse
