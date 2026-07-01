@@ -71,7 +71,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `should get original education support plan for specific prisoner without date filtering`() {
+  fun `should get subject-access-request data for specific prisoner without date filtering`() {
     // Given
     stubGetDisplayName("testuser")
     val prisonNumber = randomValidPrisonNumber()
