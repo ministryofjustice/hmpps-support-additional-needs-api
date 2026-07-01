@@ -85,7 +85,7 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): List<StrengthResponse> = strengthService.getStrengths(prn, includeAln = false).strengths
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
-    .sortedBy { it.createdAt }
+    .sortedByDescending { it.createdAt }
 
   /**
    * Obtain manually added challenges of the prisoner (excluding challenges from ALN screener)
