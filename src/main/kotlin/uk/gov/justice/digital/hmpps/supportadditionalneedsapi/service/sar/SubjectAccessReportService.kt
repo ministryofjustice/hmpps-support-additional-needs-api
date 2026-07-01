@@ -37,7 +37,7 @@ class SubjectAccessReportService(
     val fromDateInstance = fromDate?.atStartOfDay()?.atOffset(ZoneOffset.UTC)
     val toDateInstance = toDate?.atEndOfDay()?.atOffset(ZoneOffset.UTC)
 
-    val originalEducationSupportPlan = getOriginalEducationSupportPlan(prn, fromDateInstance, toDateInstance)
+    val originalEducationSupportPlan = getOriginalEducationSupportPlanIfCreatedBeforeToDate(prn, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
@@ -64,12 +64,11 @@ class SubjectAccessReportService(
     }
   }
 
-  private fun getOriginalEducationSupportPlan(
+  private fun getOriginalEducationSupportPlanIfCreatedBeforeToDate(
     prn: String,
-    fromDateInstance: OffsetDateTime?,
     toDateInstance: OffsetDateTime?,
   ): EducationSupportPlanResponse? = educationSupportPlanService.getOriginalPlan(prn)
-    ?.takeIf { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+    ?.takeIf { it.createdAt.isEqualOrBefore(toDateInstance) }
 
   private fun getSupportStrategies(
     prn: String,
@@ -106,11 +105,10 @@ class SubjectAccessReportService(
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
 }
 
-private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = (from == null || this.isEqualOrAfter(from)) &&
-  (to == null || this.isEqualOrBefore(to))
+private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = this.isEqualOrAfter(from) && this.isEqualOrBefore(to)
 
-private fun OffsetDateTime.isEqualOrAfter(other: OffsetDateTime): Boolean = (this == other || isAfter(other))
+private fun OffsetDateTime.isEqualOrAfter(other: OffsetDateTime?): Boolean = (other == null || this == other || isAfter(other))
 
-private fun OffsetDateTime.isEqualOrBefore(other: OffsetDateTime): Boolean = (this == other || this.isBefore(other))
+private fun OffsetDateTime.isEqualOrBefore(other: OffsetDateTime?): Boolean = (other == null || this == other || this.isBefore(other))
 
 private fun LocalDate.atEndOfDay(): LocalDateTime = LocalDateTime.of(this, LocalTime.parse("23:59:59.999"))

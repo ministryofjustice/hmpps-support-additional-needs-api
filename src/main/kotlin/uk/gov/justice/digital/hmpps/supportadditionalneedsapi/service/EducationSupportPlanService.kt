@@ -42,12 +42,12 @@ class EducationSupportPlanService(
    */
   fun getOriginalPlan(prisonNumber: String): EducationSupportPlanResponse? {
     val originalPlan = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
-      .minByOrNull { it.id.revisionNumber }
+      .minByOrNull { it.createdAt }
       ?: return null
     // Source the EHCP status from its own history at the original revision (created in the same transaction as the
     // original plan), so every field on the response comes from the same first version of the plan.
     val originalEhcpStatus = ehcpStatusHistoryRepository.findAllByPrisonNumber(prisonNumber)
-      .minByOrNull { it.id.revisionNumber }
+      .minByOrNull { it.createdAt }
     return elspPlanHistoryMapper.toModel(originalPlan, originalEhcpStatus)
   }
 
