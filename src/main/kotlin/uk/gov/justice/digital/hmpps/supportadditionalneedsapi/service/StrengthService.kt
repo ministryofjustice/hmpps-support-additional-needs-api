@@ -60,17 +60,6 @@ class StrengthService(
     return StrengthListResponse(models)
   }
 
-  /**
-   * get all ALN screeners' strengths, sorted by screener date and updatedAt time in descending order
-   */
-  fun getAllScreenerStrengths(prisonNumber: String): StrengthListResponse = alnScreenerRepository.findAllByPrisonNumber(prisonNumber)
-    .flatMap { alnScreener -> alnScreener.strengths.map { strengthMapper.toModel(it, alnScreener.screeningDate) } }
-    .sortedWith(
-      compareByDescending<StrengthResponse> { it.alnScreenerDate }
-        .thenByDescending { it.updatedAt },
-    )
-    .let { StrengthListResponse(it) }
-
   @Transactional
   @TimelineEvent(
     eventType = STRENGTH_ADDED,

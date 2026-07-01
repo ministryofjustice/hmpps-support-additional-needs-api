@@ -136,18 +136,23 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .wasIdentifiedBy(setOf(IdentificationSource.COLLEAGUE_INFO, IdentificationSource.OTHER_SCREENING_TOOL))
       }
       .hasNumberOfAlnScreeners(2)
-      .alnScreener(1) { it.hasScreenerDate(LocalDate.parse("2026-02-15")) }
-      .alnScreener(2) { it.hasScreenerDate(LocalDate.parse("2026-01-10")) }
-      .hasNumberOfAlnStrengths(2)
-      .alnStrength(1) {
-        it.isActive()
-          .hasCode("MEMORY")
-          .hasAlnScreenerDate(LocalDate.parse("2026-02-15"))
+      .alnScreener(1) {
+        it.hasScreenerDate(LocalDate.parse("2026-02-15"))
+          .hasNumberOfStrengths(1)
+          .strength(1) {
+            it.isActive()
+              .hasCode("MEMORY")
+              .hasAlnScreenerDate(LocalDate.parse("2026-02-15"))
+          }
       }
-      .alnStrength(2) {
-        it.isActive()
-          .hasCode("MEMORY")
-          .hasAlnScreenerDate(LocalDate.parse("2026-01-10"))
+      .alnScreener(2) {
+        it.hasScreenerDate(LocalDate.parse("2026-01-10"))
+          .hasNumberOfStrengths(1)
+          .strength(1) {
+            it.isActive()
+              .hasCode("MEMORY")
+              .hasAlnScreenerDate(LocalDate.parse("2026-01-10"))
+          }
       }
   }
 }
