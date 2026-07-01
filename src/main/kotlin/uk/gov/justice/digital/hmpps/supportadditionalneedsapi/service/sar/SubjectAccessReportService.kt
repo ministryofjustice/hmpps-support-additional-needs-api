@@ -77,7 +77,7 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): List<SupportStrategyResponse> = supportStrategyService.getSupportStrategies(prn).supportStrategies
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
-    .sortedBy { it.createdAt }
+    .sortedByDescending { it.createdAt }
 
   private fun getNonAlnStrengths(
     prn: String,
