@@ -231,6 +231,31 @@
         {{^strengths}}
             <p>No Data Held</p>
         {{/strengths}}
+        <h4>Additional Learning Needs Challenges</h4>
+        {{#challenges}}
+            <h5>Challenge</h5>
+            <table class="summary-list">
+                <tr><td>From additional learning needs screener</td><td>{{ convertBoolean fromALNScreener }}</td></tr>
+                <tr><td>Additional learning needs screener date</td><td>{{ formatDate alnScreenerDate }}</td></tr>
+                <tr><td>Active</td><td>{{ convertBoolean active }}</td></tr>
+                <tr><td>Challenge type</td><td>{{ optionalValue challengeType.code }}</td></tr>
+            </table>
+            <table class="data-table">
+                <tr>
+                    <td class="data-column-30">Created by</td>
+                    <td class="data-column-35">Created at</td>
+                    <td class="data-column-30">Created at prison</td>
+                </tr>
+                <tr>
+                    <td>{{ getUserLastName createdBy }}</td>
+                    <td>{{ optionalValue (formatDate createdAt) }}</td>
+                    <td>{{ getPrisonName createdAtPrison }}</td>
+                </tr>
+            </table>
+        {{/challenges}}
+        {{^challenges}}
+            <p>No Data Held</p>
+        {{/challenges}}
     {{/alnScreeners}}
     {{^alnScreeners}}
         <p>No Data Held</p>

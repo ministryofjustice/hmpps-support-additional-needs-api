@@ -49,7 +49,9 @@ class SarReportGenerationTest :
     aValidChallengeExists(prisonNumber)
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-15"))
       .also { aValidStrengthExists(prisonNumber, it.id) }
+      .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-10"))
       .also { aValidStrengthExists(prisonNumber, it.id) }
+      .also { aValidChallengeExists(prisonNumber, it.id) }
   }
 }
