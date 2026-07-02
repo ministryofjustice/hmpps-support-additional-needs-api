@@ -1,0 +1,97 @@
+package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model
+
+import org.assertj.core.api.AbstractObjectAssert
+import java.time.LocalDate
+import java.util.UUID
+
+fun assertThat(actual: PlanCreationScheduleResponse?) = PlanCreationScheduleResponseAssert(actual)
+
+/**
+ * AssertJ custom assertion for a single [PlanCreationScheduleResponse].
+ */
+class PlanCreationScheduleResponseAssert(actual: PlanCreationScheduleResponse?) :
+  AbstractObjectAssert<PlanCreationScheduleResponseAssert, PlanCreationScheduleResponse?>(
+    actual,
+    PlanCreationScheduleResponseAssert::class.java,
+  ) {
+
+  fun hasReference(expected: UUID): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (reference != expected) {
+        failWithMessage("Expected reference to be $expected, but was $reference")
+      }
+    }
+    return this
+  }
+
+  fun hasDeadlineDate(expected: LocalDate): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (deadlineDate != expected) {
+        failWithMessage("Expected deadlineDate to be $expected, but was $deadlineDate")
+      }
+    }
+    return this
+  }
+
+  fun hasStatus(expected: PlanCreationStatus): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (status != expected) {
+        failWithMessage("Expected status to be $expected, but was $status")
+      }
+    }
+    return this
+  }
+
+  fun hasExemptionReason(expected: PlanCreationScheduleExemptionReason): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (exemptionReason != expected) {
+        failWithMessage("Expected exemptionReason to be $expected, but was $exemptionReason")
+      }
+    }
+    return this
+  }
+
+  fun hasNoExemptionReason(): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (exemptionReason != null) {
+        failWithMessage("Expected no exemptionReason, but was $exemptionReason")
+      }
+    }
+    return this
+  }
+
+  fun hasExemptionDetail(expected: String): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (exemptionDetail != expected) {
+        failWithMessage("Expected exemptionDetail to be $expected, but was $exemptionDetail")
+      }
+    }
+    return this
+  }
+
+  fun hasNoExemptionDetail(): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (exemptionDetail != null) {
+        failWithMessage("Expected no exemptionDetail, but was $exemptionDetail")
+      }
+    }
+    return this
+  }
+
+  fun hasVersion(expected: Int): PlanCreationScheduleResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (version != expected) {
+        failWithMessage("Expected version to be $expected, but was $version")
+      }
+    }
+    return this
+  }
+}

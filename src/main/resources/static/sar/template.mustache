@@ -260,4 +260,43 @@
     {{^alnScreeners}}
         <p>No Data Held</p>
     {{/alnScreeners}}
+
+    <h2>Plan Creation Schedules</h2>
+    {{#planCreationSchedules}}
+        <h3>Schedule</h3>
+        <table class="summary-list">
+            <tr><td>Deadline date</td><td>{{ optionalValue (formatDate deadlineDate) }}</td></tr>
+            <tr><td>Status</td><td>{{ optionalValue status }}</td></tr>
+            <tr><td>Version</td><td>{{ optionalValue version }}</td></tr>
+            <tr><td>Exemption reason</td><td>{{ optionalValue exemptionReason }}</td></tr>
+            <tr><td>Exemption detail</td><td>{{ optionalValue exemptionDetail }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Updated by</td>
+                <td class="data-column-35">Updated at</td>
+                <td class="data-column-30">Updated at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName updatedBy }}</td>
+                <td>{{ optionalValue (formatDate updatedAt) }}</td>
+                <td>{{ getPrisonName updatedAtPrison }}</td>
+            </tr>
+        </table>
+    {{/planCreationSchedules}}
+    {{^planCreationSchedules}}
+        <p>No Data Held</p>
+    {{/planCreationSchedules}}
 {{/.}}
