@@ -57,6 +57,16 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     return this
   }
 
+  fun hasNoArchivedReason(): ConditionResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (archiveReason != null) {
+        failWithMessage("Expected condition to have no archive reason but it was $archiveReason")
+      }
+    }
+    return this
+  }
+
   fun hasSource(expected: Source): ConditionResponseAssert {
     isNotNull
     with(actual!!) {
@@ -77,6 +87,16 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     return this
   }
 
+  fun hasNoConditionName(): ConditionResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (conditionName != null) {
+        failWithMessage("Expected condition name to be null but was $conditionName")
+      }
+    }
+    return this
+  }
+
   fun hasConditionDetails(expected: String): ConditionResponseAssert {
     isNotNull
     with(actual!!) {
@@ -87,11 +107,21 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     return this
   }
 
+  fun hasNoConditionDetails(): ConditionResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (conditionDetails != null) {
+        failWithMessage("Expected condition details to be null but was $conditionDetails")
+      }
+    }
+    return this
+  }
+
   fun hasCode(expected: String): ConditionResponseAssert {
     isNotNull
     with(actual!!.conditionType) {
       if (code != expected) {
-        failWithMessage("Expected challenge code to be $expected, but was $code")
+        failWithMessage("Expected condition code to be $expected, but was $code")
       }
     }
     return this
