@@ -394,7 +394,7 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
    * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
    * The assertions on all [ALNAssessmentResponse]s must pass as true.
    */
-  fun allAalnAssessments(consumer: Consumer<ALNAssessmentResponseAssert>): SubjectAccessRequestContentAssert {
+  fun allAlnAssessments(consumer: Consumer<ALNAssessmentResponseAssert>): SubjectAccessRequestContentAssert {
     isNotNull
     with(actual!!) {
       alnAssessments.onEach {
