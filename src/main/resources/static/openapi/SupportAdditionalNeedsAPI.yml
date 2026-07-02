@@ -2937,14 +2937,20 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlanCreationScheduleResponse'
+        conditions:
+          description: A list of the person's conditions.
+          type: array
+          items:
+            $ref: '#/components/schemas/ConditionResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges
         - alnScreeners
         - planCreationSchedules
+        - conditions
 
-  #
+  # --------------------------------------------------------------------------------
   # Response Body Definitions
   # --------------------------------------------------------------------------------
   responses:

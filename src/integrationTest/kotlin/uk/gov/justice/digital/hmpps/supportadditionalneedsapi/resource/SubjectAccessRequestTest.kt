@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
@@ -87,6 +88,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       .also { aValidStrengthExists(prisonNumber, it.id) }
       .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
+    aValidConditionExists(prisonNumber)
 
     // When
     val response = webTestClient.get()
@@ -177,6 +179,21 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .hasNoExemptionReason()
           .hasNoExemptionDetail()
           .hasVersion(1)
+      }
+      .alnScreener(1) { it.hasScreenerDate(LocalDate.parse("2026-02-15")) }
+      .alnScreener(2) { it.hasScreenerDate(LocalDate.parse("2026-01-10")) }
+      .hasNumberOfConditions(1)
+      .condition(1) {
+        it.isActive()
+          .hasNoArchivedReason()
+          .hasCode("ADHD")
+          .hasNoConditionName()
+          .hasSource(Source.SELF_DECLARED)
+          .hasNoConditionDetails()
+          .wasCreatedAtPrison("BXI")
+          .wasUpdatedAtPrison("BXI")
+        // TODO - add test to verify remaining fields:
+        // createdAt/createdBy/updatedAt/updatedBy
       }
   }
 }

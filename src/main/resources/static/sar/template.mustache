@@ -299,4 +299,44 @@
     {{^planCreationSchedules}}
         <p>No Data Held</p>
     {{/planCreationSchedules}}
+
+    <h2>Conditions</h2>
+    {{#conditions}}
+        <h3>Condition</h3>
+        <table class="summary-list">
+            <tr><td>Active</td><td>{{ convertBoolean active }}</td></tr>
+            <tr><td>Archive reason</td><td>{{ optionalValue archiveReason }}</td></tr>
+            <tr><td>Condition type</td><td>{{ optionalValue conditionType.code }}</td></tr>
+            <tr><td>Other condition name</td><td>{{ optionalValue conditionName }}</td></tr>
+            <tr><td>Source</td><td>{{ optionalValue source }}</td></tr>
+            <tr><td>Details</td><td>{{ optionalValue conditionDetails }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Updated by</td>
+                <td class="data-column-35">Updated at</td>
+                <td class="data-column-30">Updated at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName updatedBy }}</td>
+                <td>{{ optionalValue (formatDate updatedAt) }}</td>
+                <td>{{ getPrisonName updatedAtPrison }}</td>
+            </tr>
+        </table>
+    {{/conditions}}
+    {{^conditions}}
+        <p>No Data Held</p>
+    {{/conditions}}
 {{/.}}

@@ -213,6 +213,59 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
   }
 
   /**
+   * Allows for assertion chaining into the specified child [ConditionResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ConditionResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `conditionNumber` parameter is not zero indexed to make for better readability in tests. IE. the first condition
+   * should be referenced as `.condition(1) { .... }`
+   */
+  fun condition(conditionNumber: Int, consumer: Consumer<ConditionResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val condition = conditions[conditionNumber - 1]
+      consumer.accept(assertThat(condition))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ConditionResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ConditionResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [ConditionResponse]s must pass as true.
+   */
+  fun allConditions(consumer: Consumer<ConditionResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      conditions.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+
+  fun hasNoConditions(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!conditions.isEmpty()) {
+        failWithMessage("Expected no ALN Screeners but has ${conditions.size} conditions")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfConditions(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (conditions.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected conditions, but has ${conditions.size}")
+      }
+    }
+    return this
+  }
+
+  /**
    * Allows for assertion chaining into the specified child [ALNScreenerResponse]. Takes a lambda as the method argument
    * to call assertion methods provided by [ALNScreenerResponseAssert].
    * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
