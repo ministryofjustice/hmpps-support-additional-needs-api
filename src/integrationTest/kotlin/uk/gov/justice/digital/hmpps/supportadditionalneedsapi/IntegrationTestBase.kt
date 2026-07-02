@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.TaskExecuto
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.LocalStackContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.container.PostgresContainer
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -563,6 +564,20 @@ abstract class IntegrationTestBase {
       ),
     )
   }
+
+  fun aValidAlnAssessmentExists(
+    prisonNumber: String,
+    screeningDate: LocalDate = LocalDate.now(),
+    hasNeed: Boolean = false,
+    curiousReference: UUID? = UUID.randomUUID(),
+  ): AlnAssessmentEntity = alnAssessmentRepository.saveAndFlush(
+    AlnAssessmentEntity(
+      prisonNumber,
+      screeningDate = screeningDate,
+      hasNeed = hasNeed,
+      curiousReference = curiousReference,
+    ),
+  )
 
   fun conditionsExist(prisonNumber: String) {
     val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))

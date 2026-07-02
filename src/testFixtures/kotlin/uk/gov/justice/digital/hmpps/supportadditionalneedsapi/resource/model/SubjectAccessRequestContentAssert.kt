@@ -350,4 +350,57 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     }
     return this
   }
+
+  fun hasNoAlnAssessments(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (!alnAssessments.isEmpty()) {
+        failWithMessage("Expected no ALN Screener needs but has ${alnAssessments.size} screener needs")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfAlnAssessments(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (alnAssessments.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected ALN Screener needs, but has ${alnAssessments.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ALNAssessmentResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNAssessmentResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `screenerNumber` parameter is not zero indexed to make for better readability in tests. IE. the first screener
+   * should be referenced as `.alnScreener(1) { .... }`
+   */
+  fun alnAssessment(screenerNumber: Int, consumer: Consumer<ALNAssessmentResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val alnAssessment = alnAssessments[screenerNumber - 1]
+      consumer.accept(assertThat(alnAssessment))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ALNAssessmentResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNAssessmentResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [ALNAssessmentResponse]s must pass as true.
+   */
+  fun allAalnAssessments(consumer: Consumer<ALNAssessmentResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      alnAssessments.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
 }

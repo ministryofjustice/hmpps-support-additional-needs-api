@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -24,7 +25,11 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNAssessmentMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.InstantMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -43,9 +48,13 @@ class NeedServiceTest {
   @Mock
   private lateinit var alnAssessmentRepository: AlnAssessmentRepository
 
+  @Mock
+  private lateinit var alnAssessmentMapper: ALNAssessmentMapper
+
   @InjectMocks
   private lateinit var needService: NeedService
   val curiousRef = UUID.randomUUID()
+  private val curiousRef2 = UUID.randomUUID()
 
   @Test
   fun `recordAlnScreenerNeed saves ALN assessment`() {
@@ -311,6 +320,38 @@ class NeedServiceTest {
     assertTrue(result.isEmpty())
   }
 
+  @Test
+  fun `getAlnScreenerNeeds returns assessment list in reverse chronological order, if ALN assessments exist`() {
+    val prisonNumber = randomValidPrisonNumber()
+    val today = LocalDate.now()
+    val yesterday = today.minusDays(1)
+
+    // ALN exists
+    whenever(alnAssessmentRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(
+      listOf(
+        makeAlnAssessmentEntity(prisonNumber, hasNeed = true, curiousReference = curiousRef, screeningDate = yesterday),
+        makeAlnAssessmentEntity(prisonNumber, hasNeed = false, curiousReference = curiousRef2, screeningDate = today),
+      ),
+    )
+    // Test with actual mapper
+    val actualMapper = ALNAssessmentMapper(InstantMapper())
+    whenever(alnAssessmentMapper.toModel(any<AlnAssessmentEntity>()))
+      .thenAnswer { actualMapper.toModel(it.arguments[0] as AlnAssessmentEntity) }
+
+    val result = needService.getAlnScreenerNeeds(prisonNumber)
+    with(result) {
+      assertThat(assessments).hasSize(2)
+      assertThat(assessments[0])
+        .hasHasNeed(false)
+        .hasScreeningDate(today)
+        .hasCuriousReference(curiousRef2)
+      assertThat(assessments[1])
+        .hasHasNeed(true)
+        .hasScreeningDate(yesterday)
+        .hasCuriousReference(curiousRef)
+    }
+  }
+
   private fun getChallengeEntity(
     prisonNumber: String,
     active: Boolean = true,
@@ -342,4 +383,20 @@ class NeedServiceTest {
     ReferenceDataKey(Domain.CONDITION, "ADHD"),
     description = "ADHD",
   )
+
+  private fun makeAlnAssessmentEntity(
+    prisonNumber: String,
+    hasNeed: Boolean = false,
+    screeningDate: LocalDate,
+    curiousReference: UUID? = null,
+    createdBy: String? = "tester",
+    createdAt: Instant? = Instant.now(),
+    updatedBy: String? = "tester",
+    updatedAt: Instant? = Instant.now(),
+  ) = AlnAssessmentEntity(prisonNumber, hasNeed, screeningDate, curiousReference).apply {
+    this.createdBy = createdBy
+    this.createdAt = createdAt
+    this.updatedBy = updatedBy
+    this.updatedAt = updatedAt
+  }
 }

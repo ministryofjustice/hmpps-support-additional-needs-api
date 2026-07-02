@@ -1855,6 +1855,19 @@ components:
       required:
         - screeners
 
+    ALNAssessmentListResponse:
+      title: ALNAssessmentListResponse
+      description: A list of ALN assessments for a given person.
+      type: object
+      properties:
+        assessments:
+          type: array
+          description: A List containing zero or more ALN assessment.
+          items:
+            $ref: '#/components/schemas/ALNAssessmentResponse'
+      required:
+        - assessments
+
     ReferenceData:
       type: object
       description: A reference item belonging to a particular domain
@@ -1921,6 +1934,62 @@ components:
         - screenerDate
         - challenges
         - strengths
+
+    ALNAssessmentResponse:
+      title: ALNAssessmentResponse
+      type: object
+      description: Details about the ALN assessment from Curious
+      properties:
+        reference:
+          type: string
+          format: uuid
+          description: The unique reference of this ALN assessment
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        prisonNumber:
+          type: string
+          description: The prisoner's NOMIS number.
+          example: A1234BC
+        hasNeed:
+          type: boolean
+          description: Whether or not the person has a need.
+          example: true
+        screeningDate:
+          type: string
+          format: date
+          description: The date that the screening assessment was recorded.
+          example: '2023-11-19'
+        curiousReference:
+          type: string
+          format: uuid
+          description: The unique reference of this ALN assessment in Curious
+          example: c88a6c48-97e2-4c04-93b5-98619966447b
+        createdBy:
+          type: string
+          description: The DPS username of the person who created this resource.
+          example: 'system'
+        createdAt:
+          type: string
+          format: date-time
+          description: An ISO-8601 timestamp representing when this resource was created.
+          example: '2023-06-19T09:39:44Z'
+        updatedBy:
+          type: string
+          description: The DPS username of the person who last updated this resource.
+          example: 'system'
+        updatedAt:
+          type: string
+          format: date-time
+          description: An ISO-8601 timestamp representing when this resource was last updated. This will be the same as the created date if it has not yet been updated.
+          example: '2023-06-19T09:39:44Z'
+      required:
+        - reference
+        - prisonNumber
+        - hasNeed
+        - screeningDate
+        - createdBy
+        - createdAt
+        - updatedBy
+        - updatedAt
 
     ReviewScheduleResponse:
       title: ReviewScheduleResponse
@@ -2942,6 +3011,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ConditionResponse'
+        alnAssessments:
+          description: All of the person's ALN assessments from Curious, ordered most recent first.
+          type: array
+          items:
+            $ref: '#/components/schemas/ALNAssessmentResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
@@ -2949,6 +3023,7 @@ components:
         - alnScreeners
         - planCreationSchedules
         - conditions
+        - alnAssessments
 
   # --------------------------------------------------------------------------------
   # Response Body Definitions

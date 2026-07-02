@@ -128,6 +128,8 @@ tasks.named("assemble") {
 }
 
 tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
+  group = "openapi tools"
+  description = "Generate model from API JSON definition"
   validateSpec.set(true)
   generatorName.set("kotlin-spring")
   inputSpec.set("$projectDir/src/main/resources/static/openapi/SupportAdditionalNeedsAPI.yml")

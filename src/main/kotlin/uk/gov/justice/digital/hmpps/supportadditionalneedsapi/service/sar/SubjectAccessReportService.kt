@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNAssessmentResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
@@ -14,6 +15,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStrategyService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonSubjectAccessRequestService
@@ -33,6 +35,7 @@ class SubjectAccessReportService(
   private val alnScreenerService: ALNScreenerService,
   private val planCreationScheduleService: PlanCreationScheduleService,
   private val conditionService: ConditionService,
+  private val needService: NeedService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -50,6 +53,7 @@ class SubjectAccessReportService(
     val alnScreeners = getAlnScreeners(prn, fromDateInstance, toDateInstance)
     val planCreationSchedules = getPlanCreationSchedules(prn, fromDateInstance, toDateInstance)
     val conditions = getConditions(prn, fromDateInstance, toDateInstance)
+    val alnAssessments = getAlnAssessments(prn, fromDateInstance, toDateInstance)
 
     return if (
       originalEducationSupportPlan != null ||
@@ -58,7 +62,8 @@ class SubjectAccessReportService(
       nonAlnChallenges.isNotEmpty() ||
       alnScreeners.isNotEmpty() ||
       planCreationSchedules.isNotEmpty() ||
-      conditions.isNotEmpty()
+      conditions.isNotEmpty() ||
+      alnAssessments.isNotEmpty()
     ) {
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
@@ -69,6 +74,7 @@ class SubjectAccessReportService(
           alnScreeners = alnScreeners,
           planCreationSchedules = planCreationSchedules,
           conditions = conditions,
+          alnAssessments = alnAssessments,
         ),
       )
     } else {
@@ -134,6 +140,13 @@ class SubjectAccessReportService(
   ): List<ConditionResponse> = conditionService.getConditions(prisonNumber = prn).conditions
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedByDescending { it.createdAt }
+
+  private fun getAlnAssessments(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<ALNAssessmentResponse> = needService.getAlnScreenerNeeds(prn).assessments
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
 }
 
 private fun OffsetDateTime.inRange(from: OffsetDateTime?, to: OffsetDateTime?): Boolean = this.isEqualOrAfter(from) && this.isEqualOrBefore(to)
