@@ -2932,11 +2932,17 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ALNScreenerResponse'
+        planCreationSchedules:
+          description: All versions of the person's plan creation schedules, ordered oldest first.
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanCreationScheduleResponse'
       required:
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges
         - alnScreeners
+        - planCreationSchedules
 
   #
   # Response Body Definitions

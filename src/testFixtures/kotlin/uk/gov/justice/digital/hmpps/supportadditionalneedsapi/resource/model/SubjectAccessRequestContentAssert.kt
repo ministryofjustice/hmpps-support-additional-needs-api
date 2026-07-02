@@ -244,4 +244,57 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     }
     return this
   }
+
+  fun hasNoPlanCreationSchedules(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (planCreationSchedules.isNotEmpty()) {
+        failWithMessage("Expected no plan creation schedules but has ${planCreationSchedules.size} plan creation schedules")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfPlanCreationSchedules(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (planCreationSchedules.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected plan creation schedules, but has ${planCreationSchedules.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [PlanCreationScheduleResponse]. Takes a lambda as the method
+   * argument to call assertion methods provided by [PlanCreationScheduleResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `planCreationScheduleNumber` parameter is not zero indexed to make for better readability in tests. IE. the first
+   * plan creation schedule should be referenced as `.planCreationSchedule(1) { .... }`
+   */
+  fun planCreationSchedule(planCreationScheduleNumber: Int, consumer: Consumer<PlanCreationScheduleResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val planCreationSchedule = planCreationSchedules[planCreationScheduleNumber - 1]
+      consumer.accept(assertThat(planCreationSchedule))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [PlanCreationScheduleResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [PlanCreationScheduleResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [PlanCreationScheduleResponse]s must pass as true.
+   */
+  fun allPlanCreationSchedules(consumer: Consumer<PlanCreationScheduleResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      planCreationSchedules.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
 }

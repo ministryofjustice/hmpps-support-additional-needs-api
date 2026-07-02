@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBas
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
@@ -85,6 +86,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidAlnScreenerExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-10"))
       .also { aValidStrengthExists(prisonNumber, it.id) }
       .also { aValidChallengeExists(prisonNumber, it.id) }
+    aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
 
     // When
     val response = webTestClient.get()
@@ -167,6 +169,14 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
               .hasCode("SENSORY_PROCESSING")
               .hasAlnScreenerDate(LocalDate.parse("2026-01-10"))
           }
+      }
+      .hasNumberOfPlanCreationSchedules(1)
+      .planCreationSchedule(1) {
+        it.hasDeadlineDate(LocalDate.parse("2026-03-15"))
+          .hasStatus(PlanCreationStatus.SCHEDULED)
+          .hasNoExemptionReason()
+          .hasNoExemptionDetail()
+          .hasVersion(1)
       }
   }
 }
