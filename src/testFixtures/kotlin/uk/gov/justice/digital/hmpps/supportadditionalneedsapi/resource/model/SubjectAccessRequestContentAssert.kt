@@ -456,4 +456,57 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     }
     return this
   }
+
+  fun hasNoEhcpStatuses(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (ehcpStatuses.isNotEmpty()) {
+        failWithMessage("Expected no EHCP statuses but has ${ehcpStatuses.size} EHCP statuses")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfEhcpStatuses(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (ehcpStatuses.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected EHCP statuses, but has ${ehcpStatuses.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [EhcpStatusResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [EhcpStatusResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `ehcpStatusNumber` parameter is not zero indexed to make for better readability in tests. IE. the first EHCP
+   * status should be referenced as `.ehcpStatus(1) { .... }`
+   */
+  fun ehcpStatus(ehcpStatusNumber: Int, consumer: Consumer<EhcpStatusResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val ehcpStatus = ehcpStatuses[ehcpStatusNumber - 1]
+      consumer.accept(assertThat(ehcpStatus))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [EhcpStatusResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [EhcpStatusResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [EhcpStatusResponse]s must pass as true.
+   */
+  fun allEhcpStatuses(consumer: Consumer<EhcpStatusResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      ehcpStatuses.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
 }

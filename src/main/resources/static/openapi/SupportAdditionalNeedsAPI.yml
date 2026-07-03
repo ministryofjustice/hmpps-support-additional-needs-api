@@ -2981,6 +2981,13 @@ components:
             This is deliberately the first version of the plan as it was created (sourced from the plan history), rather
             than the current plan. Subsequent changes to the plan are represented by its reviews.
           $ref: '#/components/schemas/SarEducationSupportPlanResponse'
+        ehcpStatuses:
+          description: |
+            All versions of the person's EHCP (Education, Health and Care Plan) answer, ordered oldest first.
+            Each version is independent of any Plan or Review version - there is no relationship between them.
+          type: array
+          items:
+            $ref: '#/components/schemas/EhcpStatusResponse'
         supportStrategies:
           description: The person's support strategies, both active and archived.
           type: array
@@ -3022,6 +3029,7 @@ components:
           items:
             $ref: '#/components/schemas/ALNAssessmentResponse'
       required:
+        - ehcpStatuses
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges

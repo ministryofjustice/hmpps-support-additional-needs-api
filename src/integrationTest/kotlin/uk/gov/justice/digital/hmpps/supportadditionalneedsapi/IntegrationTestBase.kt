@@ -428,6 +428,16 @@ abstract class IntegrationTestBase {
     ehcpStatusRepository.save(ehcp)
   }
 
+  /**
+   * Updates the person's existing EHCP status, which creates a new EHCP history revision (version). Use after
+   * [anElSPExists] to exercise the "all versions of the EHCP answer" behaviour in the SAR report.
+   */
+  fun anEhcpStatusUpdateExists(prisonNumber: String, hasCurrentEhcp: Boolean) {
+    val ehcp = ehcpStatusRepository.findByPrisonNumber(prisonNumber)
+    ehcp.hasCurrentEhcp = hasCurrentEhcp
+    ehcpStatusRepository.save(ehcp)
+  }
+
   fun anOldElSPExists(prisonNumber: String): ElspPlanEntity {
     val elsp = ElspPlanEntity(
       prisonNumber = prisonNumber,

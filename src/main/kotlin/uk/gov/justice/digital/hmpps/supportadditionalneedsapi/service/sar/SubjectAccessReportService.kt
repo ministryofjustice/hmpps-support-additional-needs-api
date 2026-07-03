@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EhcpStatusResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanResponse
@@ -16,6 +17,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Sup
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EhcpStatusService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ReviewScheduleService
@@ -41,6 +43,7 @@ class SubjectAccessReportService(
   private val reviewScheduleService: ReviewScheduleService,
   private val conditionService: ConditionService,
   private val needService: NeedService,
+  private val ehcpStatusService: EhcpStatusService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -52,6 +55,7 @@ class SubjectAccessReportService(
     val toDateInstance = toDate?.atEndOfDay()?.atOffset(ZoneOffset.UTC)
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlanIfCreatedBeforeToDate(prn, toDateInstance)
+    val ehcpStatuses = getEhcpStatuses(prn, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
@@ -63,6 +67,7 @@ class SubjectAccessReportService(
 
     return if (
       originalEducationSupportPlan != null ||
+      ehcpStatuses.isNotEmpty() ||
       supportStrategies.isNotEmpty() ||
       nonAlnStrengths.isNotEmpty() ||
       nonAlnChallenges.isNotEmpty() ||
@@ -75,6 +80,7 @@ class SubjectAccessReportService(
       HmppsSubjectAccessRequestContent(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
+          ehcpStatuses = ehcpStatuses,
           supportStrategies = supportStrategies,
           nonAlnStrengths = nonAlnStrengths,
           nonAlnChallenges = nonAlnChallenges,
@@ -97,6 +103,16 @@ class SubjectAccessReportService(
     .minByOrNull { it.createdAt }
     ?.let { sarEducationSupportPlanResponseMapper.toModel(it) }
     ?.takeIf { it.createdAt.isEqualOrBefore(toDateInstance) }
+
+  /**
+   * Obtain every version of the person's EHCP answer. As with the plan, these are filtered on the toDate only (never
+   * the fromDate). The EHCP answers are independent of any Plan or Review version.
+   */
+  private fun getEhcpStatuses(
+    prn: String,
+    toDateInstance: OffsetDateTime?,
+  ): List<EhcpStatusResponse> = ehcpStatusService.getAllEhcpStatuses(prn)
+    .filter { it.createdAt.isEqualOrBefore(toDateInstance) }
 
   private fun getSupportStrategies(
     prn: String,
