@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Sub
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.kotlin.sar.HmppsSubjectAccessRequestContent
 import java.time.LocalDate
+import java.util.UUID
 
 class SubjectAccessRequestTest : IntegrationTestBase() {
   companion object {
@@ -89,6 +90,18 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
     aValidConditionExists(prisonNumber)
+    aValidAlnAssessmentExists(
+      prisonNumber,
+      screeningDate = LocalDate.parse("2026-01-05"),
+      hasNeed = false,
+      curiousReference = UUID.fromString("afcd7235-c13b-48c4-8424-61718b2255ba"),
+    )
+    aValidAlnAssessmentExists(
+      prisonNumber,
+      screeningDate = LocalDate.parse("2026-02-05"),
+      hasNeed = true,
+      curiousReference = UUID.fromString("46259b4d-7a9b-4fce-90c4-7c8c659b79b5"),
+    )
 
     // When
     val response = webTestClient.get()
@@ -194,6 +207,17 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .wasUpdatedAtPrison("BXI")
         // TODO - add test to verify remaining fields:
         // createdAt/createdBy/updatedAt/updatedBy
+      }
+      .hasNumberOfAlnAssessments(2)
+      .alnAssessment(1) {
+        it.hasScreeningDate(LocalDate.parse("2026-02-05"))
+          .hasHasNeed(true)
+          .hasCuriousReference(UUID.fromString("46259b4d-7a9b-4fce-90c4-7c8c659b79b5"))
+      }
+      .alnAssessment(2) {
+        it.hasScreeningDate(LocalDate.parse("2026-01-05"))
+          .hasHasNeed(false)
+          .hasCuriousReference(UUID.fromString("afcd7235-c13b-48c4-8424-61718b2255ba"))
       }
   }
 }

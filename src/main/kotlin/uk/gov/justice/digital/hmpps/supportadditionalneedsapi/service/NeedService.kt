@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.LddAssessmentRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNAssessmentMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNAssessmentListResponse
 import java.time.LocalDate
 import java.util.*
 
@@ -22,6 +24,7 @@ class NeedService(
   private val conditionRepository: ConditionRepository,
   private val lddAssessmentRepository: LddAssessmentRepository,
   private val alnAssessmentRepository: AlnAssessmentRepository,
+  private val alnAssessmentMapper: ALNAssessmentMapper,
 ) {
 
   /**
@@ -121,4 +124,13 @@ class NeedService(
       }
     }
   }
+
+  fun getAlnScreenerNeeds(prisonNumber: String): ALNAssessmentListResponse = alnAssessmentRepository
+    .findAllByPrisonNumber(prisonNumber)
+    .sortedWith(
+      compareByDescending<AlnAssessmentEntity> { it.screeningDate }
+        .thenByDescending { it.updatedAt },
+    ).let { assessments ->
+      ALNAssessmentListResponse(assessments.map { alnAssessmentMapper.toModel(it) })
+    }
 }

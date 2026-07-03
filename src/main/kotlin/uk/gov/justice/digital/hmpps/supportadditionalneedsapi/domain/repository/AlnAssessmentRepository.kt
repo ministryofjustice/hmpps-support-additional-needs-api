@@ -8,4 +8,6 @@ import java.util.UUID
 @Repository
 interface AlnAssessmentRepository : JpaRepository<AlnAssessmentEntity, UUID> {
   fun findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber: String): AlnAssessmentEntity?
+
+  fun findAllByPrisonNumber(prisonNumber: String): List<AlnAssessmentEntity>
 }

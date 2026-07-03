@@ -176,6 +176,42 @@
         <p>No Data Held</p>
     {{/nonAlnChallenges}}
 
+    <h2>Additional Learning Needs Assessment</h2>
+    {{#alnAssessments}}
+        <h3>Assessment</h3>
+        <table class="summary-list">
+            <tr><td>Has need</td><td>{{ convertBoolean hasNeed }}</td></tr>
+            <tr><td>Screening date</td><td>{{ formatDate screeningDate }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30"></td>
+            </tr>
+            <tr>
+                <td>{{ createdBy }}</td>
+                <td>{{ formatDate createdAt }}</td>
+                <td></td>
+            </tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Updated by</td>
+                <td class="data-column-35">Updated at</td>
+                <td class="data-column-30"></td>
+            </tr>
+            <tr>
+                <td>{{ updatedBy }}</td>
+                <td>{{ formatDate updatedAt }}</td>
+                <td></td>
+            </tr>
+        </table>
+    {{/alnAssessments}}
+    {{^alnAssessments}}
+        <p>No Data Held</p>
+    {{/alnAssessments}}
+
     <h2>ALN Screener result entered in SAN</h2>
     {{#alnScreeners}}
         <h3>Screener</h3>
