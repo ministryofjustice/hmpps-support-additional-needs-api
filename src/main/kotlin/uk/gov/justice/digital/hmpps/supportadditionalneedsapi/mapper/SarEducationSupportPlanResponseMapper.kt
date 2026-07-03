@@ -1,24 +1,21 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper
 
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusHistoryEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanHistoryEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ManageUserService
 
 @Component
-class ElspPlanHistoryMapper(
+class SarEducationSupportPlanResponseMapper(
   private val instantMapper: InstantMapper,
   private val userService: ManageUserService,
 ) {
 
   fun toModel(
     entity: ElspPlanHistoryEntity,
-    ehcpStatusHistoryEntity: EhcpStatusHistoryEntity?,
-  ): EducationSupportPlanResponse = with(entity) {
-    EducationSupportPlanResponse(
-      hasCurrentEhcp = ehcpStatusHistoryEntity?.hasCurrentEhcp ?: false,
+  ): SarEducationSupportPlanResponse = with(entity) {
+    SarEducationSupportPlanResponse(
       planCreatedBy = planCreatedByName?.let { PlanContributor(it, planCreatedByJobRole!!) },
       teachingAdjustments = teachingAdjustments,
       specificTeachingSkills = specificTeachingSkills,
@@ -26,7 +23,7 @@ class ElspPlanHistoryMapper(
       lnspSupport = lnspSupport,
       lnspSupportHours = lnspSupportHours,
       individualSupport = individualSupport,
-      detail = detail,
+      otherDetails = detail,
       otherContributors = otherContributors.map { PlanContributor(it.name, it.jobRole) },
       createdBy = createdBy,
       createdByDisplayName = userService.getUserDetails(createdBy).name,

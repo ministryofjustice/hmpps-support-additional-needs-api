@@ -4,23 +4,22 @@
     {{#originalEducationSupportPlan}}
         <h3>Plan</h3>
         <table class="summary-list">
-            <tr><td>Has Education, Health and Care Plan</td><td>{{ convertBoolean hasCurrentEhcp }}</td></tr>
             <tr><td>Individual support</td><td>{{ optionalValue individualSupport }}</td></tr>
             <tr><td>Teaching adjustments</td><td>{{ optionalValue teachingAdjustments }}</td></tr>
             <tr><td>Specific teaching skills</td><td>{{ optionalValue specificTeachingSkills }}</td></tr>
             <tr><td>Exam access arrangements</td><td>{{ optionalValue examAccessArrangements }}</td></tr>
             <tr><td>Learning needs support practitioner support</td><td>{{ optionalValue lnspSupport }}</td></tr>
             <tr><td>Learning needs support practitioner support hours</td><td>{{ optionalValue lnspSupportHours }}</td></tr>
-            <tr><td>Detail</td><td>{{ optionalValue detail }}</td></tr>
+            <tr><td>Detail</td><td>{{ optionalValue otherDetails }}</td></tr>
             <tr><td>Created by</td><td>{{ optionalValue planCreatedBy.name }}</td></tr>
             <tr><td>Created by job role</td><td>{{ optionalValue planCreatedBy.jobRole }}</td></tr>
             {{#otherContributors}}
-            <tr><td>Other contributor name</td><td>{{ optionalValue name }}</td></tr>
-            <tr><td>Other contributor job role</td><td>{{ optionalValue jobRole }}</td></tr>
+                <tr><td>Other contributor name</td><td>{{ optionalValue name }}</td></tr>
+                <tr><td>Other contributor job role</td><td>{{ optionalValue jobRole }}</td></tr>
             {{/otherContributors}}
             {{^otherContributors}}
-            <tr><td>Other contributor name</td><td>No Data Held</td></tr>
-            <tr><td>Other contributor job role</td><td>No Data Held</td></tr>
+                <tr><td>Other contributor name</td><td>No Data Held</td></tr>
+                <tr><td>Other contributor job role</td><td>No Data Held</td></tr>
             {{/otherContributors}}
         </table>
         <table class="data-table">
