@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
@@ -17,6 +18,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeS
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ReviewScheduleService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.SupportStrategyService
 import uk.gov.justice.hmpps.kotlin.sar.HmppsPrisonSubjectAccessRequestService
@@ -36,6 +38,7 @@ class SubjectAccessReportService(
   private val challengeService: ChallengeService,
   private val alnScreenerService: ALNScreenerService,
   private val planCreationScheduleService: PlanCreationScheduleService,
+  private val reviewScheduleService: ReviewScheduleService,
   private val conditionService: ConditionService,
   private val needService: NeedService,
 ) : HmppsPrisonSubjectAccessRequestService {
@@ -54,6 +57,7 @@ class SubjectAccessReportService(
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
     val alnScreeners = getAlnScreeners(prn, fromDateInstance, toDateInstance)
     val planCreationSchedules = getPlanCreationSchedules(prn, fromDateInstance, toDateInstance)
+    val reviewSchedules = getReviewSchedules(prn, fromDateInstance, toDateInstance)
     val conditions = getConditions(prn, fromDateInstance, toDateInstance)
     val alnAssessments = getAlnAssessments(prn, fromDateInstance, toDateInstance)
 
@@ -64,6 +68,7 @@ class SubjectAccessReportService(
       nonAlnChallenges.isNotEmpty() ||
       alnScreeners.isNotEmpty() ||
       planCreationSchedules.isNotEmpty() ||
+      reviewSchedules.isNotEmpty() ||
       conditions.isNotEmpty() ||
       alnAssessments.isNotEmpty()
     ) {
@@ -75,6 +80,7 @@ class SubjectAccessReportService(
           nonAlnChallenges = nonAlnChallenges,
           alnScreeners = alnScreeners,
           planCreationSchedules = planCreationSchedules,
+          reviewSchedules = reviewSchedules,
           conditions = conditions,
           alnAssessments = alnAssessments,
         ),
@@ -133,6 +139,19 @@ class SubjectAccessReportService(
   ): List<PlanCreationScheduleResponse> = planCreationScheduleService.getSchedules(prn, includeAllHistory = true).planCreationSchedules
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
     .sortedBy { it.version }
+
+
+  /**
+   * Obtain all review schedules for the prisoner
+   */
+  private fun getReviewSchedules(
+    prn: String,
+    fromDateInstance: OffsetDateTime?,
+    toDateInstance: OffsetDateTime?,
+  ): List<ReviewScheduleResponse> = reviewScheduleService.getSchedules(prn).reviewSchedules
+    .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
+    .sortedBy { it.version }
+
 
   /**
    * Obtain all conditions of the prisoner

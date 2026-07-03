@@ -351,6 +351,59 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     return this
   }
 
+  fun hasNoReviewSchedules(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (reviewSchedules.isNotEmpty()) {
+        failWithMessage("Expected no plan creation schedules but has ${reviewSchedules.size} review schedules")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfReviewSchedules(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (reviewSchedules.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected review schedules, but has ${reviewSchedules.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ReviewScheduleResponse]. Takes a lambda as the method
+   * argument to call assertion methods provided by [ReviewScheduleResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `reviewScheduleNumber` parameter is not zero indexed to make for better readability in tests. IE. the first
+   * plan creation schedule should be referenced as `.reviewSchedule(1) { .... }`
+   */
+  fun reviewSchedule(reviewScheduleNumber: Int, consumer: Consumer<ReviewScheduleResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val reviewSchedule = reviewSchedules[reviewScheduleNumber - 1]
+      consumer.accept(assertThat(reviewSchedule))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ReviewScheduleResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ReviewScheduleResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [ReviewScheduleResponse]s must pass as true.
+   */
+  fun allReviewSchedules(consumer: Consumer<ReviewScheduleResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      reviewSchedules.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
+
   fun hasNoAlnAssessments(): SubjectAccessRequestContentAssert {
     isNotNull
     with(actual!!) {
