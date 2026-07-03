@@ -51,6 +51,29 @@
         <p>No Data Held</p>
     {{/originalEducationSupportPlan}}
 
+    <h2>Education, Health and Care Plan</h2>
+    {{#ehcpStatuses}}
+        <h3>EHCP</h3>
+        <table class="summary-list">
+            <tr><td>Has current EHCP</td><td>{{ convertBoolean hasCurrentEhcp }}</td></tr>
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+    {{/ehcpStatuses}}
+    {{^ehcpStatuses}}
+        <p>No Data Held</p>
+    {{/ehcpStatuses}}
+
     <h2>Support strategies</h2>
     {{#supportStrategies}}
         <h3>Support strategy</h3>

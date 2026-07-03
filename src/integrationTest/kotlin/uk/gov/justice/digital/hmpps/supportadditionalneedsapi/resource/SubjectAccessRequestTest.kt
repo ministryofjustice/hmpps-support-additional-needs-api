@@ -104,6 +104,8 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       hasNeed = true,
       curiousReference = UUID.fromString("46259b4d-7a9b-4fce-90c4-7c8c659b79b5"),
     )
+    // Update the EHCP answer, creating a second EHCP version
+    anEhcpStatusUpdateExists(prisonNumber, hasCurrentEhcp = false)
 
     // When
     val response = webTestClient.get()
@@ -135,6 +137,9 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
               .hasJobRole("Teacher")
           }
       }
+      .hasNumberOfEhcpStatuses(2)
+      .ehcpStatus(1) { it.hasCurrentEhcp() }
+      .ehcpStatus(2) { it.doesNotHaveCurrentEhcp() }
       .hasNumberOfSupportStrategies(1)
       .supportStrategy(1) {
         it.isActive()
