@@ -116,14 +116,13 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     val actual = objectMapper.convertValue<SubjectAccessRequestContent>(response.responseBody.blockFirst()!!.content)
     assertThat(actual)
       .originalEducationSupportPlan {
-        it.hasCurrentEhcp()
-          .hasIndividualSupport("support")
+        it.hasIndividualSupport("support")
           .hasTeachingAdjustments("teachingAdjustments")
           .hasSpecificTeachingSkills("specificTeachingSkills")
           .hasExamAccessArrangements("examAccessArrangements")
           .hasLearningNeedsSupportPractitionerSupport("lnspSupport")
           .hasLearningNeedsSupportPractitionerHours(2)
-          .hasOtherDetail("detail")
+          .hasOtherDetails("detail")
           .planWasCreatedByPlanContributor {
             it.hasName("Tom Brown")
               .hasJobRole("Education coordinator")

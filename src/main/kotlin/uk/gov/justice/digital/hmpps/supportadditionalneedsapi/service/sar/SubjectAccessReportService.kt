@@ -1,19 +1,20 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.sar
 
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SarEducationSupportPlanResponseMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNAssessmentResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionResponse
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ALNScreenerService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ChallengeService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.ConditionService
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.PlanCreationScheduleService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.StrengthService
@@ -28,7 +29,8 @@ import java.time.ZoneOffset
 
 @Service
 class SubjectAccessReportService(
-  private val educationSupportPlanService: EducationSupportPlanService,
+  private val elspPlanHistoryRepository: ElspPlanHistoryRepository,
+  private val sarEducationSupportPlanResponseMapper: SarEducationSupportPlanResponseMapper,
   private val supportStrategyService: SupportStrategyService,
   private val strengthService: StrengthService,
   private val challengeService: ChallengeService,
@@ -85,7 +87,9 @@ class SubjectAccessReportService(
   private fun getOriginalEducationSupportPlanIfCreatedBeforeToDate(
     prn: String,
     toDateInstance: OffsetDateTime?,
-  ): EducationSupportPlanResponse? = educationSupportPlanService.getOriginalPlan(prn)
+  ): SarEducationSupportPlanResponse? = elspPlanHistoryRepository.findAllByPrisonNumber(prn)
+    .minByOrNull { it.createdAt }
+    ?.let { sarEducationSupportPlanResponseMapper.toModel(it) }
     ?.takeIf { it.createdAt.isEqualOrBefore(toDateInstance) }
 
   private fun getSupportStrategies(

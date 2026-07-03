@@ -21,11 +21,11 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
   }
 
   /**
-   * Allows for assertion chaining into the child [EducationSupportPlanResponse]. Takes a lambda as the method argument
-   * to call assertion methods provided by [EducationSupportPlanResponseAssert].
+   * Allows for assertion chaining into the child [SarEducationSupportPlanResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [SarEducationSupportPlanResponseAssert].
    * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
    */
-  fun originalEducationSupportPlan(consumer: Consumer<EducationSupportPlanResponseAssert>): SubjectAccessRequestContentAssert {
+  fun originalEducationSupportPlan(consumer: Consumer<SarEducationSupportPlanResponseAssert>): SubjectAccessRequestContentAssert {
     isNotNull
     with(actual!!) {
       consumer.accept(assertThat(originalEducationSupportPlan))
