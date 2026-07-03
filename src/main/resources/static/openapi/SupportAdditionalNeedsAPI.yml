@@ -3006,6 +3006,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PlanCreationScheduleResponse'
+        reviewSchedules:
+          description: All versions of the person's review schedules, ordered oldest first.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewScheduleResponse'
         conditions:
           description: A list of the person's conditions.
           type: array
@@ -3022,6 +3027,7 @@ components:
         - nonAlnChallenges
         - alnScreeners
         - planCreationSchedules
+        - reviewSchedules
         - conditions
         - alnAssessments
 

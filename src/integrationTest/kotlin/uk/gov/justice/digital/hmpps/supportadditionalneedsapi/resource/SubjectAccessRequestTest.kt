@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
@@ -89,6 +90,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       .also { aValidStrengthExists(prisonNumber, it.id) }
       .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
+    aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
     aValidConditionExists(prisonNumber)
     aValidAlnAssessmentExists(
       prisonNumber,
@@ -190,6 +192,13 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .hasStatus(PlanCreationStatus.SCHEDULED)
           .hasNoExemptionReason()
           .hasNoExemptionDetail()
+          .hasVersion(1)
+      }
+      .hasNumberOfReviewSchedules(1)
+      .reviewSchedule(1) {
+        it.hasDeadlineDate(LocalDate.parse("2026-04-15"))
+          .hasStatus(ReviewScheduleStatus.SCHEDULED)
+          .hasNoExemptionReason()
           .hasVersion(1)
       }
       .alnScreener(1) { it.hasScreenerDate(LocalDate.parse("2026-02-15")) }
