@@ -1,8 +1,8 @@
 version: "3"
 services:
   hmpps-support-additional-needs-api:
-    build:
-      context: .
+    image: ghcr.io/ministryofjustice/hmpps-support-additional-needs-api:latest
+    profiles: [ api ]
     networks:
       - hmpps
     container_name: hmpps-support-additional-needs-api
@@ -11,25 +11,29 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health/ping"]
     environment:
+      - PRODUCT_ID=DPS124
       - SERVER_PORT=8080
-      - HMPPS_AUTH_URL=http://hmpps-auth:8080/auth
       - SPRING_PROFILES_ACTIVE=dev
+      - HMPPS_AUTH_URL=https://sign-in-dev.hmpps.service.justice.gov.uk/auth
+      - DB_SERVER=support-additional-needs-api-db:5432
+      - DB_NAME=support-additional-needs-api-db
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://support-additional-needs-api-db:5432/support-additional-needs-api-db
+      - DB_USER=admin
+      - DB_PASS=admin_password
+      - DPR_USER=dpr_user
+      - DPR_PASSWORD=dpr_password
+      - SERVICE_BASE_URL=http://localhost:8080
+      - UI_SERVICE_BASE_URL=https://support-for-additional-needs-dev.hmpps.service.justice.gov.uk
+      - PRISONER_SEARCH_API_URL=https://prisoner-search-dev.prison.service.justice.gov.uk
+      - CURIOUS_API_URL=https://testservices.sequation.net/sequation-virtual-campus2-api
       - MANAGE_USERS_API_URL=https://manage-users-api-dev.hmpps.service.justice.gov.uk
-      - SERVICE_BASE_URL=http://localhost:8081
-
-  hmpps-auth:
-    image: ghcr.io/ministryofjustice/hmpps-auth:latest
-    networks:
-      - hmpps
-    container_name: hmpps-auth
-    ports:
-      - "8090:8080"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/auth/health"]
-    environment:
-      - SERVER_PORT=8080
-      - SPRING_PROFILES_ACTIVE=dev
-      - APPLICATION_AUTHENTICATION_UI_ALLOWLIST=0.0.0.0/0
+      - BANK_HOLIDAYS_API_URL=https://www.gov.uk
+      - PES_CONTRACT_DATE=2025-10-01
+      - REVIEW_DEADLINE_DAYS_TO_ADD=5
+      - ADDITIONAL_REVIEW_DATE_LOGIC=true
+      - HMPPS_SQS_ENABLED=false
+      - HMPPS_SAR_ADDITIONALACCESSROLE=ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW
+    env_file: .env.docker
 
   db:
     image: postgres:latest
