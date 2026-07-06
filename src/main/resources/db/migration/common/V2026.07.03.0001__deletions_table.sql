@@ -12,7 +12,7 @@ CREATE TABLE data_deletion_event
     correlation_id           uuid                  NOT NULL,
     prison_number            varchar(10)           NOT NULL,
     reason                   varchar(50)           NOT NULL,
-    deleted_at               timestamp             NOT NULL,
-    deleted_by               varchar(50)           NOT NULL,
-    deleted_at_prison        varchar(3)            NOT NULL
+    data_deleted_at          timestamp             NOT NULL,
+    data_deleted_by          varchar(50)           NOT NULL,
+    data_deleted_at_prison   varchar(3)            NOT NULL
 );

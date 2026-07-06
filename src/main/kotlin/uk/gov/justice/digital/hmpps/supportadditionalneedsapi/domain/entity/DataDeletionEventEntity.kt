@@ -19,7 +19,7 @@ import java.util.UUID
 @Entity
 @EntityListeners(value = [AuditingEntityListener::class])
 @Table(name = "data_deletion_event")
-data class DataDeletionEvent(
+data class DataDeletionEventEntity(
   @Column(updatable = false)
   val prisonNumber: String,
 
@@ -31,25 +31,29 @@ data class DataDeletionEvent(
   val reason: DeletionReason,
 
   @Column(updatable = false)
-  val createdAtPrison: String,
+  val dataDeletedAtPrison: String,
 ) {
   @Id
   @GeneratedValue
   @UuidGenerator
   var id: UUID? = null
 
+  // Property to record the timestamp that this entity was created, hence the annotation.
+  // Semantically the property says when the Data Deletion Event happened, hence the property name.
   @Column(updatable = false)
   @CreatedDate
-  var deletedAt: Instant? = null
+  var dataDeletedAt: Instant? = null
 
+  // Property to record who this entity was created by, hence the annotation.
+  // Semantically the property says who performed the Data Deletion Event happened, hence the property name.
   @Column(updatable = false)
   @CreatedBy
-  var deletedBy: String? = null
+  var dataDeletedBy: String? = null
 
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
-    other as DataDeletionEvent
+    other as DataDeletionEventEntity
 
     return id == other.id
   }
