@@ -7,7 +7,7 @@ plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.4"
   kotlin("plugin.spring") version "2.4.0"
   kotlin("plugin.jpa") version "2.4.0"
-  id("org.openapi.generator") version "7.23.0"
+  id("org.openapi.generator") version "7.22.0"
 
   id("jacoco")
   id("name.remal.integration-tests") version "5.0.6"
@@ -128,6 +128,7 @@ tasks.named("assemble") {
 }
 
 tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
+  dependsOn("processResources")
   group = "openapi tools"
   description = "Generate model from API YAML definition"
   validateSpec.set(true)
