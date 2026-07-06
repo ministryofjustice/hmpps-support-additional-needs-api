@@ -71,3 +71,10 @@ sonar-project.properties
 
 #Helm
 **/Chart.lock
+
+#Jar files for docker build
+/*.jar
+
+#Misc
+/.env
+/.env.docker

@@ -9,134 +9,65 @@ Support for additional needs enables staff to better support prisoners with neur
 This API allows for the recording and retrieval of a prisoner's challenges, strengths, conditions and support recommendations.
 
 # Instructions
-
-If this is a HMPPS project then the project will be created as part of bootstrapping -
-see [dps-project-bootstrap](https://github.com/ministryofjustice/dps-project-bootstrap). You are able to specify a
-template application using the `github_template_repo` attribute to clone without the need to manually do this yourself
-within GitHub.
-
-This project is community managed by the mojdt `#kotlin-dev` slack channel.
-Please raise any questions or queries there. Contributions welcome!
-
-Our security policy is located [here](https://github.com/ministryofjustice/hmpps-support-additional-needs-api/security/policy).
-
-Documentation to create new service is located [here](https://tech-docs.hmpps.service.justice.gov.uk/applicationplatform/newservice-GHA/).
-
-## Creating a Cloud Platform namespace
-
-When deploying to a new namespace, you may wish to use the
-[templates project namespace](https://github.com/ministryofjustice/cloud-platform-environments/tree/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-templates-dev)
-as the basis for your new namespace. This namespace contains both the kotlin and typescript template projects, 
-which is the usual way that projects are setup.
-
-Copy this folder and update all the existing namespace references to correspond to the environment to which you're deploying.
-
-If you only need the kotlin configuration then remove all typescript references and remove the elasticache configuration. 
-
-To ensure the correct github teams can approve releases, you will need to make changes to the configuration in `resources/service-account-github` where the appropriate team names will need to be added (based on [lines 98-100](https://github.com/ministryofjustice/cloud-platform-environments/blob/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-templates-dev/resources/serviceaccount-github.tf#L98) and the reference appended to the teams list below [line 112](https://github.com/ministryofjustice/cloud-platform-environments/blob/main/namespaces/live.cloud-platform.service.justice.gov.uk/hmpps-templates-dev/resources/serviceaccount-github.tf#L112)). Note: hmpps-sre is in this list to assist with deployment issues.
-
-Submit a PR to the Cloud Platform team in
-#ask-cloud-platform. Further instructions from the Cloud Platform team can be found in
-the [Cloud Platform User Guide](https://user-guide.cloud-platform.service.justice.gov.uk/#cloud-platform-user-guide)
-
-## Renaming from HMPPS Support Additional Needs Api - github Actions
-
-Once the new repository is deployed. Navigate to the repository in github, and select the `Actions` tab.
-Click the link to `Enable Actions on this repository`.
-
-Find the Action workflow named: `rename-project-create-pr` and click `Run workflow`. This workflow will
-execute the `rename-project.bash` and create Pull Request for you to review. Review the PR and merge.
-
-Note: ideally this workflow would run automatically however due to a recent change github Actions are not
-enabled by default on newly created repos. There is no way to enable Actions other then to click the button in the UI.
-If this situation changes we will update this project so that the workflow is triggered during the bootstrap project.
-Further reading: <https://github.community/t/workflow-isnt-enabled-in-repos-generated-from-template/136421>
-
-The script takes six arguments:
-
-### New project name
-
-This should start with `hmpps-` e.g. `hmpps-prison-visits` so that it can be easily distinguished in github from
-other departments projects. Try to avoid using abbreviations so that others can understand easily what your project is.
-
-### Slack channel for release notifications
-
-By default, release notifications are only enabled for production. The circleci configuration can be amended to send
-release notifications for deployments to other environments if required. Note that if the configuration is amended,
-the slack channel should then be amended to your own team's channel as `dps-releases` is strictly for production release
-notifications. If the slack channel is set to something other than `dps-releases`, production release notifications
-will still automatically go to `dps-releases` as well. This is configured by `releases-slack-channel` in
-`.circleci/config.yml`.
-
-### Slack channel for pipeline security notifications
-
-Ths channel should be specific to your team and is for daily / weekly security scanning job results. It is your team's
-responsibility to keep up-to-date with security issues and update your application so that these jobs pass. You will
-only be notified if the jobs fail. The scan results can always be found in circleci for your project. This is
-configured by `alerts-slack-channel` in `.circleci/config.yml`.
-
-### Non production kubernetes alerts
-
-By default Prometheus alerts are created in the application namespaces to monitor your application e.g. if your
-application is crash looping, there are a significant number of errors from the ingress. Since Prometheus runs in
-cloud platform AlertManager needs to be setup first with your channel. Please see
-[Create your own custom alerts](https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html)
-in the Cloud Platform user guide. Once that is setup then the `custom severity label` can be used for
-`alertSeverity` in the `helm_deploy/values-*.yaml` configuration.
-
-Normally it is worth setting up two separate labels and therefore two separate slack channels - one for your production
-alerts and one for your non-production alerts. Using the same channel can mean that production alerts are sometimes
-lost within non-production issues.
-
-### Production kubernetes alerts
-
-This is the severity label for production, determined by the `custom severity label`. See the above
-#non-production-kubernetes-alerts for more information. This is configured in `helm_deploy/values-prod.yaml`.
-
-### Product ID
-
-This is so that we can link a component to a product and thus provide team and product information in the Developer
-Portal. Refer to the developer portal at https://developer-portal.hmpps.service.justice.gov.uk/products to find your
-product id. This is configured in `helm_deploy/<project_name>/values.yaml`.
-
-## Manually branding from template app
-
-Run the `rename-project.bash` without any arguments. This will prompt for the six required parameters and create a PR.
-The script requires a recent version of `bash` to be installed, as well as GNU `sed` in the path.
-
-## Common Kotlin patterns
-
-Many patterns have evolved for HMPPS Kotlin applications. Using these patterns provides consistency across our suite of 
-Kotlin microservices and allows you to concentrate on building  your business needs rather than reinventing the 
-technical approach.
-
-Documentation for these patterns can be found in the [HMPPS tech docs](https://tech-docs.hmpps.service.justice.gov.uk/common-kotlin-patterns/). 
-If this documentation is incorrect or needs improving please report to [#ask-prisons-digital-sre](https://moj.enterprise.slack.com/archives/C06MWP0UKDE)
-or [raise a PR](https://github.com/ministryofjustice/hmpps-tech-docs). 
-
 ## Running the application locally
 
-The application comes with a `dev` spring profile that includes default settings for running locally. This is not
-necessary when deploying to kubernetes as these values are included in the helm configuration templates -
-e.g. `values-dev.yaml`.
+### Preparation
+Obtain API client credentials
+- populate those value from kubernetes secrets `hmpps-support-additional-needs-api`.
+  ```shell
+  kubectl -n hmpps-support-additional-needs-dev get secret hmpps-support-additional-needs-api-client-creds -o json | jq '.data | map_values(@base64d)' 
+  ```
+- fill in the API client credentials in these files: `*_CLIENT_ID` and `*_CLIENT_SECRET`
+    - `.env` for running outside docker
+    - `.env.docker` for running in docker
 
-There is also a `docker-compose.yml` that can be used to run a local instance of the template in docker and also an
-instance of HMPPS Auth (required if your service calls out to other services using a token).
+---
+### Running with docker compose
+The easiest way to run the app is to use docker compose to create the service and all dependencies.
+1. Prepare `.env.docker` (from `.env.docker.sample`)
+    ```shell
+    cp .env.docker.sample .env.docker
+    ```
+    - fill in the API client credentials in `.env.docker`
+      see above to obtain these
+    - in case of `$` in value, escape them (with `$$`)
+2. Then run
+   ```shell
+   docker compose --profile api up
+   ```
+   will run the application (from latest image) and PostgreSQL within a local docker instance.
+3. Check if application is up and running
+    * See `http://localhost:8080/health` to check the app is running.
+    * See `http://localhost:8080/swagger-ui/index.html?configUrl=/v3/api-docs` to explore the OpenAPI spec document.
+    * See `http://localhost:8080/info` to check the app info
 
-```bash
-docker compose pull && docker compose up
-```
+It connects HMPPS Auth and other upstream APIs in `dev` environment. Thus, a set of valid dev API clients are required to run the application.
 
-will build the application and run it and HMPPS Auth within a local docker instance.
+---
+### Running the application in IntelliJ
+1. Prepare `.env` (from `.env.local.sample`)
+    ```shell
+    cp .env.local.sample .env
+    ```
+    - fill in the API client credentials in `.env`:
+      see above to obtain these
+2. Run this
+    ```shell
+   docker compose up -d 
+    ```
+    * will start dependencies only without the API application
+    * `-d` for detached run
+3. Run `bootRun` with  `.env` file prepared above
+    * either IntelliJ
+        - run `bootRun` with `EnvFile` plugin
+        - add `.env`
+        - enable integrations
+    * or Gradle wrapper
+      ```shell
+      export $(grep -v '^#' .env | xargs)
+      ./gradlew bootRun
+      ```
 
-### Running the application in Intellij
-
-```bash
-docker compose pull && docker compose up --scale hmpps-support-additional-needs-api=0
-```
-
-will just start a docker instance of HMPPS Auth. The application should then be started with a `dev` active profile
-in Intellij.
 
 ## Environment variables
 The following environment variables are required in order for the app to start:
@@ -157,6 +88,14 @@ The following environment variables are required in order for the app to start:
 | DB_USER   | The application's DB username     |
 | DB_PASS   | The DB user's password            |
 
+### DPR
+For DPR Digital Prison Reporting
+
+| Name         | Description       |
+|--------------|-------------------|
+| DPR_USER     | DPR's DB username |
+| DPR_PASSWORD | DPR's DB password |
+
 ### Application Insights
 
 | Name                                   | Description                              |
@@ -168,6 +107,8 @@ The following environment variables are required in order for the app to start:
 
 | Name                              | Description                                                                 |
 |-----------------------------------|-----------------------------------------------------------------------------|
+| SERVICE_BASE_URL                  | Base URL of this backend service                                            |
+| UI_SERVICE_BASE_URL               | Base URL of the corresponding frontend service                              |
 | PRISONER_SEARCH_API_URL           | The URL of the Prisoner Search API                                          |
 | PRISONER_SEARCH_API_CLIENT_ID     | hmpps-auth oauth2 client-id for connecting to the Prisoner Search API       |
 | PRISONER_SEARCH_API_CLIENT_SECRET | hmpps-auth oauth2 client-secret for connecting to the Prisoner Search API   |
@@ -178,3 +119,19 @@ The following environment variables are required in order for the app to start:
 | MANAGE_USERS_API_CLIENT_ID        | hmpps-auth oauth2 client-id for connecting to the Manage Users API          |
 | MANAGE_USERS_API_CLIENT_SECRET    | hmpps-auth oauth2 client-secret for connecting to the Manage Users API      |
 | BANK_HOLIDAYS_API_URL             | The URL of the Government Bank Holidays API                                 |
+
+### Feature flags or parameters
+
+| Name                         | Description                                        |
+|------------------------------|----------------------------------------------------|
+| PES_CONTRACT_DATE            | Contract start date of Prisoner Education Services |
+| REVIEW_DEADLINE_DAYS_TO_ADD  | Number of days to add for review deadline          |
+| ADDITIONAL_REVIEW_DATE_LOGIC | Feature flag: apply additional plan/review logic   |
+
+### More for dev/test or local run
+
+| Name                           | Description                         |
+|--------------------------------|-------------------------------------|
+| HMPPS_SQS_ENABLED              | Enable or disable SQS queue         |
+| HMPPS_SAR_ADDITIONALACCESSROLE | Additional role to test SAR request |
+
