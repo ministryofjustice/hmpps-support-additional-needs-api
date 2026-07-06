@@ -4,7 +4,7 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.3.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.5.4"
   kotlin("plugin.spring") version "2.4.0"
   kotlin("plugin.jpa") version "2.4.0"
   id("org.openapi.generator") version "7.22.0"
@@ -128,6 +128,7 @@ tasks.named("assemble") {
 }
 
 tasks.register<GenerateTask>("buildSupportAdditionalNeedsModel") {
+  dependsOn("processResources")
   group = "openapi tools"
   description = "Generate model from API YAML definition"
   validateSpec.set(true)
