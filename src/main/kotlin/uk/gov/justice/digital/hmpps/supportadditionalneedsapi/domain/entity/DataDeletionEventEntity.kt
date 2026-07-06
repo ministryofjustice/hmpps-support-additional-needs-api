@@ -24,9 +24,6 @@ data class DataDeletionEventEntity(
   val prisonNumber: String,
 
   @Column(updatable = false)
-  val correlationId: UUID,
-
-  @Column(updatable = false)
   @Enumerated(value = EnumType.STRING)
   val reason: DeletionReason,
 
