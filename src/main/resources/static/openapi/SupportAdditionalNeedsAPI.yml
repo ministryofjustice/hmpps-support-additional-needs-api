@@ -2988,6 +2988,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/EhcpStatusResponse'
+        reviews:
+          description: |
+            The person's Education Support Plan reviews, ordered oldest first. Each review shows the review's own
+            fields (feedback, contributors) together with the version of the plan as it was after that review was
+            completed, so the reader can see how the plan changed over time following the initial plan.
+          type: array
+          items:
+            $ref: '#/components/schemas/SarEducationSupportPlanReviewResponse'
         supportStrategies:
           description: The person's support strategies, both active and archived.
           type: array
@@ -3030,6 +3038,7 @@ components:
             $ref: '#/components/schemas/ALNAssessmentResponse'
       required:
         - ehcpStatuses
+        - reviews
         - supportStrategies
         - nonAlnStrengths
         - nonAlnChallenges
@@ -3086,6 +3095,59 @@ components:
           example: Chris is sensitive to loud noises and has asked for a quieter position in a calm classroom.
       required:
         - individualSupport
+
+    SarEducationSupportPlanReviewResponse:
+      title: SarEducationSupportPlanReviewResponse
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/AuditedResource'
+      description: |
+        A single Education Support Plan Review, modelled specifically for the Subject Access Request endpoint.
+        This is a union of two records that share no id or reference: the review record itself (feedback, contributors),
+        and the version of the plan as it was after the review was completed. The two are associated by ordinal position
+        in the service layer, not by any relationship in the data.
+      properties:
+        individualSupport:
+          type: string
+          description: The `individualSupport` field of the plan as it was after this review.
+        teachingAdjustments:
+          type: string
+          description: The `teachingAdjustments` field of the plan as it was after this review.
+        specificTeachingSkills:
+          type: string
+          description: The `specificTeachingSkills` field of the plan as it was after this review.
+        examAccessArrangements:
+          type: string
+          description: The `examAccessArrangements` field of the plan as it was after this review.
+        lnspSupport:
+          type: string
+          description: The `lnspSupport` field of the plan as it was after this review.
+        lnspSupportHours:
+          type: integer
+          description: The `lnspSupportHours` field of the plan as it was after this review.
+        otherDetails:
+          type: string
+          description: The `detail` field of the plan as it was after this review.
+        prisonerDeclinedFeedback:
+          type: boolean
+          description: Whether the prisoner declined to give feedback for this review.
+        prisonerFeedback:
+          type: string
+          description: The prisoner's feedback for this review.
+        reviewerFeedback:
+          type: string
+          description: The reviewer's feedback for this review.
+        reviewCreatedBy:
+          description: Details of who carried out this review.
+          $ref: '#/components/schemas/ReviewContributor'
+        otherContributors:
+          description: Optional list of other people involved in this review.
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewContributor'
+      required:
+        - individualSupport
+        - prisonerDeclinedFeedback
 
   # --------------------------------------------------------------------------------
   # Response Body Definitions

@@ -43,6 +43,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Elsp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.IdentificationSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.LddAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.OtherReviewContributorEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -471,6 +472,55 @@ abstract class IntegrationTestBase {
       reviewScheduleReference = reviewScheduleReference,
     )
     return elspReviewRepository.save(review)
+  }
+
+  /**
+   * Simulates a completed plan review: updates the plan (which writes a new version to the plan history, exactly as a
+   * real review does) and creates the corresponding review record. Use after [anElSPExists] to build the review history
+   * that the SAR "Education Support Reviews" section renders. Each call adds one review and one plan history version.
+   */
+  fun aPlanReviewExists(
+    prisonNumber: String,
+    reviewScheduleReference: UUID,
+    teachingAdjustments: String,
+    detail: String,
+    reviewCreatedByName: String = "Bob Smith",
+    reviewCreatedByJobRole: String = "Teacher",
+    prisonerFeedback: String = "prisonerFeedback",
+    reviewerFeedback: String = "reviewerFeedback",
+    otherContributors: List<Pair<String, String>> = emptyList(),
+  ) {
+    // Update the plan so a new version is written to the plan history, exactly as completing a real review does.
+    val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)!!
+    plan.teachingAdjustments = teachingAdjustments
+    plan.detail = detail
+    plan.updatedAtPrison = "BXI"
+    elspPlanRepository.saveAndFlush(plan)
+
+    // Create the review record itself, along with any other contributors.
+    val review = ElspReviewEntity(
+      prisonNumber = prisonNumber,
+      reviewCreatedByName = reviewCreatedByName,
+      reviewCreatedByJobRole = reviewCreatedByJobRole,
+      prisonerDeclinedFeedback = false,
+      prisonerFeedback = prisonerFeedback,
+      reviewerFeedback = reviewerFeedback,
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      reviewScheduleReference = reviewScheduleReference,
+    )
+    otherContributors.forEach { (name, jobRole) ->
+      review.otherContributors.add(
+        OtherReviewContributorEntity(
+          elspReview = review,
+          name = name,
+          jobRole = jobRole,
+          createdAtPrison = "BXI",
+          updatedAtPrison = "BXI",
+        ),
+      )
+    }
+    elspReviewRepository.saveAndFlush(review)
   }
 
   fun aValidAlnScreenerExists(prisonNumber: String, screeningDate: LocalDate = LocalDate.now()): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(

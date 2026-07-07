@@ -509,4 +509,57 @@ class SubjectAccessRequestContentAssert(actual: SubjectAccessRequestContent?) : 
     }
     return this
   }
+
+  fun hasNoReviews(): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (reviews.isNotEmpty()) {
+        failWithMessage("Expected no reviews but has ${reviews.size} reviews")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfReviews(expected: Int): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      if (reviews.size != expected) {
+        failWithMessage("Expected SubjectAccessRequestContent to be have $expected reviews, but has ${reviews.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [SarEducationSupportPlanReviewResponse]. Takes a lambda as
+   * the method argument to call assertion methods provided by [SarEducationSupportPlanReviewResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   *
+   * The `reviewNumber` parameter is not zero indexed to make for better readability in tests. IE. the first review
+   * should be referenced as `.review(1) { .... }`
+   */
+  fun review(reviewNumber: Int, consumer: Consumer<SarEducationSupportPlanReviewResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      val review = reviews[reviewNumber - 1]
+      consumer.accept(assertThat(review))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [SarEducationSupportPlanReviewResponse]s. Takes a lambda as the method
+   * argument to call assertion methods provided by [SarEducationSupportPlanReviewResponseAssert].
+   * Returns this [SubjectAccessRequestContentAssert] to allow further chained assertions on the parent [SubjectAccessRequestContent]
+   * The assertions on all [SarEducationSupportPlanReviewResponse]s must pass as true.
+   */
+  fun allReviews(consumer: Consumer<SarEducationSupportPlanReviewResponseAssert>): SubjectAccessRequestContentAssert {
+    isNotNull
+    with(actual!!) {
+      reviews.onEach {
+        consumer.accept(assertThat(it))
+      }
+    }
+    return this
+  }
 }

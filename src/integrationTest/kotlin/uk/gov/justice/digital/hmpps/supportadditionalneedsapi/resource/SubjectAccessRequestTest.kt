@@ -90,7 +90,7 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       .also { aValidStrengthExists(prisonNumber, it.id) }
       .also { aValidChallengeExists(prisonNumber, it.id) }
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
-    aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
+    val reviewSchedule = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
     aValidConditionExists(prisonNumber)
     aValidAlnAssessmentExists(
       prisonNumber,
@@ -106,6 +106,22 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     )
     // Update the EHCP answer, creating a second EHCP version
     anEhcpStatusUpdateExists(prisonNumber, hasCurrentEhcp = false)
+    // Two reviews, each updating the plan (creating a new plan history version paired with the review)
+    aPlanReviewExists(
+      prisonNumber,
+      reviewScheduleReference = reviewSchedule.reference,
+      teachingAdjustments = "teachingAdjustmentsUpdated",
+      detail = "detailUpdated",
+      otherContributors = listOf("Jane Doe" to "Mentor"),
+    )
+    aPlanReviewExists(
+      prisonNumber,
+      reviewScheduleReference = reviewSchedule.reference,
+      teachingAdjustments = "teachingAdjustmentsUpdatedAgain",
+      detail = "detailUpdatedAgain",
+      reviewCreatedByName = "Fred Brown",
+      reviewCreatedByJobRole = "Teaching assistant",
+    )
 
     // When
     val response = webTestClient.get()
@@ -140,6 +156,26 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
       .hasNumberOfEhcpStatuses(2)
       .ehcpStatus(1) { it.hasCurrentEhcp() }
       .ehcpStatus(2) { it.doesNotHaveCurrentEhcp() }
+      .hasNumberOfReviews(2)
+      .review(1) {
+        // The plan as it was after the first review - teachingAdjustments/detail were changed by this review,
+        // but individualSupport was not, so it still reads the original value.
+        it.hasIndividualSupport("support")
+          .hasTeachingAdjustments("teachingAdjustmentsUpdated")
+          .hasOtherDetails("detailUpdated")
+          .prisonerDidNotDeclineReview()
+          .hasPrisonerFeedback("prisonerFeedback")
+          .hasReviewerFeedback("reviewerFeedback")
+          .hasReviewCreatedBy("Bob Smith", "Teacher")
+          .hasNumberOfOtherContributors(1)
+          .hasOtherContributor(1, "Jane Doe", "Mentor")
+      }
+      .review(2) {
+        it.hasTeachingAdjustments("teachingAdjustmentsUpdatedAgain")
+          .hasOtherDetails("detailUpdatedAgain")
+          .hasReviewCreatedBy("Fred Brown", "Teaching assistant")
+          .hasNoOtherContributors()
+      }
       .hasNumberOfSupportStrategies(1)
       .supportStrategy(1) {
         it.isActive()

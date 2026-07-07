@@ -74,6 +74,48 @@
         <p>No Data Held</p>
     {{/ehcpStatuses}}
 
+    <h2>Education Support Reviews</h2>
+    {{#reviews}}
+        <h3>Review</h3>
+        <table class="summary-list">
+            <tr><td>Individual support</td><td>{{ optionalValue individualSupport }}</td></tr>
+            <tr><td>Teaching adjustments</td><td>{{ optionalValue teachingAdjustments }}</td></tr>
+            <tr><td>Specific teaching skills</td><td>{{ optionalValue specificTeachingSkills }}</td></tr>
+            <tr><td>Exam access arrangements</td><td>{{ optionalValue examAccessArrangements }}</td></tr>
+            <tr><td>Learning needs support practitioner support</td><td>{{ optionalValue lnspSupport }}</td></tr>
+            <tr><td>Learning needs support practitioner support hours</td><td>{{ optionalValue lnspSupportHours }}</td></tr>
+            <tr><td>Detail</td><td>{{ optionalValue otherDetails }}</td></tr>
+            <tr><td>Prisoner declined review</td><td>{{ convertBoolean prisonerDeclinedFeedback }}</td></tr>
+            <tr><td>Prisoner feedback</td><td>{{ optionalValue prisonerFeedback }}</td></tr>
+            <tr><td>Reviewer feedback</td><td>{{ optionalValue reviewerFeedback }}</td></tr>
+            <tr><td>Review created by name</td><td>{{ optionalValue reviewCreatedBy.name }}</td></tr>
+            <tr><td>Review created by job role</td><td>{{ optionalValue reviewCreatedBy.jobRole }}</td></tr>
+            {{#otherContributors}}
+            <tr><td>Other contributor name</td><td>{{ optionalValue name }}</td></tr>
+            <tr><td>Other contributor job role</td><td>{{ optionalValue jobRole }}</td></tr>
+            {{/otherContributors}}
+            {{^otherContributors}}
+            <tr><td>Other contributor name</td><td>No Data Held</td></tr>
+            <tr><td>Other contributor job role</td><td>No Data Held</td></tr>
+            {{/otherContributors}}
+        </table>
+        <table class="data-table">
+            <tr>
+                <td class="data-column-30">Created by</td>
+                <td class="data-column-35">Created at</td>
+                <td class="data-column-30">Created at prison</td>
+            </tr>
+            <tr>
+                <td>{{ getUserLastName createdBy }}</td>
+                <td>{{ optionalValue (formatDate createdAt) }}</td>
+                <td>{{ getPrisonName createdAtPrison }}</td>
+            </tr>
+        </table>
+    {{/reviews}}
+    {{^reviews}}
+        <p>No Data Held</p>
+    {{/reviews}}
+
     <h2>Support strategies</h2>
     {{#supportStrategies}}
         <h3>Support strategy</h3>
