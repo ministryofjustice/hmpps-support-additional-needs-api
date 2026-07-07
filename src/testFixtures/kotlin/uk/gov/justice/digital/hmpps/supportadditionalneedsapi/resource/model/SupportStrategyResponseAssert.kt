@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model
 import org.assertj.core.api.AbstractObjectAssert
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.function.Consumer
 
 fun assertThat(actual: SupportStrategyResponse?) = SupportStrategyResponseAssert(actual)
+fun assertThat(actual: SupportStrategyListResponse?) = SupportStrategyListResponseAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [SupportStrategyResponse].
@@ -182,6 +184,69 @@ class SupportStrategyResponseAssert(actual: SupportStrategyResponse?) :
     with(actual!!) {
       if (updatedAtPrison != expected) {
         failWithMessage("Expected updatedAtPrison to be $expected, but was $updatedAtPrison")
+      }
+    }
+    return this
+  }
+}
+
+/**
+ * AssertJ custom assertion for a [SupportStrategyListResponse].
+ */
+class SupportStrategyListResponseAssert(actual: SupportStrategyListResponse?) :
+  AbstractObjectAssert<SupportStrategyListResponseAssert, SupportStrategyListResponse?>(
+    actual,
+    SupportStrategyListResponseAssert::class.java,
+  ) {
+
+  fun hasNoSupportStrategies(): SupportStrategyListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!supportStrategies.isEmpty()) {
+        failWithMessage("Expected there to be no support strategies, but there was: ${supportStrategies.size}")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfSupportStrategies(expected: Int): SupportStrategyListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (supportStrategies.size != expected) {
+        failWithMessage("Expected there to be $expected support strategies, but has ${supportStrategies.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [SupportStrategyResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [SupportStrategyResponseAssert].
+   * Returns this [SupportStrategyListResponseAssert] to allow further chained assertions on the parent [SupportStrategyListResponse]
+   *
+   * The `supportStrategyNumber` parameter is not zero indexed to make for better readability in tests. IE. the first support strategy
+   * should be referenced as `.supportStrategy(1) { .... }`
+   */
+  fun supportStrategy(supportStrategyNumber: Int, consumer: Consumer<SupportStrategyResponseAssert>): SupportStrategyListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      val supportStrategy = supportStrategies[supportStrategyNumber - 1]
+      consumer.accept(assertThat(supportStrategy))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [SupportStrategyResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [SupportStrategyResponseAssert].
+   * Returns this [SupportStrategyListResponseAssert] to allow further chained assertions on the parent [SupportStrategyListResponse]
+   * The assertions on all [SupportStrategyResponse]s must pass as true.
+   */
+  fun allSupportStrategies(consumer: Consumer<SupportStrategyResponseAssert>): SupportStrategyListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      supportStrategies.onEach {
+        consumer.accept(assertThat(it))
       }
     }
     return this

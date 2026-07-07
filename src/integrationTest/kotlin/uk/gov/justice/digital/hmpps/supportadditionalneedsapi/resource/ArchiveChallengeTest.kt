@@ -4,16 +4,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 class ArchiveChallengeTest : IntegrationTestBase() {
   companion object {
@@ -51,11 +52,16 @@ class ArchiveChallengeTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val challengeEntities = challengeRepository.findAllByPrisonNumber(prisonNumber)
+    val challengeList = getChallenges(prisonNumber)
+    assertThat(challengeList)
+      .hasNumberOfChallenges(1)
+      .challenge(1) {
+        it.isNotActive()
+          .hasArchivedReason("archive reason")
+      }
 
-    assertThat(challengeEntities).hasSize(1)
-    assertThat(challengeEntities.first().active).isEqualTo(false)
-    assertThat(challengeEntities.first().archiveReason).isEqualTo("archive reason")
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -89,10 +95,10 @@ class ArchiveChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Challenge with reference [${entity.reference}] has been archived for prisoner [$prisonNumber]")
@@ -137,10 +143,10 @@ class ArchiveChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Challenge with reference [${entity.reference}] cannot be modified as it is an ALN screener challenge for prisoner [$prisonNumber]")
@@ -163,10 +169,10 @@ class ArchiveChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Challenge with reference [$ref] not found for prisoner [$prisonNumber]")

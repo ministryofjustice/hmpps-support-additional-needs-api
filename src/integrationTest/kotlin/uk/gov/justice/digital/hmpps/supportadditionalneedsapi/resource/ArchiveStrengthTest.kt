@@ -4,16 +4,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveStrengthRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 class ArchiveStrengthTest : IntegrationTestBase() {
   companion object {
@@ -51,11 +52,16 @@ class ArchiveStrengthTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val strengthEntities = strengthRepository.findAllByPrisonNumber(prisonNumber)
+    val strengthList = getStrengths(prisonNumber)
+    assertThat(strengthList)
+      .hasNumberOfStrengths(1)
+      .strength(1) {
+        it.isNotActive()
+          .hasArchivedReason("archive reason")
+      }
 
-    assertThat(strengthEntities).hasSize(1)
-    assertThat(strengthEntities.first().active).isEqualTo(false)
-    assertThat(strengthEntities.first().archiveReason).isEqualTo("archive reason")
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -89,10 +95,10 @@ class ArchiveStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Strength with reference [${entity.reference}] has been archived for prisoner [$prisonNumber]")
@@ -137,10 +143,10 @@ class ArchiveStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Strength with reference [${entity.reference}] cannot be modified as it is an ALN screener strength for prisoner [$prisonNumber]")
@@ -163,10 +169,10 @@ class ArchiveStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Strength with reference [$ref] not found for prisoner [$prisonNumber]")

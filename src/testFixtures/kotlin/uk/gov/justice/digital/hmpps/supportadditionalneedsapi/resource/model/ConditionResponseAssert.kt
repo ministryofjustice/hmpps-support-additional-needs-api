@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model
 import org.assertj.core.api.AbstractObjectAssert
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.function.Consumer
 
 fun assertThat(actual: ConditionResponse?) = ConditionResponseAssert(actual)
+fun assertThat(actual: ConditionListResponse?) = ConditionListResponseAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [ConditionResponse].
@@ -29,7 +31,7 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     isNotNull
     with(actual!!) {
       if (!active) {
-        failWithMessage("Expected challenge to be active but it was not")
+        failWithMessage("Expected condition to be active but it was not")
       }
     }
     return this
@@ -39,7 +41,7 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     isNotNull
     with(actual!!) {
       if (active) {
-        failWithMessage("Expected challenge not to be active but it was")
+        failWithMessage("Expected condition not to be active but it was")
       }
     }
     return this
@@ -51,7 +53,7 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     isNotNull
     with(actual!!) {
       if (archiveReason != expected) {
-        failWithMessage("Expected challenge to have archive reason $expected but it was $archiveReason")
+        failWithMessage("Expected condition to have archive reason $expected but it was $archiveReason")
       }
     }
     return this
@@ -131,7 +133,7 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     isNotNull
     with(actual!!.conditionType) {
       if (categoryCode != expected) {
-        failWithMessage("Expected challenge category to be $expected, but was $categoryCode")
+        failWithMessage("Expected condition category to be $expected, but was $categoryCode")
       }
     }
     return this
@@ -141,7 +143,7 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     isNotNull
     with(actual!!.conditionType) {
       if (areaCode != expected) {
-        failWithMessage("Expected challenge area to be $expected, but was $areaCode")
+        failWithMessage("Expected condition area to be $expected, but was $areaCode")
       }
     }
     return this
@@ -222,6 +224,69 @@ class ConditionResponseAssert(actual: ConditionResponse?) :
     with(actual!!) {
       if (updatedAtPrison != expected) {
         failWithMessage("Expected updatedAtPrison to be $expected, but was $updatedAtPrison")
+      }
+    }
+    return this
+  }
+}
+
+/**
+ * AssertJ custom assertion for a [ConditionListResponse].
+ */
+class ConditionListResponseAssert(actual: ConditionListResponse?) :
+  AbstractObjectAssert<ConditionListResponseAssert, ConditionListResponse?>(
+    actual,
+    ConditionListResponseAssert::class.java,
+  ) {
+
+  fun hasNoConditions(): ConditionListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!conditions.isEmpty()) {
+        failWithMessage("Expected there to be no conditions, but there was: ${conditions.size}")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfConditions(expected: Int): ConditionListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (conditions.size != expected) {
+        failWithMessage("Expected there to be $expected conditions, but has ${conditions.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ConditionResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ConditionResponseAssert].
+   * Returns this [ConditionListResponseAssert] to allow further chained assertions on the parent [ConditionListResponse]
+   *
+   * The `conditionNumber` parameter is not zero indexed to make for better readability in tests. IE. the first condition
+   * should be referenced as `.condition(1) { .... }`
+   */
+  fun condition(conditionNumber: Int, consumer: Consumer<ConditionResponseAssert>): ConditionListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      val condition = conditions[conditionNumber - 1]
+      consumer.accept(assertThat(condition))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ConditionResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ConditionResponseAssert].
+   * Returns this [ConditionListResponseAssert] to allow further chained assertions on the parent [ConditionListResponse]
+   * The assertions on all [ConditionResponse]s must pass as true.
+   */
+  fun allConditions(consumer: Consumer<ConditionResponseAssert>): ConditionListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      conditions.onEach {
+        consumer.accept(assertThat(it))
       }
     }
     return this

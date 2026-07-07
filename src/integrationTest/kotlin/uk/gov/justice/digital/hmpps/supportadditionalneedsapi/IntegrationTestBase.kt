@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.reactive.server.WebTestClient
+import org.springframework.test.web.reactive.server.returnResult
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
@@ -55,6 +56,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.DataDeletionEventRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
@@ -77,8 +79,13 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventTyp
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidHmppsDomainEventsSqsMessage
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.ELSP_RO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
@@ -118,6 +125,11 @@ import java.util.concurrent.TimeUnit.SECONDS
 abstract class IntegrationTestBase {
 
   companion object {
+    const val GET_CHALLENGES_URI_TEMPLATE = "/profile/{prisonNumber}/challenges"
+    const val GET_STRENGTHS_URI_TEMPLATE = "/profile/{prisonNumber}/strengths"
+    const val GET_CONDITIONS_URI_TEMPLATE = "/profile/{prisonNumber}/conditions"
+    const val GET_SUPPORT_STRATEGIES_URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies"
+
     val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
     private val localStackContainer = LocalStackContainer.instance
@@ -214,6 +226,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   protected lateinit var elspReviewHistoryRepository: ElspReviewHistoryRepository
+
+  @Autowired
+  protected lateinit var dataDeletionEventRepository: DataDeletionEventRepository
 
   @Autowired
   protected lateinit var elspPlanService: EducationSupportPlanService
@@ -840,4 +855,36 @@ abstract class IntegrationTestBase {
   fun aSmallPause(duration: Long = 100L) {
     Thread.sleep(duration)
   }
+
+  protected fun aValidTokenWithAuthority(vararg roles: String, username: String = "auser_gen"): String = sarIntegrationTestHelper.jwtAuthHelper.createJwtAccessToken(roles = roles.toList(), username = username)
+
+  protected fun aValidTokenWithNoAuthorities(username: String = "auser_gen"): String = sarIntegrationTestHelper.jwtAuthHelper.createJwtAccessToken(roles = emptyList(), username = username)
+
+  fun getChallenges(prisonNumber: String): ChallengeListResponse = webTestClient.get()
+    .uri(GET_CHALLENGES_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<ChallengeListResponse>()
+    .body()
+
+  fun getStrengths(prisonNumber: String): StrengthListResponse = webTestClient.get()
+    .uri(GET_STRENGTHS_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<StrengthListResponse>()
+    .body()
+
+  fun getConditions(prisonNumber: String): ConditionListResponse = webTestClient.get()
+    .uri(GET_CONDITIONS_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<ConditionListResponse>()
+    .body()
+
+  fun getSupportStrategies(prisonNumber: String): SupportStrategyListResponse = webTestClient.get()
+    .uri(GET_SUPPORT_STRATEGIES_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<SupportStrategyListResponse>()
+    .body()
 }

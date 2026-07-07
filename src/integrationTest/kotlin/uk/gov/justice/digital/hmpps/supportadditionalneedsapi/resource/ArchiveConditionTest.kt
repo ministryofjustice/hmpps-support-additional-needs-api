@@ -4,6 +4,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
@@ -11,9 +12,9 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Sour
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveConditionRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
-import java.util.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
+import java.util.UUID
 
 class ArchiveConditionTest : IntegrationTestBase() {
   companion object {
@@ -52,11 +53,16 @@ class ArchiveConditionTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val conditionEntities = conditionRepository.findAllByPrisonNumber(prisonNumber)
+    val conditionList = getConditions(prisonNumber)
+    assertThat(conditionList)
+      .hasNumberOfConditions(1)
+      .condition(1) {
+        it.isNotActive()
+          .hasArchivedReason("archive reason")
+      }
 
-    assertThat(conditionEntities).hasSize(1)
-    assertThat(conditionEntities.first().active).isEqualTo(false)
-    assertThat(conditionEntities.first().archiveReason).isEqualTo("archive reason")
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -91,10 +97,10 @@ class ArchiveConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Condition with reference [${condition.reference}] has been archived for prisoner [$prisonNumber]")
@@ -117,10 +123,10 @@ class ArchiveConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Condition with reference [$ref] not found for prisoner [$prisonNumber]")
