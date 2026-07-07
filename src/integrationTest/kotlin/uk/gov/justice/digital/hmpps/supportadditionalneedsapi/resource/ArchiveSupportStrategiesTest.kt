@@ -4,14 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
-import java.util.*
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
+import java.util.UUID
 
 class ArchiveSupportStrategiesTest : IntegrationTestBase() {
   companion object {
@@ -51,11 +52,22 @@ class ArchiveSupportStrategiesTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
+    val supportStrategiesList = getSupportStrategies(prisonNumber)
+    assertThat(supportStrategiesList)
+      .hasNumberOfSupportStrategies(1)
+      .supportStrategy(1) {
+        it.isNotActive()
+          .hasArchivedReason("archive reason")
+      }
+
     val supportStrategies = supportStrategyRepository.findAllByPrisonNumber(prisonNumber)
 
     assertThat(supportStrategies).hasSize(1)
     assertThat(supportStrategies.first().active).isEqualTo(false)
     assertThat(supportStrategies.first().archiveReason).isEqualTo("archive reason")
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -90,10 +102,10 @@ class ArchiveSupportStrategiesTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Support Strategy with reference [${strategy.reference}] has been archived for prisoner [$prisonNumber]")
@@ -116,10 +128,10 @@ class ArchiveSupportStrategiesTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Support Strategy with reference [$ref] not found for prisoner [$prisonNumber]")

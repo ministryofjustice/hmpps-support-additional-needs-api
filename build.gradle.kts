@@ -74,6 +74,8 @@ dependencies {
 
   // Test fixtures dependencies
   testFixturesImplementation("org.assertj:assertj-core")
+  testFixturesImplementation("org.springframework.boot:spring-boot-starter-test")
+  testFixturesImplementation("io.projectreactor:reactor-core")
   testFixturesImplementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 }
 

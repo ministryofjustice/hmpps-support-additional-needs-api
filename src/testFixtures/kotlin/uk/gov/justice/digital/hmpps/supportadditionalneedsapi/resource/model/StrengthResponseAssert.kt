@@ -4,8 +4,10 @@ import org.assertj.core.api.AbstractObjectAssert
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.function.Consumer
 
 fun assertThat(actual: StrengthResponse?) = StrengthResponseAssert(actual)
+fun assertThat(actual: StrengthListResponse?) = StrengthListResponseAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [StrengthResponse].
@@ -233,6 +235,69 @@ class StrengthResponseAssert(actual: StrengthResponse?) :
     with(actual!!) {
       if (updatedAtPrison != expected) {
         failWithMessage("Expected updatedAtPrison to be $expected, but was $updatedAtPrison")
+      }
+    }
+    return this
+  }
+}
+
+/**
+ * AssertJ custom assertion for a [StrengthListResponse].
+ */
+class StrengthListResponseAssert(actual: StrengthListResponse?) :
+  AbstractObjectAssert<StrengthListResponseAssert, StrengthListResponse?>(
+    actual,
+    StrengthListResponseAssert::class.java,
+  ) {
+
+  fun hasNoStrengths(): StrengthListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!strengths.isEmpty()) {
+        failWithMessage("Expected there to be no strengths, but there was: ${strengths.size}")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfStrengths(expected: Int): StrengthListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (strengths.size != expected) {
+        failWithMessage("Expected there to be $expected strengths, but has ${strengths.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [StrengthResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [StrengthResponseAssert].
+   * Returns this [StrengthListResponseAssert] to allow further chained assertions on the parent [StrengthListResponse]
+   *
+   * The `strengthNumber` parameter is not zero indexed to make for better readability in tests. IE. the first strength
+   * should be referenced as `.strength(1) { .... }`
+   */
+  fun strength(strengthNumber: Int, consumer: Consumer<StrengthResponseAssert>): StrengthListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      val strength = strengths[strengthNumber - 1]
+      consumer.accept(assertThat(strength))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [StrengthResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [StrengthResponseAssert].
+   * Returns this [StrengthListResponseAssert] to allow further chained assertions on the parent [StrengthListResponse]
+   * The assertions on all [StrengthResponse]s must pass as true.
+   */
+  fun allStrengths(consumer: Consumer<StrengthResponseAssert>): StrengthListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      strengths.onEach {
+        consumer.accept(assertThat(it))
       }
     }
     return this

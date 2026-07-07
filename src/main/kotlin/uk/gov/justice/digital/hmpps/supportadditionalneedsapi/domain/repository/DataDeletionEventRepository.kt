@@ -6,4 +6,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Data
 import java.util.UUID
 
 @Repository
-interface DataDeletionEventRepository : JpaRepository<DataDeletionEventEntity, UUID>
+interface DataDeletionEventRepository : JpaRepository<DataDeletionEventEntity, UUID> {
+  fun findAllByPrisonNumber(prisonNumber: String): List<DataDeletionEventEntity>
+}

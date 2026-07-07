@@ -4,8 +4,10 @@ import org.assertj.core.api.AbstractObjectAssert
 import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.util.UUID
+import java.util.function.Consumer
 
 fun assertThat(actual: ChallengeResponse?) = ChallengeResponseAssert(actual)
+fun assertThat(actual: ChallengeListResponse?) = ChallengeListResponseAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [ChallengeResponse].
@@ -233,6 +235,69 @@ class ChallengeResponseAssert(actual: ChallengeResponse?) :
     with(actual!!) {
       if (updatedAtPrison != expected) {
         failWithMessage("Expected updatedAtPrison to be $expected, but was $updatedAtPrison")
+      }
+    }
+    return this
+  }
+}
+
+/**
+ * AssertJ custom assertion for a [ChallengeListResponse].
+ */
+class ChallengeListResponseAssert(actual: ChallengeListResponse?) :
+  AbstractObjectAssert<ChallengeListResponseAssert, ChallengeListResponse?>(
+    actual,
+    ChallengeListResponseAssert::class.java,
+  ) {
+
+  fun hasNoChallenges(): ChallengeListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!challenges.isEmpty()) {
+        failWithMessage("Expected there to be no challenges, but there was: ${challenges.size}")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfChallenges(expected: Int): ChallengeListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (challenges.size != expected) {
+        failWithMessage("Expected there to be $expected challenges, but has ${challenges.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ChallengeResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ChallengeResponseAssert].
+   * Returns this [ChallengeListResponseAssert] to allow further chained assertions on the parent [ChallengeListResponse]
+   *
+   * The `challengeNumber` parameter is not zero indexed to make for better readability in tests. IE. the first challenge
+   * should be referenced as `.challenge(1) { .... }`
+   */
+  fun challenge(challengeNumber: Int, consumer: Consumer<ChallengeResponseAssert>): ChallengeListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      val challenge = challenges[challengeNumber - 1]
+      consumer.accept(assertThat(challenge))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ChallengeResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ChallengeResponseAssert].
+   * Returns this [ChallengeListResponseAssert] to allow further chained assertions on the parent [ChallengeListResponse]
+   * The assertions on all [ChallengeResponse]s must pass as true.
+   */
+  fun allChallenges(consumer: Consumer<ChallengeResponseAssert>): ChallengeListResponseAssert {
+    isNotNull
+    with(actual!!) {
+      challenges.onEach {
+        consumer.accept(assertThat(it))
       }
     }
     return this
