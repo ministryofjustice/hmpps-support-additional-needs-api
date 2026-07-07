@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Ehc
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SarEducationSupportPlanReviewResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SubjectAccessRequestContent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
@@ -44,6 +45,7 @@ class SubjectAccessReportService(
   private val conditionService: ConditionService,
   private val needService: NeedService,
   private val ehcpStatusService: EhcpStatusService,
+  private val sarEducationSupportPlanReviewService: SarEducationSupportPlanReviewService,
 ) : HmppsPrisonSubjectAccessRequestService {
 
   override fun getPrisonContentFor(
@@ -56,6 +58,7 @@ class SubjectAccessReportService(
 
     val originalEducationSupportPlan = getOriginalEducationSupportPlanIfCreatedBeforeToDate(prn, toDateInstance)
     val ehcpStatuses = getEhcpStatuses(prn, toDateInstance)
+    val reviews = getReviews(prn, toDateInstance)
     val supportStrategies = getSupportStrategies(prn, fromDateInstance, toDateInstance)
     val nonAlnStrengths = getNonAlnStrengths(prn, fromDateInstance, toDateInstance)
     val nonAlnChallenges = getNonAlnChallenges(prn, fromDateInstance, toDateInstance)
@@ -68,6 +71,7 @@ class SubjectAccessReportService(
     return if (
       originalEducationSupportPlan != null ||
       ehcpStatuses.isNotEmpty() ||
+      reviews.isNotEmpty() ||
       supportStrategies.isNotEmpty() ||
       nonAlnStrengths.isNotEmpty() ||
       nonAlnChallenges.isNotEmpty() ||
@@ -81,6 +85,7 @@ class SubjectAccessReportService(
         content = SubjectAccessRequestContent(
           originalEducationSupportPlan = originalEducationSupportPlan,
           ehcpStatuses = ehcpStatuses,
+          reviews = reviews,
           supportStrategies = supportStrategies,
           nonAlnStrengths = nonAlnStrengths,
           nonAlnChallenges = nonAlnChallenges,
@@ -112,6 +117,16 @@ class SubjectAccessReportService(
     prn: String,
     toDateInstance: OffsetDateTime?,
   ): List<EhcpStatusResponse> = ehcpStatusService.getAllEhcpStatuses(prn)
+    .filter { it.createdAt.isEqualOrBefore(toDateInstance) }
+
+  /**
+   * Obtain the person's Education Support Plan reviews, each paired with the version of the plan as it was after that
+   * review. As with the plan and EHCP data, these are filtered on the toDate only (never the fromDate).
+   */
+  private fun getReviews(
+    prn: String,
+    toDateInstance: OffsetDateTime?,
+  ): List<SarEducationSupportPlanReviewResponse> = sarEducationSupportPlanReviewService.getReviewsWithTheirAssociatedPlanVersion(prn)
     .filter { it.createdAt.isEqualOrBefore(toDateInstance) }
 
   private fun getSupportStrategies(
