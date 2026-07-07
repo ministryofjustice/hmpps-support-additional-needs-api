@@ -44,8 +44,10 @@ class SarEducationSupportPlanReviewService(
   fun getReviewsWithTheirAssociatedPlanVersion(prisonNumber: String): List<SarEducationSupportPlanReviewResponse> {
     val reviewsOldestFirst = elspReviewRepository.findAllByPrisonNumber(prisonNumber)
       .sortedBy { it.createdAt }
+    // Order the plan versions oldest-first by when each version was last updated. Each version is written when the plan
+    // is created (the original) or updated (as part of a review), so `updatedAt` reflects that chronological sequence.
     val planHistoryVersionsOldestFirst = elspPlanHistoryRepository.findAllByPrisonNumber(prisonNumber)
-      .sortedBy { it.id.revisionNumber }
+      .sortedBy { it.updatedAt }
 
     return reviewsOldestFirst.mapIndexedNotNull { reviewIndex, review ->
       // The plan version associated with this review sits one place further along than the review, because plan-history
