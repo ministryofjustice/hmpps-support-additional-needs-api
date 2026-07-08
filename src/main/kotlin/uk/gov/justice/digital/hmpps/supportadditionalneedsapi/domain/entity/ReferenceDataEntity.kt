@@ -8,6 +8,7 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReferenceData
 import java.time.LocalDateTime
@@ -45,6 +46,18 @@ class ReferenceDataEntity(
     listSequence,
     isActive(),
   )
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as ReferenceDataEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, code = $code)"
 }
 
 interface ReferenceDataLookup {

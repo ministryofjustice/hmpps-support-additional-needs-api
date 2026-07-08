@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.JoinColumns
 import jakarta.persistence.ManyToOne
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import java.time.Instant
 import java.util.*
@@ -60,7 +61,19 @@ class OtherReviewContributorHistoryEntity(
 
   @Column(name = "updated_at_prison")
   val updatedAtPrison: String,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as OtherReviewContributorHistoryEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, name = $name)"
+}
 
 @Embeddable
 data class OtherReviewContributorHistoryEntityKey(

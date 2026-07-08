@@ -10,6 +10,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import jakarta.persistence.Version
+import org.hibernate.Hibernate
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.envers.Audited
 import org.hibernate.type.SqlTypes
@@ -84,7 +85,19 @@ data class PlanCreationScheduleEntity(
   @LastModifiedDate
   @Column
   var updatedAt: Instant? = null,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as PlanCreationScheduleEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
+}
 
 enum class PlanCreationScheduleStatus(val activeReview: Boolean) {
   SCHEDULED(true),
