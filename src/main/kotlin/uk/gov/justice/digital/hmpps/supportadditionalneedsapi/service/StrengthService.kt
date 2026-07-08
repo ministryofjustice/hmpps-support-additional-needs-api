@@ -17,7 +17,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthAlnScreenerException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.StrengthNotFoundException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.StrengthMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
@@ -29,7 +28,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Str
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateStrengthRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
-import java.util.*
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -39,6 +38,7 @@ class StrengthService(
   private val referenceDataRepository: ReferenceDataRepository,
   private val alnScreenerRepository: AlnScreenerRepository,
   private val strengthMapper: StrengthMapper,
+  private val dataDeletionEventService: DataDeletionEventService,
 ) {
   fun getStrengths(prisonNumber: String, includeAln: Boolean = true): StrengthListResponse {
     val nonAlnStrengths = strengthRepository
@@ -184,8 +184,6 @@ class StrengthService(
     additionalInfoField = "strengthReference,reason",
   )
   fun deleteStrength(prisonNumber: String, strengthReference: UUID, prisonId: String, reason: DeletionReason) {
-    val deletionReason = DeletionReasonMapper.toEntity(reason)
-
     val strength = strengthRepository.getStrengthEntityByPrisonNumberAndReference(prisonNumber, strengthReference)
       ?: throw StrengthNotFoundException(prisonNumber, strengthReference)
 
@@ -195,7 +193,10 @@ class StrengthService(
     }
 
     strengthRepository.delete(strength)
-    log.info("Processed Delete strength for $prisonNumber (reason=$deletionReason)")
+
+    dataDeletionEventService.recordDataDeletionEvent(prisonNumber, prisonId, reason)
+
+    log.info("Processed Delete strength for $prisonNumber (reason=$reason)")
   }
 
   @Transactional

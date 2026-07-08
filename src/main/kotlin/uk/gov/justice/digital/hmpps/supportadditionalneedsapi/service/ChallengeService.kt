@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.Challen
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ChallengeMapper
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.IdentificationSourceMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
@@ -29,7 +28,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cre
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
-import java.util.*
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -41,6 +40,7 @@ class ChallengeService(
   private val alnScreenerRepository: AlnScreenerRepository,
   private val scheduleService: ScheduleService,
   private val needService: NeedService,
+  private val dataDeletionEventService: DataDeletionEventService,
 ) {
   fun getChallenges(prisonNumber: String, includeAln: Boolean = true): ChallengeListResponse {
     val nonAlnChallenges =
@@ -200,8 +200,6 @@ class ChallengeService(
     additionalInfoField = "challengeReference,reason",
   )
   fun deleteChallenge(prisonNumber: String, challengeReference: UUID, prisonId: String, reason: DeletionReason) {
-    val deletionReason = DeletionReasonMapper.toEntity(reason)
-
     val challenge = challengeRepository.getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       ?: throw ChallengeNotFoundException(prisonNumber, challengeReference)
 
@@ -220,7 +218,10 @@ class ChallengeService(
     } else {
       log.info("The challenge deletion did not change the overall need of $prisonNumber")
     }
-    log.info("Processed Delete challenge for $prisonNumber (reason=$deletionReason)")
+
+    dataDeletionEventService.recordDataDeletionEvent(prisonNumber, prisonId, reason)
+
+    log.info("Processed Delete challenge for $prisonNumber (reason=$reason)")
   }
 
   @Transactional
