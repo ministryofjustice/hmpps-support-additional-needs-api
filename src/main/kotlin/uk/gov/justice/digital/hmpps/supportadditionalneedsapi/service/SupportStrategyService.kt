@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.validateReferenceData
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.SupportStrategyNotFoundException
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.SupportStrategyMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateSupportStrategiesRequest
@@ -23,7 +22,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Sup
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateSupportStrategyRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.timeline.TimelineEvent
-import java.util.*
+import java.util.UUID
 
 private val log = KotlinLogging.logger {}
 
@@ -32,6 +31,7 @@ class SupportStrategyService(
   private val supportStrategyRepository: SupportStrategyRepository,
   private val referenceDataRepository: ReferenceDataRepository,
   private val supportStrategyMapper: SupportStrategyMapper,
+  private val dataDeletionEventService: DataDeletionEventService,
 ) {
   fun getSupportStrategies(prisonNumber: String): SupportStrategyListResponse {
     val strategyEntities = supportStrategyRepository.findAllByPrisonNumber(prisonNumber)
@@ -133,8 +133,6 @@ class SupportStrategyService(
     prisonId: String,
     reason: DeletionReason,
   ) {
-    val deletionReason = DeletionReasonMapper.toEntity(reason)
-
     val supportStrategy = supportStrategyRepository.getSupportStrategyEntityByPrisonNumberAndReference(
       prisonNumber,
       supportStrategyReference,
@@ -142,6 +140,9 @@ class SupportStrategyService(
       ?: throw SupportStrategyNotFoundException(prisonNumber, supportStrategyReference)
 
     supportStrategyRepository.delete(supportStrategy)
-    log.info("Processed Delete support strategy for $prisonNumber (reason=$deletionReason)")
+
+    dataDeletionEventService.recordDataDeletionEvent(prisonNumber, prisonId, reason)
+
+    log.info("Processed Delete support strategy for $prisonNumber (reason=$reason)")
   }
 }

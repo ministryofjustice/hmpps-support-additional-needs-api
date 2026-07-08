@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Time
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnScreenerRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ALNScreenerNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ALNScreenerMapper
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.DeletionReasonMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
@@ -34,6 +33,7 @@ class ALNScreenerService(
   private val needService: NeedService,
   private val alnScreenerMapper: ALNScreenerMapper,
   private val scheduleService: ScheduleService,
+  private val dataDeletionEventService: DataDeletionEventService,
 ) {
   @Transactional
   @TimelineEvent(
@@ -70,8 +70,6 @@ class ALNScreenerService(
     additionalInfoField = "reason",
   )
   fun deleteCurrentScreener(prisonNumber: String, prisonId: String, reason: DeletionReason) {
-    val deletionReason = DeletionReasonMapper.toEntity(reason)
-
     val currentScreener = alnScreenerRepository
       .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
       ?: throw ALNScreenerNotFoundException(prisonNumber)
@@ -86,7 +84,9 @@ class ALNScreenerService(
       .findFirstByPrisonNumberOrderByScreeningDateDescCreatedAtDesc(prisonNumber)
       ?.let { unarchiveScreenerChildren(it) }
 
-    log.info("Processed delete current ALN screener for $prisonNumber (reason=$deletionReason)")
+    dataDeletionEventService.recordDataDeletionEvent(prisonNumber, prisonId, reason)
+
+    log.info("Processed delete current ALN screener for $prisonNumber (reason=$reason)")
   }
 
   private fun unarchiveScreenerChildren(screener: ALNScreenerEntity) {
