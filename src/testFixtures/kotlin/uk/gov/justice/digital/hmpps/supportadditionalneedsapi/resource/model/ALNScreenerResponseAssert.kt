@@ -7,6 +7,7 @@ import java.util.UUID
 import java.util.function.Consumer
 
 fun assertThat(actual: ALNScreenerResponse?) = ALNScreenerResponseAssert(actual)
+fun assertThat(actual: ALNScreeners?) = ALNScreenersAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [ALNScreenerResponse]
@@ -214,6 +215,69 @@ class ALNScreenerResponseAssert(actual: ALNScreenerResponse?) : AbstractObjectAs
     with(actual!!) {
       if (updatedAtPrison != expected) {
         failWithMessage("Expected updatedAtPrison to be $expected, but was $updatedAtPrison")
+      }
+    }
+    return this
+  }
+}
+
+/**
+ * AssertJ custom assertion for a [ALNScreeners].
+ */
+class ALNScreenersAssert(actual: ALNScreeners?) :
+  AbstractObjectAssert<ALNScreenersAssert, ALNScreeners?>(
+    actual,
+    ALNScreenersAssert::class.java,
+  ) {
+
+  fun hasNoScreeners(): ALNScreenersAssert {
+    isNotNull
+    with(actual!!) {
+      if (!screeners.isEmpty()) {
+        failWithMessage("Expected there to be no screeners, but there was: ${screeners.size}")
+      }
+    }
+    return this
+  }
+
+  fun hasNumberOfScreeners(expected: Int): ALNScreenersAssert {
+    isNotNull
+    with(actual!!) {
+      if (screeners.size != expected) {
+        failWithMessage("Expected there to be $expected screeners, but has ${screeners.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [ALNScreenerResponse]. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNScreenerResponseAssert].
+   * Returns this [ALNScreenersAssert] to allow further chained assertions on the parent [ALNScreeners]
+   *
+   * The `screenerNumber` parameter is not zero indexed to make for better readability in tests. IE. the first screener
+   * should be referenced as `.screener(1) { .... }`
+   */
+  fun screener(screenerNumber: Int, consumer: Consumer<ALNScreenerResponseAssert>): ALNScreenersAssert {
+    isNotNull
+    with(actual!!) {
+      val screener = screeners[screenerNumber - 1]
+      consumer.accept(assertThat(screener))
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into all child [ALNScreenerResponse]s. Takes a lambda as the method argument
+   * to call assertion methods provided by [ALNScreenerResponseAssert].
+   * Returns this [ALNScreenersAssert] to allow further chained assertions on the parent [ALNScreeners]
+   * The assertions on all [ALNScreenerResponse]s must pass as true.
+   */
+  fun allScreeners(consumer: Consumer<ALNScreenerResponseAssert>): ALNScreenersAssert {
+    isNotNull
+    with(actual!!) {
+      screeners.onEach {
+        consumer.accept(assertThat(it))
       }
     }
     return this

@@ -60,6 +60,16 @@ class StrengthResponseAssert(actual: StrengthResponse?) :
     return this
   }
 
+  fun hasNoArchivedReason(): StrengthResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!archiveReason.isNullOrEmpty()) {
+        failWithMessage("Expected strength to not have an archive reason but it was $archiveReason")
+      }
+    }
+    return this
+  }
+
   fun isFromAlnScreener(): StrengthResponseAssert {
     isNotNull
     with(actual!!) {

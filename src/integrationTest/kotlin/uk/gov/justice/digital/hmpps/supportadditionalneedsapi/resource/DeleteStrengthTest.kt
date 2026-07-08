@@ -4,14 +4,15 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.StrengthEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.time.LocalDate
 import java.util.UUID
 
@@ -49,8 +50,11 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val strengths = strengthRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(strengths).isEmpty()
+    val strengths = getStrengths(prisonNumber)
+    assertThat(strengths).hasNoStrengths()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -91,10 +95,16 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val remaining = strengthRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(remaining).hasSize(1)
-    assertThat(remaining.first().reference).isEqualTo(sensoryStrength.reference)
-    assertThat(remaining.first().strengthType.key.code).isEqualTo("SENSORY_PROCESSING")
+    val strengths = getStrengths(prisonNumber)
+    assertThat(strengths)
+      .hasNumberOfStrengths(1)
+      .strength(1) {
+        it.hasReference(sensoryStrength.reference)
+          .hasCode("SENSORY_PROCESSING")
+      }
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -127,8 +137,11 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val strengths = strengthRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(strengths).isEmpty()
+    val strengths = getStrengths(prisonNumber)
+    assertThat(strengths).hasNoStrengths()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -146,13 +159,16 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Strength with reference [$ref] not found for prisoner [$prisonNumber]")
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -191,16 +207,19 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Strength with reference [${strength.reference}] cannot be modified as it is an ALN screener strength for prisoner [$prisonNumber]")
 
     // and the strength is still present
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber)).hasSize(1)
+    assertThat(getStrengths(prisonNumber)).hasNumberOfStrengths(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -230,16 +249,19 @@ class DeleteStrengthTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Strength with reference [${strength.reference}] not found for prisoner [$prisonerB]")
 
     // and the original is untouched
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonerA)).hasSize(1)
+    assertThat(getStrengths(prisonerA)).hasNumberOfStrengths(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonerA)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test

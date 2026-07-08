@@ -81,6 +81,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessa
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidEducationALNAssessmentUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidHmppsDomainEventsSqsMessage
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.ELSP_RO
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
@@ -130,6 +131,7 @@ abstract class IntegrationTestBase {
     const val GET_STRENGTHS_URI_TEMPLATE = "/profile/{prisonNumber}/strengths"
     const val GET_CONDITIONS_URI_TEMPLATE = "/profile/{prisonNumber}/conditions"
     const val GET_SUPPORT_STRATEGIES_URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies"
+    const val GET_ALN_SCREENERS_URI_TEMPLATE = "/profile/{prisonNumber}/aln-screener"
 
     val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
@@ -936,5 +938,12 @@ abstract class IntegrationTestBase {
     .bearerToken(aValidTokenWithAuthority(ELSP_RO))
     .exchange()
     .returnResult<SupportStrategyListResponse>()
+    .body()
+
+  fun getAlnScreeners(prisonNumber: String): ALNScreeners = webTestClient.get()
+    .uri(GET_ALN_SCREENERS_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<ALNScreeners>()
     .body()
 }
