@@ -7,6 +7,7 @@ import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import java.time.Instant
 import java.time.LocalDate
@@ -59,7 +60,19 @@ data class ReviewScheduleHistoryEntity(
 
   @EmbeddedId
   val id: ReviewScheduleHistoryEntityKey,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as ReviewScheduleHistoryEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
+}
 
 @Embeddable
 data class ReviewScheduleHistoryEntityKey(

@@ -6,6 +6,7 @@ import jakarta.persistence.EntityListeners
 import jakarta.persistence.FetchType
 import jakarta.persistence.OneToMany
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.time.LocalDate
 
@@ -39,4 +40,16 @@ data class ALNScreenerEntity(
 ) : BaseAuditableEntity() {
   val needsIdentified: Boolean
     get() = challenges.isNotEmpty() || strengths.isNotEmpty()
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as ALNScreenerEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
 }

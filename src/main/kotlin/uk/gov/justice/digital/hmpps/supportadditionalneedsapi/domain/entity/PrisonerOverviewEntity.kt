@@ -4,6 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.hibernate.annotations.Immutable
 import java.time.LocalDate
 
@@ -54,4 +55,16 @@ data class PrisonerOverviewEntity(
 
   @Column(name = "has_need")
   val hasNeed: Boolean = false,
-)
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as PrisonerOverviewEntity
+
+    return prisonNumber == other.prisonNumber
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(prisonNumber = $prisonNumber)"
+}

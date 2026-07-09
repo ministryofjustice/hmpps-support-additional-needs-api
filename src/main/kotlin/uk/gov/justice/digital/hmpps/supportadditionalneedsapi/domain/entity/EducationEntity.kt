@@ -4,6 +4,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.EntityListeners
 import jakarta.persistence.Table
+import org.hibernate.Hibernate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
 import java.util.UUID
 
@@ -30,4 +31,16 @@ data class EducationEntity(
 
   @Column(nullable = false)
   val curiousReference: UUID? = null,
-) : BaseAuditableEntity()
+) : BaseAuditableEntity() {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false
+    other as EducationEntity
+
+    return id == other.id
+  }
+
+  override fun hashCode(): Int = javaClass.hashCode()
+
+  override fun toString(): String = this::class.simpleName + "(id = $id, prisonNumber = $prisonNumber)"
+}
