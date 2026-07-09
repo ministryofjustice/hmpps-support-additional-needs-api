@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ALNScreenerEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ChallengeEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
@@ -14,8 +16,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.time.LocalDate
 import java.util.UUID
 
@@ -53,8 +55,11 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(challenges).isEmpty()
+    val challenges = getChallenges(prisonNumber)
+    assertThat(challenges).hasNoChallenges()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -95,10 +100,16 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val remaining = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(remaining).hasSize(1)
-    assertThat(remaining.first().reference).isEqualTo(sensoryChallenge.reference)
-    assertThat(remaining.first().challengeType.key.code).isEqualTo("SENSORY_PROCESSING")
+    val challenges = getChallenges(prisonNumber)
+    assertThat(challenges)
+      .hasNumberOfChallenges(1)
+      .challenge(1) {
+        it.hasReference(sensoryChallenge.reference)
+          .hasCode("SENSORY_PROCESSING")
+      }
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -131,8 +142,11 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val challenges = challengeRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(challenges).isEmpty()
+    val challenges = getChallenges(prisonNumber)
+    assertThat(challenges).hasNoChallenges()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -150,10 +164,10 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Challenge with reference [$ref] not found for prisoner [$prisonNumber]")
@@ -195,16 +209,19 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .is4xxClientError
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.CONFLICT.value())
       .hasUserMessage("Challenge with reference [${challenge.reference}] cannot be modified as it is an ALN screener challenge for prisoner [$prisonNumber]")
 
     // and the challenge is still present
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber)).hasSize(1)
+    assertThat(getChallenges(prisonNumber)).hasNumberOfChallenges(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -234,16 +251,19 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Challenge with reference [${challenge.reference}] not found for prisoner [$prisonerB]")
 
     // and the original is untouched
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonerA)).hasSize(1)
+    assertThat(getChallenges(prisonerA)).hasNumberOfChallenges(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonerA)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -357,9 +377,9 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(ChallengeListResponse::class.java)
+      .returnResult<ChallengeListResponse>()
 
-    val created = createResponse.responseBody.blockFirst()!!
+    val created = createResponse.body()
     val challengeReference = created.challenges.first().reference
 
     val scheduleBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -408,9 +428,9 @@ class DeleteChallengeTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(ChallengeListResponse::class.java)
+      .returnResult<ChallengeListResponse>()
 
-    val created = createResponse.responseBody.blockFirst()!!
+    val created = createResponse.body()
     val memoryReference = created.challenges.first { it.challengeType.code == "MEMORY" }.reference
 
     val scheduleBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)

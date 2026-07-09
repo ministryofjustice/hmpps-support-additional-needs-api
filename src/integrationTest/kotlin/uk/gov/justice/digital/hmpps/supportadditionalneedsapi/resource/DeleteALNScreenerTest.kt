@@ -3,17 +3,16 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNChallenge
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreenerRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNScreeners
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALNStrength
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.time.LocalDate
 import java.util.UUID
 
@@ -46,9 +45,15 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    assertThat(alnScreenerRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
+    val alnScreeners = getAlnScreeners(prisonNumber)
+    assertThat(alnScreeners).hasNoScreeners()
+    val allChallenges = getChallenges(prisonNumber)
+    assertThat(allChallenges).hasNoChallenges()
+    val allStrengths = getStrengths(prisonNumber)
+    assertThat(allStrengths).hasNoStrengths()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -79,15 +84,18 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
     )
 
     // Sanity-check the pre-delete state via the public API
-    val pre = getScreeners(prisonNumber)
-    assertThat(pre.screeners).hasSize(2)
-    val preCurrent = pre.screeners.first()
-    assertThat(preCurrent.screenerDate).isEqualTo(LocalDate.parse("2020-06-01"))
-    assertThat(preCurrent.challenges.map { it.active }).containsOnly(true)
-    assertThat(preCurrent.strengths.map { it.active }).containsOnly(true)
-    val prePrevious = pre.screeners.last()
-    assertThat(prePrevious.challenges.map { it.active }).containsOnly(false)
-    assertThat(prePrevious.strengths.map { it.active }).containsOnly(false)
+    val screenersBeforeDelete = getAlnScreeners(prisonNumber)
+    assertThat(screenersBeforeDelete)
+      .hasNumberOfScreeners(2)
+      .screener(1) {
+        it.hasScreenerDate(LocalDate.parse("2020-06-01"))
+          .allChallenges { it.isActive() }
+          .allStrengths { it.isActive() }
+      }
+      .screener(2) {
+        it.allChallenges { it.isArchived() }
+          .allStrengths { it.isArchived() }
+      }
 
     // When — delete the current screener
     webTestClient.delete()
@@ -98,23 +106,27 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .isNoContent
 
     // Then — only the older screener remains and is now current with re-activated children
-    val post = getScreeners(prisonNumber)
-    assertThat(post.screeners).hasSize(1)
-    val current = post.screeners.first()
-    assertThat(current.screenerDate).isEqualTo(LocalDate.parse("2020-01-01"))
-    assertThat(current.createdAtPrison).isEqualTo("NWI")
-    assertThat(current.challenges.map { it.challengeType.code }).containsExactly("MEMORY")
-    assertThat(current.strengths.map { it.strengthType.code }).containsExactly("PEOPLE_PERSON")
-    assertThat(current.challenges.map { it.active }).containsOnly(true)
-    assertThat(current.strengths.map { it.active }).containsOnly(true)
-    assertThat(current.challenges.map { it.archiveReason }).containsOnly(null)
-    assertThat(current.strengths.map { it.archiveReason }).containsOnly(null)
+    val screenersAfterDelete = getAlnScreeners(prisonNumber)
+    assertThat(screenersAfterDelete)
+      .hasNumberOfScreeners(1)
+      .screener(1) {
+        it.hasScreenerDate(LocalDate.parse("2020-01-01"))
+          .wasCreatedAtPrison("NWI")
+          .hasNumberOfChallenges(1)
+          .challenge(1) {
+            it.isActive()
+              .hasNoArchivedReason()
+              .hasCode("MEMORY")
+          }
+          .hasNumberOfStrengths(1)
+          .strength(1) {
+            it.hasNoArchivedReason()
+              .hasCode("PEOPLE_PERSON")
+          }
+      }
 
-    // Defensive — direct repository checks confirm screener 2's children were cascade-deleted
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber).map { it.challengeType.key.code })
-      .containsExactly("MEMORY")
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber).map { it.strengthType.key.code })
-      .containsExactly("PEOPLE_PERSON")
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -131,10 +143,10 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("ALN Screener not found for prisoner [$prisonNumber]")
@@ -252,13 +264,18 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .isNoContent
 
     // Then — prisonerB is untouched
-    val prisonerBScreeners = getScreeners(prisonerB)
-    assertThat(prisonerBScreeners.screeners).hasSize(1)
-    val prisonerBCurrent = prisonerBScreeners.screeners.first()
-    assertThat(prisonerBCurrent.challenges.map { it.challengeType.code }).containsExactly("SPEED_OF_CALCULATION")
-    assertThat(prisonerBCurrent.strengths.map { it.strengthType.code }).containsExactly("SPATIAL_AWARENESS")
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonerB)).hasSize(1)
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonerB)).hasSize(1)
+    val prisonerBScreeners = getAlnScreeners(prisonerB)
+    assertThat(prisonerBScreeners)
+      .hasNumberOfScreeners(1)
+      .screener(1) {
+        it.hasNumberOfChallenges(1)
+          .challenge(1) { it.hasCode("SPEED_OF_CALCULATION") }
+          .hasNumberOfStrengths(1)
+          .strength(1) { it.hasCode("SPATIAL_AWARENESS") }
+      }
+
+    assertThat(dataDeletionEventRepository.findAllByPrisonNumber(prisonerA)).hasSize(1)
+    assertThat(dataDeletionEventRepository.findAllByPrisonNumber(prisonerB)).isEmpty()
   }
 
   @Test
@@ -297,7 +314,11 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .isNoContent
 
     // Then — ALN screener is gone, but AlnAssessmentEntity is still present and unchanged
-    assertThat(alnScreenerRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
+    val alnScreeners = getAlnScreeners(prisonNumber)
+    assertThat(alnScreeners).hasNoScreeners()
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
+
     val assessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     assertThat(assessment).isNotNull
     assertThat(assessment!!.curiousReference).isEqualTo(curiousReference)
@@ -371,14 +392,20 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val post = getScreeners(prisonNumber)
-    assertThat(post.screeners).hasSize(1)
-    val current = post.screeners.first()
-    assertThat(current.screenerDate).isEqualTo(LocalDate.parse("2020-01-01"))
-    assertThat(current.challenges).isEmpty()
-    assertThat(current.strengths).isEmpty()
-    assertThat(challengeRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
-    assertThat(strengthRepository.findAllByPrisonNumber(prisonNumber)).isEmpty()
+    val alnScreeners = getAlnScreeners(prisonNumber)
+    assertThat(alnScreeners)
+      .hasNumberOfScreeners(1)
+      .screener(1) {
+        it.hasNoChallenges()
+          .hasNoStrengths()
+      }
+    val allChallenges = getChallenges(prisonNumber)
+    assertThat(allChallenges).hasNoChallenges()
+    val allStrengths = getStrengths(prisonNumber)
+    assertThat(allStrengths).hasNoStrengths()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   private fun createScreener(
@@ -402,14 +429,4 @@ class DeleteALNScreenerTest : IntegrationTestBase() {
       .expectStatus()
       .isCreated
   }
-
-  private fun getScreeners(prisonNumber: String): ALNScreeners = webTestClient.get()
-    .uri(URI_TEMPLATE, prisonNumber)
-    .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
-    .exchange()
-    .expectStatus()
-    .isOk
-    .expectBody<ALNScreeners>()
-    .returnResult()
-    .responseBody!!
 }

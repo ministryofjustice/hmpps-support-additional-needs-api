@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.returnResult
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
@@ -14,8 +16,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateConditionsRequest
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.util.UUID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Source as ModelSource
 
@@ -54,8 +56,11 @@ class DeleteConditionTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(conditions).isEmpty()
+    val conditions = getConditions(prisonNumber)
+    assertThat(conditions).hasNoConditions()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -98,10 +103,16 @@ class DeleteConditionTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val remaining = conditionRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(remaining).hasSize(1)
-    assertThat(remaining.first().reference).isEqualTo(dyslexiaCondition.reference)
-    assertThat(remaining.first().conditionType.key.code).isEqualTo("DYSLEXIA")
+    val conditions = getConditions(prisonNumber)
+    assertThat(conditions)
+      .hasNumberOfConditions(1)
+      .condition(1) {
+        it.hasReference(dyslexiaCondition.reference)
+          .hasCode("DYSLEXIA")
+      }
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -135,8 +146,11 @@ class DeleteConditionTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(conditions).isEmpty()
+    val conditions = getConditions(prisonNumber)
+    assertThat(conditions).hasNoConditions()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -154,13 +168,16 @@ class DeleteConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Condition with reference [$ref] not found for prisoner [$prisonNumber]")
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -191,16 +208,19 @@ class DeleteConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Condition with reference [${condition.reference}] not found for prisoner [$prisonerB]")
 
     // and the original is untouched
-    assertThat(conditionRepository.findAllByPrisonNumber(prisonerA)).hasSize(1)
+    assertThat(getConditions(prisonerA)).hasNumberOfConditions(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonerA)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -315,9 +335,9 @@ class DeleteConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(ConditionListResponse::class.java)
+      .returnResult<ConditionListResponse>()
 
-    val created = createResponse.responseBody.blockFirst()!!
+    val created = createResponse.body()
     val conditionReference = created.conditions.first().reference
 
     val scheduleBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -368,9 +388,9 @@ class DeleteConditionTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isCreated
-      .returnResult(ConditionListResponse::class.java)
+      .returnResult<ConditionListResponse>()
 
-    val created = createResponse.responseBody.blockFirst()!!
+    val created = createResponse.body()
     val adhdReference = created.conditions.first { it.conditionType.code == "ADHD" }.reference
 
     val scheduleBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)

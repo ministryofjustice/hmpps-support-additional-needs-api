@@ -4,13 +4,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.body
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReferenceDataKey
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.SupportStrategyEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
 import java.util.UUID
 
 class DeleteSupportStrategyTest : IntegrationTestBase() {
@@ -48,8 +49,11 @@ class DeleteSupportStrategyTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val strategies = supportStrategyRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(strategies).isEmpty()
+    val strategies = getSupportStrategies(prisonNumber)
+    assertThat(strategies).hasNoSupportStrategies()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -90,10 +94,16 @@ class DeleteSupportStrategyTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val remaining = supportStrategyRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(remaining).hasSize(1)
-    assertThat(remaining.first().reference).isEqualTo(sensoryStrategy.reference)
-    assertThat(remaining.first().supportStrategyType.key.code).isEqualTo("SENSORY")
+    val supportStrategies = getSupportStrategies(prisonNumber)
+    assertThat(supportStrategies)
+      .hasNumberOfSupportStrategies(1)
+      .supportStrategy(1) {
+        it.hasReference(sensoryStrategy.reference)
+          .hasCode("SENSORY")
+      }
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -126,8 +136,11 @@ class DeleteSupportStrategyTest : IntegrationTestBase() {
       .isNoContent
 
     // Then
-    val strategies = supportStrategyRepository.findAllByPrisonNumber(prisonNumber)
-    assertThat(strategies).isEmpty()
+    val strategies = getSupportStrategies(prisonNumber)
+    assertThat(strategies).hasNoSupportStrategies()
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).hasSize(1)
   }
 
   @Test
@@ -145,13 +158,16 @@ class DeleteSupportStrategyTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Support Strategy with reference [$ref] not found for prisoner [$prisonNumber]")
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonNumber)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test
@@ -181,16 +197,19 @@ class DeleteSupportStrategyTest : IntegrationTestBase() {
       .exchange()
       .expectStatus()
       .isNotFound
-      .returnResult(ErrorResponse::class.java)
+      .returnError()
 
     // Then
-    val actual = response.responseBody.blockFirst()
+    val actual = response.body()
     assertThat(actual)
       .hasStatus(HttpStatus.NOT_FOUND.value())
       .hasUserMessage("Support Strategy with reference [${strategy.reference}] not found for prisoner [$prisonerB]")
 
     // and the original is untouched
-    assertThat(supportStrategyRepository.findAllByPrisonNumber(prisonerA)).hasSize(1)
+    assertThat(getSupportStrategies(prisonerA)).hasNumberOfSupportStrategies(1)
+
+    val dataDeletionEvents = dataDeletionEventRepository.findAllByPrisonNumber(prisonerA)
+    assertThat(dataDeletionEvents).isEmpty()
   }
 
   @Test

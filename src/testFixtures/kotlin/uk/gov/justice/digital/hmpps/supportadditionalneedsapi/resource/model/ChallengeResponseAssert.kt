@@ -60,6 +60,16 @@ class ChallengeResponseAssert(actual: ChallengeResponse?) :
     return this
   }
 
+  fun hasNoArchivedReason(): ChallengeResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (!archiveReason.isNullOrEmpty()) {
+        failWithMessage("Expected challenge to not have an archive reason but it was $archiveReason")
+      }
+    }
+    return this
+  }
+
   fun isFromAlnScreener(): ChallengeResponseAssert {
     isNotNull
     with(actual!!) {
