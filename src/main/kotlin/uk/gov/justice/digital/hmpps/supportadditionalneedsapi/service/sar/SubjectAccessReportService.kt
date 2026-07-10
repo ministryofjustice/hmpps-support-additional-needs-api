@@ -169,7 +169,7 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): List<PlanCreationScheduleResponse> = planCreationScheduleService.getSchedules(prn, includeAllHistory = true).planCreationSchedules
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
-    .sortedBy { it.version }
+    .sortedBy { it.updatedAt }
 
   /**
    * Obtain all review schedules for the prisoner
@@ -180,7 +180,7 @@ class SubjectAccessReportService(
     toDateInstance: OffsetDateTime?,
   ): List<ReviewScheduleResponse> = reviewScheduleService.getSchedules(prn).reviewSchedules
     .filter { it.createdAt.inRange(fromDateInstance, toDateInstance) }
-    .sortedBy { it.version }
+    .sortedBy { it.updatedAt }
 
   /**
    * Obtain all conditions of the prisoner
