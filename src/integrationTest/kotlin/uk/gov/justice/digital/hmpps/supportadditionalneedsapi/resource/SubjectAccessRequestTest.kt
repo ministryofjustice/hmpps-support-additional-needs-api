@@ -269,4 +269,77 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
           .hasCuriousReference(UUID.fromString("afcd7235-c13b-48c4-8424-61718b2255ba"))
       }
   }
+
+  @Test
+  fun `should pair each review with its own plan version given a review that changed none of the plan answers`() {
+    // Given
+    // Reproduces the reporting problem seen for a real PRN: a review submitted with `anyChanges = false`
+    // writes no new plan history version, so the number of plan history versions is NOT the number of reviews + 1.
+    //
+    // The data below builds this history:
+    //   plan history: [ original, afterFirstReview, afterThirdReview ]  (3 versions - the 2nd review changed nothing)
+    //   reviews:      [ first,    second,           third ]             (3 reviews)
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    anElSPExists(prisonNumber)
+    val reviewSchedule = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
+
+    // 1st review - changed the plan, so a new plan history version is written.
+    aPlanReviewExists(
+      prisonNumber,
+      reviewScheduleReference = reviewSchedule.reference,
+      teachingAdjustments = "teachingAdjustmentsFromFirstReview",
+      detail = "detailFromFirstReview",
+      reviewCreatedByName = "Alice First",
+      reviewCreatedByJobRole = "Teacher",
+    )
+    // 2nd review - changed nothing, so NO new plan history version is written. The plan still reads as it did after
+    // the 1st review.
+    aPlanReviewWithNoPlanChangesExists(
+      prisonNumber,
+      reviewScheduleReference = reviewSchedule.reference,
+      reviewCreatedByName = "Bob Second",
+      reviewCreatedByJobRole = "Tutor",
+    )
+    // 3rd review - changed the plan again, so a new plan history version is written.
+    aPlanReviewExists(
+      prisonNumber,
+      reviewScheduleReference = reviewSchedule.reference,
+      teachingAdjustments = "teachingAdjustmentsFromThirdReview",
+      detail = "detailFromThirdReview",
+      reviewCreatedByName = "Carol Third",
+      reviewCreatedByJobRole = "Teaching assistant",
+    )
+
+    // When
+    val response = webTestClient.get()
+      .uri { it.path(URI_TEMPLATE).queryParam("prn", prisonNumber).build() }
+      .headers(setAuthorisation(roles = listOf("ROLE_SAR_DATA_ACCESS")))
+      .exchange()
+      .expectStatus()
+      .isOk
+      .returnResult<HmppsSubjectAccessRequestContent>()
+
+    // Then
+    val actual = objectMapper.convertValue<SubjectAccessRequestContent>(response.responseBody.blockFirst()!!.content)
+    assertThat(actual)
+      // All three reviews must be reported - none should be dropped.
+      .hasNumberOfReviews(3)
+      .review(1) {
+        it.hasReviewCreatedBy("Alice First", "Teacher")
+          .hasTeachingAdjustments("teachingAdjustmentsFromFirstReview")
+          .hasOtherDetails("detailFromFirstReview")
+      }
+      .review(2) {
+        // This review changed nothing, so it must show the plan as it stood - ie. unchanged since the 1st review.
+        it.hasReviewCreatedBy("Bob Second", "Tutor")
+          .hasTeachingAdjustments("teachingAdjustmentsFromFirstReview")
+          .hasOtherDetails("detailFromFirstReview")
+      }
+      .review(3) {
+        it.hasReviewCreatedBy("Carol Third", "Teaching assistant")
+          .hasTeachingAdjustments("teachingAdjustmentsFromThirdReview")
+          .hasOtherDetails("detailFromThirdReview")
+      }
+  }
 }
