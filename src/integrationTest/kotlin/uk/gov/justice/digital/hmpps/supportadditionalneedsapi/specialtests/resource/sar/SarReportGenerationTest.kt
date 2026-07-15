@@ -43,7 +43,11 @@ class SarReportGenerationTest :
 
   override fun setupTestData() {
     stubGetDisplayName("testuser")
-    anElSPExists(prisonNumber)
+    anElSPExists(
+      prisonNumber = prisonNumber,
+      lnspSupport = null,
+      lnspSupportHours = null,
+    )
     aValidSupportStrategyExists(prisonNumber)
     aValidStrengthExists(prisonNumber)
     aValidChallengeExists(prisonNumber)
@@ -66,6 +70,8 @@ class SarReportGenerationTest :
       reviewScheduleReference = reviewSchedule.reference,
       teachingAdjustments = "teachingAdjustmentsUpdated",
       detail = "detailUpdated",
+      lnspSupport = "LNSP support required",
+      lnspSupportHours = 5,
       otherContributors = listOf("Jane Doe" to "Mentor"),
     )
   }
