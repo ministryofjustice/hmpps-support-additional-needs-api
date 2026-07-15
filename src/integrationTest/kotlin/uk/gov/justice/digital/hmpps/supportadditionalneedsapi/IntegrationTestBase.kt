@@ -507,14 +507,10 @@ abstract class IntegrationTestBase {
     reviewerFeedback: String = "reviewerFeedback",
     otherContributors: List<Pair<String, String>> = emptyList(),
   ) {
-    // Update the plan so a new version is written to the plan history, exactly as completing a real review does.
-    val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)!!
-    plan.teachingAdjustments = teachingAdjustments
-    plan.detail = detail
-    plan.updatedAtPrison = "BXI"
-    elspPlanRepository.saveAndFlush(plan)
-
     // Create the review record itself, along with any other contributors.
+    // NB. the review is created BEFORE the plan is updated, mirroring the order of EducationSupportPlanReviewService
+    // .processReview. The order matters: it means the review's createdAt precedes the updatedAt of the plan version
+    // that the review produced, which is what the SAR pairing logic relies on.
     val review = ElspReviewEntity(
       prisonNumber = prisonNumber,
       reviewCreatedByName = reviewCreatedByName,
@@ -537,6 +533,44 @@ abstract class IntegrationTestBase {
         ),
       )
     }
+    elspReviewRepository.saveAndFlush(review)
+
+    // Now update the plan so a new version is written to the plan history, exactly as completing a real review does.
+    val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)!!
+    plan.teachingAdjustments = teachingAdjustments
+    plan.detail = detail
+    plan.updatedAtPrison = "BXI"
+    elspPlanRepository.saveAndFlush(plan)
+  }
+
+  /**
+   * Simulates a completed plan review in which the reviewer changed none of the plan's answers - ie. the review was
+   * submitted with `anyChanges = false`, so [EducationSupportPlanService.updatePlan] does not touch the plan and NO new
+   * version is written to the plan history. Only the review record is created.
+   *
+   * This is a supported real-world scenario (see the `anyChanges` flag on `UpdateEducationSupportPlanRequest`), and it
+   * means the number of plan history versions is NOT always the number of reviews + 1.
+   */
+  fun aPlanReviewWithNoPlanChangesExists(
+    prisonNumber: String,
+    reviewScheduleReference: UUID,
+    reviewCreatedByName: String = "Bob Smith",
+    reviewCreatedByJobRole: String = "Teacher",
+    prisonerFeedback: String = "prisonerFeedback",
+    reviewerFeedback: String = "reviewerFeedback",
+  ) {
+    // Deliberately do NOT touch the plan - a review with no changes writes no new plan history version.
+    val review = ElspReviewEntity(
+      prisonNumber = prisonNumber,
+      reviewCreatedByName = reviewCreatedByName,
+      reviewCreatedByJobRole = reviewCreatedByJobRole,
+      prisonerDeclinedFeedback = false,
+      prisonerFeedback = prisonerFeedback,
+      reviewerFeedback = reviewerFeedback,
+      createdAtPrison = "BXI",
+      updatedAtPrison = "BXI",
+      reviewScheduleReference = reviewScheduleReference,
+    )
     elspReviewRepository.saveAndFlush(review)
   }
 
