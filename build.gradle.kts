@@ -41,7 +41,7 @@ val springdocOpenapiVersion = "3.0.3"
 val hmppsSqsStarterVersion = "7.4.0"
 val hmppsKotlinSpringBootStarterVersion = "2.5.0"
 val awaitilityVersion = "4.3.0"
-val sarTestSupportLibraryVersion = "2.6.0"
+val sarTestSupportLibraryVersion = "2.6.2"
 
 dependencies {
   implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:$hmppsKotlinSpringBootStarterVersion")

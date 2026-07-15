@@ -405,7 +405,11 @@ abstract class IntegrationTestBase {
     educationEnrolmentRepository.save(educationEnrolmentEntity)
   }
 
-  fun anElSPExists(prisonNumber: String) {
+  fun anElSPExists(
+    prisonNumber: String,
+    lnspSupport: String? = "lnspSupport",
+    lnspSupportHours: Int? = 2,
+  ) {
     val elsp = elspPlanMapper.toEntity(
       prisonNumber,
       educationSupportPlanRequest = CreateEducationSupportPlanRequest(
@@ -418,8 +422,8 @@ abstract class IntegrationTestBase {
         teachingAdjustments = "teachingAdjustments",
         specificTeachingSkills = "specificTeachingSkills",
         examAccessArrangements = "examAccessArrangements",
-        lnspSupport = "lnspSupport",
-        lnspSupportHours = 2,
+        lnspSupport = lnspSupport,
+        lnspSupportHours = lnspSupportHours,
         detail = "detail",
       ),
     )
@@ -499,8 +503,10 @@ abstract class IntegrationTestBase {
   fun aPlanReviewExists(
     prisonNumber: String,
     reviewScheduleReference: UUID,
-    teachingAdjustments: String,
-    detail: String,
+    teachingAdjustments: String? = "teachingAdjustmentsUpdated",
+    detail: String? = "detailUpdated",
+    lnspSupport: String? = "lnspSupport",
+    lnspSupportHours: Int? = 2,
     reviewCreatedByName: String = "Bob Smith",
     reviewCreatedByJobRole: String = "Teacher",
     prisonerFeedback: String = "prisonerFeedback",
@@ -537,8 +543,10 @@ abstract class IntegrationTestBase {
 
     // Now update the plan so a new version is written to the plan history, exactly as completing a real review does.
     val plan = elspPlanRepository.findByPrisonNumber(prisonNumber)!!
-    plan.teachingAdjustments = teachingAdjustments
-    plan.detail = detail
+    teachingAdjustments?.also { plan.teachingAdjustments = it }
+    detail?.also { plan.detail = it }
+    lnspSupport?.also { plan.lnspSupport = it }
+    lnspSupportHours?.also { plan.lnspSupportHours = it }
     plan.updatedAtPrison = "BXI"
     elspPlanRepository.saveAndFlush(plan)
   }
