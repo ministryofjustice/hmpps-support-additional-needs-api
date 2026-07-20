@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Isolated
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousEducationCompletionStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidEducationDto
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidV2Education
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.PLAN_DEADLINE_DAYS_TO_ADD
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
@@ -386,7 +389,17 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     fundingType: String = "PES",
     educationStartDate: LocalDate = LocalDate.now().minusMonths(5),
   ) {
-    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType, educationStartDate))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        aValidV2Education(
+          prn = prisonNumber,
+          learningStartDate = educationStartDate,
+          fundingType = fundingType,
+        ),
+      ),
+    )
+
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -418,7 +431,18 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     educationStartDate: LocalDate = LocalDate.now().minusMonths(5),
     expectedNumberOfEnrolments: Int = 1,
   ) {
-    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, fundingType, educationStartDate))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        aValidV2Education(
+          prn = prisonNumber,
+          learningStartDate = educationStartDate,
+          fundingType = fundingType,
+          completionStatus = CuriousEducationCompletionStatus.IN_PROGRESS,
+        ),
+      ),
+    )
+
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -446,7 +470,24 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   private fun putInTwoEducationAndValidate(prisonNumber: String, fundingType: String = "PES") {
-    stubGetCurious2InEducation(prisonNumber, inEducationResponseWithTwoEducations(prisonNumber, fundingType))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        listOf(
+          aValidV2Education(
+            prn = prisonNumber,
+            fundingType = fundingType,
+            completionStatus = CuriousEducationCompletionStatus.IN_PROGRESS,
+          ),
+          aValidV2Education(
+            prn = prisonNumber,
+            fundingType = fundingType,
+            completionStatus = CuriousEducationCompletionStatus.IN_PROGRESS,
+          ),
+        ),
+      ),
+    )
+
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -479,7 +520,19 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   private fun endEducationAndValidate(prisonNumber: String, expectedNumberOfEnrolments: Int = 1) {
-    stubGetCurious2OutEducation(prisonNumber, endedEducationResponse(prisonNumber))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        aValidV2Education(
+          prn = prisonNumber,
+          learningStartDate = LocalDate.parse("2025-01-01"),
+          learningPlannedEndDate = LocalDate.parse("2025-01-31"),
+          learningActualEndDate = LocalDate.parse("2025-08-01"),
+          completionStatus = CuriousEducationCompletionStatus.COMPLETED,
+        ),
+      ),
+    )
+
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -512,7 +565,19 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   private fun restartEducationAndValidate(prisonNumber: String) {
-    stubGetCurious2OutEducation(prisonNumber, restartedEducationResponse(prisonNumber))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        aValidV2Education(
+          prn = prisonNumber,
+          learningStartDate = LocalDate.parse("2025-01-01"),
+          learningPlannedEndDate = LocalDate.parse("2025-01-31"),
+          learningActualEndDate = null,
+          completionStatus = CuriousEducationCompletionStatus.IN_PROGRESS,
+        ),
+      ),
+    )
+
     // When
     val curiousReference = UUID.randomUUID()
     val sqsMessage = aValidHmppsDomainEventsSqsMessage(
@@ -543,149 +608,6 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(timelineEntries[2].event).isEqualTo(TimelineEventType.CURIOUS_EDUCATION_TRIGGER)
     Assertions.assertThat(timelineEntries[2].additionalInfo).isEqualTo("curiousReference:$curiousReference")
   }
-
-  fun inEducationResponse(prisonNumber: String, fundingType: String = "PES", educationStartDate: LocalDate): String = """{
-    "v1": [],
-    "v2": [
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "CFI",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "60322457",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "$educationStartDate",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "$fundingType",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": null,
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        }
-    ]
-}"""
-
-  fun endedEducationResponse(prisonNumber: String): String = """{
-    "v1": [],
-    "v2": [
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "CFI",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "60322457",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-01-01",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "PES",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": "2025-08-01",
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        }
-    ]
-}"""
-
-  fun restartedEducationResponse(prisonNumber: String): String = """{
-    "v1": [],
-    "v2": [
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "CFI",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "60322457",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-01-01",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "PES",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": null,
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        }
-    ]
-}"""
-
-  fun inEducationResponseWithTwoEducations(
-    prisonNumber: String,
-    fundingType: String = "PES",
-    establishmentId: String = "CFI",
-  ): String = """{
-    "v1": [],
-    "v2": [
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "$establishmentId",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "1231231",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-06-12",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "$fundingType",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": null,
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        },
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "$establishmentId",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "60322457",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-01-02",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "$fundingType",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": "2025-08-01",
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        }
-    ]
-}"""
 
   private fun sendCuriousEducationMessage(sqsMessage: SqsMessage) {
     sendDomainEvent(sqsMessage)

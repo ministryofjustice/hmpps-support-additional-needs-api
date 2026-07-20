@@ -3,8 +3,10 @@ package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model
 import org.assertj.core.api.AbstractObjectAssert
 import java.time.LocalDate
 import java.util.UUID
+import java.util.function.Consumer
 
 fun assertThat(actual: PlanCreationScheduleResponse?) = PlanCreationScheduleResponseAssert(actual)
+fun assertThat(actual: PlanCreationSchedulesResponse?) = PlanCreationSchedulesResponseAssert(actual)
 
 /**
  * AssertJ custom assertion for a single [PlanCreationScheduleResponse].
@@ -91,6 +93,40 @@ class PlanCreationScheduleResponseAssert(actual: PlanCreationScheduleResponse?) 
       if (version != expected) {
         failWithMessage("Expected version to be $expected, but was $version")
       }
+    }
+    return this
+  }
+}
+
+class PlanCreationSchedulesResponseAssert(actual: PlanCreationSchedulesResponse?) :
+  AbstractObjectAssert<PlanCreationSchedulesResponseAssert, PlanCreationSchedulesResponse?>(
+    actual,
+    PlanCreationSchedulesResponseAssert::class.java,
+  ) {
+
+  fun hasNumberOfPlanCreationSchedules(expected: Int): PlanCreationSchedulesResponseAssert {
+    isNotNull
+    with(actual!!) {
+      if (planCreationSchedules.size != expected) {
+        failWithMessage("Expected PlanCreationSchedulesResponse to be have $expected plan creation schedules, but has ${planCreationSchedules.size}")
+      }
+    }
+    return this
+  }
+
+  /**
+   * Allows for assertion chaining into the specified child [PlanCreationScheduleResponse]. Takes a lambda as the method
+   * argument to call assertion methods provided by [PlanCreationScheduleResponseAssert].
+   * Returns this [PlanCreationSchedulesResponseAssert] to allow further chained assertions on the parent [PlanCreationSchedulesResponse]
+   *
+   * The `planCreationScheduleNumber` parameter is not zero indexed to make for better readability in tests. IE. the first
+   * plan creation schedule should be referenced as `.planCreationSchedule(1) { .... }`
+   */
+  fun planCreationSchedule(planCreationScheduleNumber: Int, consumer: Consumer<PlanCreationScheduleResponseAssert>): PlanCreationSchedulesResponseAssert {
+    isNotNull
+    with(actual!!) {
+      val planCreationSchedule = planCreationSchedules[planCreationScheduleNumber - 1]
+      consumer.accept(assertThat(planCreationSchedule))
     }
     return this
   }

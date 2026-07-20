@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 
 private val log = KotlinLogging.logger {}
@@ -82,7 +83,7 @@ class CuriousApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-  fun stubGetCurious2Education(prisonNumber: String, response: String) {
+  fun stubGetCurious2Education(prisonNumber: String, response: EducationDTO) {
     log.debug("setting up Education stub for $prisonNumber")
     stubFor(
       get(urlPathMatching("/learnerQualifications/v2/$prisonNumber"))
@@ -90,7 +91,7 @@ class CuriousApiMockServer : WireMockServer(WIREMOCK_PORT) {
           responseDefinition()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(response),
+            .withBody(objectMapper.writeValueAsString(response)),
         ),
     )
   }
