@@ -33,11 +33,8 @@ import java.time.LocalDate
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MultipleMessagesScenariosTest : IntegrationTestBase() {
 
-  private lateinit var today: LocalDate
-
   @BeforeAll
   fun beforeAll() {
-    today = LocalDate.now(clock)
     stubForBankHoliday()
   }
 

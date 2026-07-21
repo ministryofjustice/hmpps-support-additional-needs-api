@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Edu
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
-import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus as ReviewScheduleStatusEntity
 
 class CreateELSPPlanTest : IntegrationTestBase() {
@@ -208,7 +207,7 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
     detail = "detail",
-    reviewDate = LocalDate.now(),
+    reviewDate = today,
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
     otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
   )
@@ -222,7 +221,7 @@ class CreateELSPPlanTest : IntegrationTestBase() {
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
     detail = "detail",
-    reviewDate = LocalDate.now(),
+    reviewDate = today,
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
     otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
   )

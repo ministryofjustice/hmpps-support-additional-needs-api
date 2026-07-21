@@ -13,7 +13,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Revi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @Isolated
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -68,11 +68,11 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
     // education with a date before ALN assessment
-    prisonerInEducation(prisonNumber, learningStartDate = LocalDate.now().minusDays(1))
+    prisonerInEducation(prisonNumber, learningStartDate = today.minusDays(1))
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now())
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = today)
 
     // Then
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -88,13 +88,13 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    val learningStartDate = LocalDate.now()
+    val learningStartDate = today
     // education with a date the same as ALN assessment
     prisonerInEducation(prisonNumber, learningStartDate = learningStartDate)
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now())
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = today)
 
     // Then
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
@@ -112,7 +112,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    val learningStartDate = LocalDate.now()
+    val learningStartDate = today
     // education with a date the same as ALN assessment
     prisonerInEducation(prisonNumber, learningStartDate = learningStartDate)
 
@@ -122,7 +122,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
       prisonNumber,
       curiousReference,
       hasNeed = true,
-      assessmentDate = LocalDate.now().minusDays(3),
+      assessmentDate = today.minusDays(3),
     )
 
     // Then
@@ -135,7 +135,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
   }
 
-  private fun planDeadlineDateBasedOnPESContractDate(learningStartDate: LocalDate): LocalDate = if (LocalDate.now() < pesContractDate) {
+  private fun planDeadlineDateBasedOnPESContractDate(learningStartDate: LocalDate): LocalDate = if (today < pesContractDate) {
     workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, pesContractDate)
   } else {
     workingDayService.getNextWorkingDayNDaysFromDate(PLAN_DEADLINE_DAYS_TO_ADD, learningStartDate)
@@ -146,7 +146,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = LocalDate.now())
+    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = today)
     anElSPExists(prisonNumber)
 
     // When
@@ -155,7 +155,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
       prisonNumber,
       curiousReference,
       hasNeed = true,
-      assessmentDate = LocalDate.now().plusDays(1),
+      assessmentDate = today.plusDays(1),
     )
 
     // Then
@@ -171,7 +171,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    val educationStartDate = LocalDate.now()
+    val educationStartDate = today
     prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = educationStartDate)
     anElSPExists(prisonNumber)
 
@@ -222,12 +222,12 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
     stubGetTokenFromHmppsAuth()
-    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = LocalDate.now())
+    prisonerInEducation(prisonNumber = prisonNumber, learningStartDate = today)
     anElSPExists(prisonNumber)
 
     // When
     val curiousReference = UUID.randomUUID()
-    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = LocalDate.now().plusDays(1))
+    createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true, assessmentDate = today.plusDays(1))
 
     val reviewScheduleEntity = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(reviewScheduleEntity!!.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)

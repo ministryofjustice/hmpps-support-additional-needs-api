@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Revi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
 import java.time.Instant
-import java.time.LocalDate
 import java.util.UUID
 
 class GetReviewSchedulesTest : IntegrationTestBase() {
@@ -49,7 +48,7 @@ class GetReviewSchedulesTest : IntegrationTestBase() {
     val reviewScheduleHistoryEntity = ReviewScheduleHistoryEntity(
       reference = reference,
       prisonNumber = prisonNumber,
-      deadlineDate = LocalDate.now().minusMonths(1),
+      deadlineDate = today.minusMonths(1),
       status = if (it == 3) ReviewScheduleStatus.SCHEDULED else ReviewScheduleStatus.COMPLETED,
       exemptionReason = null,
       createdAtPrison = "BXI",

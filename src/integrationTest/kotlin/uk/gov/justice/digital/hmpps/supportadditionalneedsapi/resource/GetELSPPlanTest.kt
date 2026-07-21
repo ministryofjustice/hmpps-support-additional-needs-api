@@ -7,7 +7,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.EducationSupportPlanResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
-import java.time.LocalDate
 
 class GetELSPPlanTest : IntegrationTestBase() {
   companion object {
@@ -66,7 +65,7 @@ class GetELSPPlanTest : IntegrationTestBase() {
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
     detail = "detail",
-    reviewDate = LocalDate.now(),
+    reviewDate = today,
     planCreatedBy = PlanContributor("Fred Johns", "manager"),
     otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
   )

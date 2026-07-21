@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Time
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
-import java.util.*
+import java.util.UUID
 
 @Isolated
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -60,10 +60,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     stubGetTokenFromHmppsAuth()
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has an ALN need
-    createALNAssessmentMessage(prisonNumber, assessmentDate = LocalDate.now().minusMonths(5), hasNeed = true)
+    createALNAssessmentMessage(prisonNumber, assessmentDate = today.minusMonths(5), hasNeed = true)
 
     // Then
-    val educationStartDate = LocalDate.now().minusMonths(4)
+    val educationStartDate = today.minusMonths(4)
     putInEducationAndValidate(prisonNumber, educationStartDate = educationStartDate)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
@@ -133,10 +133,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     stubGetTokenFromHmppsAuth()
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     // person has a need:
-    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now())
+    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = today)
 
     // Then person is on a non PES course
-    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = LocalDate.now())
+    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = today)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNotNull()
@@ -235,8 +235,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       prisonNumber = prisonNumber,
       establishmentId = "BXI",
       qualificationCode = "4321",
-      learningStartDate = LocalDate.now().minusMonths(1),
-      plannedEndDate = LocalDate.now().plusMonths(1),
+      learningStartDate = today.minusMonths(1),
+      plannedEndDate = today.plusMonths(1),
       fundingType = "Previous contract",
       completionStatus = null,
       endDate = null,
@@ -246,8 +246,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       prisonNumber = prisonNumber,
       establishmentId = "BXI",
       qualificationCode = "1234",
-      learningStartDate = LocalDate.now().minusMonths(1),
-      plannedEndDate = LocalDate.now().plusMonths(1),
+      learningStartDate = today.minusMonths(1),
+      plannedEndDate = today.plusMonths(1),
       fundingType = "Previous contract",
       completionStatus = null,
       endDate = null,
@@ -293,7 +293,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     anElSPExists(prisonNumber = prisonNumber)
-    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(2))
+    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = today.plusMonths(2))
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
@@ -302,7 +302,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Then
     // the reviewSchedule should be marked as exempt
     val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(2))
+    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(today.plusMonths(2))
   }
 
   @Test
@@ -312,16 +312,16 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     anElSPExists(prisonNumber = prisonNumber)
-    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(2))
+    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = today.plusMonths(2))
     // person has a need:
     aValidChallengeExists(prisonNumber)
 
-    putInEducationAndValidate(prisonNumber, educationStartDate = LocalDate.now())
+    putInEducationAndValidate(prisonNumber, educationStartDate = today)
 
     // Then
     // the reviewSchedule should be marked as exempt
     val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(2))
+    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(today.plusMonths(2))
   }
 
   @Test
@@ -331,9 +331,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     anOldElSPExists(prisonNumber = prisonNumber)
-    val oldReviewSchedule = aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(1), status = ReviewScheduleStatus.COMPLETED)
+    val oldReviewSchedule = aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = today.plusMonths(1), status = ReviewScheduleStatus.COMPLETED)
     anElSPReviewExists(prisonNumber = prisonNumber, oldReviewSchedule.reference)
-    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = LocalDate.now().plusMonths(1))
+    aValidReviewScheduleExists(prisonNumber = prisonNumber, deadlineDate = today.plusMonths(1))
     // person has a need:
     aValidChallengeExists(prisonNumber)
     putInEducationAndValidate(prisonNumber)
@@ -341,7 +341,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     // Then
     // the reviewSchedule should be marked as exempt
     val reviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(LocalDate.now().plusMonths(1))
+    Assertions.assertThat(reviewSchedule!!.deadlineDate).isEqualTo(today.plusMonths(1))
   }
 
   @Test
@@ -374,10 +374,10 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aPrisonerExists(prisonNumber, prisonId = "CFI")
     stubGetTokenFromHmppsAuth()
     // person has a need:
-    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = LocalDate.now().plusDays(5))
+    createALNAssessmentMessage(prisonNumber, hasNeed = true, assessmentDate = today.plusDays(5))
 
     // Then person is on a non PES course
-    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = LocalDate.now())
+    putInEducationAndValidate(prisonNumber, "PES", educationStartDate = today)
     val planCreationSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
@@ -387,7 +387,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   private fun processEducationAndValidatePrisonerNotInEducation(
     prisonNumber: String,
     fundingType: String = "PES",
-    educationStartDate: LocalDate = LocalDate.now().minusMonths(5),
+    educationStartDate: LocalDate = today.minusMonths(5),
   ) {
     stubGetCurious2Education(
       prisonNumber,
@@ -428,7 +428,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   private fun putInEducationAndValidate(
     prisonNumber: String,
     fundingType: String = "PES",
-    educationStartDate: LocalDate = LocalDate.now().minusMonths(5),
+    educationStartDate: LocalDate = today.minusMonths(5),
     expectedNumberOfEnrolments: Int = 1,
   ) {
     stubGetCurious2Education(

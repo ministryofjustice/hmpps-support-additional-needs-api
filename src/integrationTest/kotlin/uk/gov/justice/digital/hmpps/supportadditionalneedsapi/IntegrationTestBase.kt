@@ -271,6 +271,10 @@ abstract class IntegrationTestBase {
   val domainEventQueueClient by lazy { domainEventQueue.sqsClient }
   val domainEventQueueDlqClient by lazy { domainEventQueue.sqsDlqClient }
 
+  protected val today: LocalDate by lazy {
+    LocalDate.now(clock)
+  }
+
   internal fun setAuthorisation(
     username: String? = "AUTH_ADM",
     roles: List<String> = listOf(),
@@ -331,13 +335,13 @@ abstract class IntegrationTestBase {
       Prisoner(
         prisonerNumber = prisonNumber,
         legalStatus = LegalStatus.SENTENCED,
-        releaseDate = LocalDate.now().plusYears(5),
+        releaseDate = today.plusYears(5),
         prisonId = prisonId,
         isIndeterminateSentence = false,
         isRecall = false,
         lastName = "smith",
         firstName = "bob",
-        dateOfBirth = LocalDate.now().minusYears(22),
+        dateOfBirth = today.minusYears(22),
         cellLocation = "12b",
         releaseType = "",
       ),
@@ -347,7 +351,7 @@ abstract class IntegrationTestBase {
   fun aValidPlanCreationScheduleExists(
     prisonNumber: String,
     status: PlanCreationScheduleStatus = PlanCreationScheduleStatus.SCHEDULED,
-    deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
+    deadlineDate: LocalDate = today.minusMonths(1),
   ) {
     val planCreationScheduleEntity =
       PlanCreationScheduleEntity(
@@ -367,7 +371,7 @@ abstract class IntegrationTestBase {
     prisonNumber: String,
     reference: UUID = UUID.randomUUID(),
     status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
-    deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
+    deadlineDate: LocalDate = today.minusMonths(1),
   ): ReviewScheduleEntity {
     val reviewScheduleEntity =
       ReviewScheduleEntity(
@@ -398,7 +402,7 @@ abstract class IntegrationTestBase {
 
   fun prisonerInEducation(
     prisonNumber: String,
-    learningStartDate: LocalDate = LocalDate.now(),
+    learningStartDate: LocalDate = today,
     endDate: LocalDate? = null,
     establishmentId: String = "BXI",
     qualificationCode: String = "123",
@@ -427,7 +431,7 @@ abstract class IntegrationTestBase {
       educationSupportPlanRequest = CreateEducationSupportPlanRequest(
         prisonId = "BXI",
         hasCurrentEhcp = true,
-        reviewDate = LocalDate.now(),
+        reviewDate = today,
         individualSupport = "support",
         planCreatedBy = PlanContributor("Tom Brown", jobRole = "Education coordinator"),
         otherContributors = listOf(PlanContributor(name = "Bob Smith", jobRole = "Teacher")),
@@ -445,7 +449,7 @@ abstract class IntegrationTestBase {
       educationSupportPlanRequest = CreateEducationSupportPlanRequest(
         prisonId = "BXI",
         hasCurrentEhcp = true,
-        reviewDate = LocalDate.now(),
+        reviewDate = today,
         individualSupport = "support",
         planCreatedBy = PlanContributor("Tom Brown", jobRole = "Education coordinator"),
         otherContributors = listOf(PlanContributor(name = "Bob Smith", jobRole = "Teacher")),
@@ -594,7 +598,7 @@ abstract class IntegrationTestBase {
     elspReviewRepository.saveAndFlush(review)
   }
 
-  fun aValidAlnScreenerExists(prisonNumber: String, screeningDate: LocalDate = LocalDate.now()): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
+  fun aValidAlnScreenerExists(prisonNumber: String, screeningDate: LocalDate = today): ALNScreenerEntity = alnScreenerRepository.saveAndFlush(
     ALNScreenerEntity(
       prisonNumber,
       screeningDate = screeningDate,
@@ -698,7 +702,7 @@ abstract class IntegrationTestBase {
 
   fun aValidAlnAssessmentExists(
     prisonNumber: String,
-    screeningDate: LocalDate = LocalDate.now(),
+    screeningDate: LocalDate = today,
     hasNeed: Boolean = false,
     curiousReference: UUID? = UUID.randomUUID(),
   ): AlnAssessmentEntity = alnAssessmentRepository.saveAndFlush(
@@ -831,7 +835,7 @@ abstract class IntegrationTestBase {
     prisonNumber: String,
     curiousReference: UUID = UUID.randomUUID(),
     hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
+    assessmentDate: LocalDate = today,
   ) {
     stubGetCurious2LearnerAssessments(
       prisonNumber,
@@ -865,7 +869,7 @@ abstract class IntegrationTestBase {
   fun createTestALNAssessment(
     prisonNumber: String,
     hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
+    assessmentDate: LocalDate = today,
   ): String = """{
   "v2": {
     "assessments": {
@@ -888,7 +892,7 @@ abstract class IntegrationTestBase {
     prisonNumber: String,
     curiousReference: UUID = UUID.randomUUID(),
     hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
+    assessmentDate: LocalDate = today,
   ) {
     stubGetCurious2LearnerAssessments(
       prisonNumber,
@@ -923,7 +927,7 @@ abstract class IntegrationTestBase {
   fun createTestALNAssessmentWithMultipleOnSameDay(
     prisonNumber: String,
     hasNeed: Boolean = true,
-    assessmentDate: LocalDate = LocalDate.now(),
+    assessmentDate: LocalDate = today,
   ): String = """{
   "v2": {
     "assessments": {

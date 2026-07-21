@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateChallengesRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
-import java.time.LocalDate
 import java.util.UUID
 
 class DeleteChallengeTest : IntegrationTestBase() {
@@ -185,7 +184,7 @@ class DeleteChallengeTest : IntegrationTestBase() {
 
     val alnScreener = alnScreenerRepository.saveAndFlush(
       ALNScreenerEntity(
-        screeningDate = LocalDate.now(),
+        screeningDate = today,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
         prisonNumber = prisonNumber,

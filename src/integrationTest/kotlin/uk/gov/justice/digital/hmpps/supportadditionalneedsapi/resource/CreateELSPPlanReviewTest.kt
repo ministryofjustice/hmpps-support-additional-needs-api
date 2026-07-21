@@ -10,7 +10,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Rev
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportPlanReviewRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.UpdateEducationSupportPlanRequest
-import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus as ReviewScheduleStatusEntity
 
 class CreateELSPPlanReviewTest : IntegrationTestBase() {
@@ -71,7 +70,7 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
     assertThat(actual.reviewSchedules[0].reviewCompletedByJobRole).isNull()
     assertThat(actual.reviewSchedules[0].reviewKeyedInBy).isNull()
     assertThat(actual.reviewSchedules[0].status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
-    assertThat(actual.reviewSchedules[1].reviewCompletedDate).isEqualTo(LocalDate.now())
+    assertThat(actual.reviewSchedules[1].reviewCompletedDate).isEqualTo(today)
     assertThat(actual.reviewSchedules[1].reviewCompletedBy).isEqualTo("Bob Smith")
     assertThat(actual.reviewSchedules[1].reviewCompletedByJobRole).isEqualTo("Teacher")
     assertThat(actual.reviewSchedules[1].reviewKeyedInBy).isEqualTo("Test User")
@@ -178,7 +177,7 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
   }
 
   fun createELSPPlanReviewRequest(): SupportPlanReviewRequest = SupportPlanReviewRequest(
-    nextReviewDate = LocalDate.now().plusMonths(1),
+    nextReviewDate = today.plusMonths(1),
     prisonId = "BXI",
     prisonerDeclinedFeedback = false,
     reviewerFeedback = "reviewerFeedback",
@@ -188,7 +187,7 @@ class CreateELSPPlanReviewTest : IntegrationTestBase() {
   )
 
   fun createELSPPlanReviewWithPlanChangesRequest(detailUpdated: String = "detailUpdated", createdByName: String = "Bob Smith", createdByRole: String = "Teacher"): SupportPlanReviewRequest = SupportPlanReviewRequest(
-    nextReviewDate = LocalDate.now().plusMonths(1),
+    nextReviewDate = today.plusMonths(1),
     prisonId = "BXI",
     prisonerDeclinedFeedback = false,
     reviewerFeedback = "reviewerFeedback",

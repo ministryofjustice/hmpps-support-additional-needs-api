@@ -22,77 +22,93 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus.REVIEW_OVERDUE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SearchByPrisonResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
-import java.time.LocalDate
 
 class SearchByPrisonTest : IntegrationTestBase() {
   companion object {
     private const val URI_TEMPLATE = "/search/prisons/{prisonId}/people"
     private const val PRISON_ID = "BXI"
+  }
 
-    private val today = LocalDate.now()
-
-    private val PRISONER_1 = aValidPrisoner(
+  private val prisoner1 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_1",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(1),
       cellLocation = "Z-3",
     )
-    private val PRISONER_2 = aValidPrisoner(
+  }
+  private val prisoner2 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_2",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = null,
       cellLocation = "Z-1",
     )
-    private val PRISONER_3 = aValidPrisoner(
+  }
+  private val prisoner3 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_3",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(10),
       cellLocation = "A-1",
     )
-    private val PRISONER_4 = aValidPrisoner(
+  }
+  private val prisoner4 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_4",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(50),
       cellLocation = "B-2",
     )
-    private val PRISONER_5 = aValidPrisoner(
+  }
+  private val prisoner5 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_5",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(30),
       cellLocation = "Z-2",
     )
-    private val PRISONER_6 = aValidPrisoner(
+  }
+  private val prisoner6 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_6",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(80),
       cellLocation = null,
     )
-    private val PRISONER_7 = aValidPrisoner(
+  }
+  private val prisoner7 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_7",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(60),
       cellLocation = "C-2",
     )
-    private val PRISONER_8 = aValidPrisoner(
+  }
+  private val prisoner8 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_8",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(90),
       cellLocation = "C-1",
     )
-    private val PRISONER_9 = aValidPrisoner(
+  }
+  private val prisoner9 by lazy {
+    aValidPrisoner(
       lastName = "PRISONER_9",
       prisonerNumber = randomValidPrisonNumber(),
       releaseDate = today.plusDays(20),
       cellLocation = "Z-4",
     )
-    private val PRISONERS_IN_PRISON =
-      listOf(PRISONER_1, PRISONER_2, PRISONER_3, PRISONER_4, PRISONER_5, PRISONER_6, PRISONER_7, PRISONER_8, PRISONER_9)
+  }
+  private val prisonersInPrison by lazy {
+    listOf(prisoner1, prisoner2, prisoner3, prisoner4, prisoner5, prisoner6, prisoner7, prisoner8, prisoner9)
   }
 
   @BeforeEach
   fun `setup data`() {
     stubGetTokenFromHmppsAuth()
-    stubGetPrisonersInPrisonFromPrisonerSearchApi(PRISON_ID, PRISONERS_IN_PRISON)
+    stubGetPrisonersInPrisonFromPrisonerSearchApi(PRISON_ID, prisonersInPrison)
     stubForBankHoliday()
 
     educationEnrolmentRepository.deleteAll()
@@ -105,51 +121,51 @@ class SearchByPrisonTest : IntegrationTestBase() {
     // set up each person to have a specific education, needs, and plan status
     // needsPlan
     // PRISONER_1
-    prisonerInEducation(PRISONER_1.prisonerNumber)
-    prisonerHasNeed(PRISONER_1.prisonerNumber)
-    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_1.prisonerNumber, deadlineDate = IN_THE_FUTURE_DATE)
+    prisonerInEducation(prisoner1.prisonerNumber)
+    prisonerHasNeed(prisoner1.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = prisoner1.prisonerNumber, deadlineDate = IN_THE_FUTURE_DATE)
 
     // PlanDue
     // PRISONER_2
-    prisonerInEducation(PRISONER_2.prisonerNumber)
-    prisonerHasNeed(PRISONER_2.prisonerNumber)
-    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_2.prisonerNumber, deadlineDate = today.plusDays(2))
+    prisonerInEducation(prisoner2.prisonerNumber)
+    prisonerHasNeed(prisoner2.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = prisoner2.prisonerNumber, deadlineDate = today.plusDays(2))
 
     // ReviewDue
     // PRISONER_3
-    prisonerInEducation(PRISONER_3.prisonerNumber)
-    prisonerHasNeed(PRISONER_3.prisonerNumber)
-    aValidReviewScheduleExists(prisonNumber = PRISONER_3.prisonerNumber, deadlineDate = today.plusDays(3))
+    prisonerInEducation(prisoner3.prisonerNumber)
+    prisonerHasNeed(prisoner3.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = prisoner3.prisonerNumber, deadlineDate = today.plusDays(3))
 
     // ActivePlan
     // PRISONER_4
-    prisonerInEducation(PRISONER_4.prisonerNumber)
-    prisonerHasNeed(PRISONER_4.prisonerNumber)
-    aValidReviewScheduleExists(prisonNumber = PRISONER_4.prisonerNumber, deadlineDate = today.plusWeeks(2))
-    anElSPExists(PRISONER_4.prisonerNumber)
+    prisonerInEducation(prisoner4.prisonerNumber)
+    prisonerHasNeed(prisoner4.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = prisoner4.prisonerNumber, deadlineDate = today.plusWeeks(2))
+    anElSPExists(prisoner4.prisonerNumber)
 
     // PlanOverDue
     // PRISONER_5
-    prisonerInEducation(PRISONER_5.prisonerNumber)
-    prisonerHasNeed(PRISONER_5.prisonerNumber)
-    aValidPlanCreationScheduleExists(prisonNumber = PRISONER_5.prisonerNumber, deadlineDate = today.minusDays(5))
+    prisonerInEducation(prisoner5.prisonerNumber)
+    prisonerHasNeed(prisoner5.prisonerNumber)
+    aValidPlanCreationScheduleExists(prisonNumber = prisoner5.prisonerNumber, deadlineDate = today.minusDays(5))
 
     // ReviewOverDue
     // PRISONER_6
-    prisonerInEducation(PRISONER_6.prisonerNumber)
-    prisonerHasNeed(PRISONER_6.prisonerNumber)
-    aValidReviewScheduleExists(prisonNumber = PRISONER_6.prisonerNumber, deadlineDate = today.minusDays(6))
+    prisonerInEducation(prisoner6.prisonerNumber)
+    prisonerHasNeed(prisoner6.prisonerNumber)
+    aValidReviewScheduleExists(prisonNumber = prisoner6.prisonerNumber, deadlineDate = today.minusDays(6))
 
     // Inactive plan
     // PRISONER_7
-    prisonerHasNeed(PRISONER_7.prisonerNumber)
-    anElSPExists(PRISONER_7.prisonerNumber)
+    prisonerHasNeed(prisoner7.prisonerNumber)
+    anElSPExists(prisoner7.prisonerNumber)
 
     // Declined plan
     // PRISONER_8
-    prisonerHasNeed(PRISONER_8.prisonerNumber)
+    prisonerHasNeed(prisoner8.prisonerNumber)
     aValidPlanCreationScheduleExists(
-      prisonNumber = PRISONER_8.prisonerNumber,
+      prisonNumber = prisoner8.prisonerNumber,
       deadlineDate = today.minusDays(8),
       status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
     )
@@ -187,7 +203,7 @@ class SearchByPrisonTest : IntegrationTestBase() {
   fun `should return paged results with one result given search by prisoner Id`() {
     // Given
     stubGetTokenFromHmppsAuth()
-    aPrisonerExists(PRISONER_1.prisonerNumber, PRISON_ID)
+    aPrisonerExists(prisoner1.prisonerNumber, PRISON_ID)
     stubForBankHoliday()
 
     // When
@@ -195,7 +211,7 @@ class SearchByPrisonTest : IntegrationTestBase() {
       .uri { uriBuilder ->
         uriBuilder
           .path(DefaultUriBuilderFactory().expand(URI_TEMPLATE, PRISON_ID).path)
-          .queryParam("prisonerNameOrNumber", PRISONER_1.prisonerNumber)
+          .queryParam("prisonerNameOrNumber", prisoner1.prisonerNumber)
           .build()
       }
       .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__SEARCH__RO")))

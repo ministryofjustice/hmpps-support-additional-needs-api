@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Nee
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
-import java.time.LocalDate
 
 class GetPlanCreationSchedulesTest : IntegrationTestBase() {
   companion object {
@@ -40,7 +39,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
 
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.SCHEDULED)
-    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(today.minusMonths(1))
     assertThat(actual.planCreationSchedules[0].needSources).containsExactlyInAnyOrder(NeedSource.ALN_SCREENER, NeedSource.CONDITION_SELF_DECLARED)
   }
 
@@ -75,9 +74,9 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
 
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.SCHEDULED)
-    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(today.minusMonths(1))
     assertThat(actual.planCreationSchedules[1].status).isEqualTo(PlanCreationStatus.COMPLETED)
-    assertThat(actual.planCreationSchedules[1].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[1].deadlineDate).isEqualTo(today.minusMonths(1))
   }
 
   @Test
@@ -113,14 +112,14 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
 
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.SCHEDULED)
-    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(today.minusMonths(1))
     assertThat(actual.planCreationSchedules[1].status).isEqualTo(PlanCreationStatus.COMPLETED)
-    assertThat(actual.planCreationSchedules[1].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[1].deadlineDate).isEqualTo(today.minusMonths(1))
 
     assertThat(actual.planCreationSchedules[1].planCompletedBy).isEqualTo("Fred Johns")
     assertThat(actual.planCreationSchedules[1].planKeyedInBy).isEqualTo("Test User")
     assertThat(actual.planCreationSchedules[1].planCompletedByJobRole).isEqualTo("Manager")
-    assertThat(actual.planCreationSchedules[1].planCompletedDate).isEqualTo(LocalDate.now())
+    assertThat(actual.planCreationSchedules[1].planCompletedDate).isEqualTo(today)
   }
 
   @Test
@@ -154,7 +153,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
 
     assertThat(actual).isNotNull()
     assertThat(actual!!.planCreationSchedules[0].status).isEqualTo(PlanCreationStatus.COMPLETED)
-    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(LocalDate.now().minusMonths(1))
+    assertThat(actual.planCreationSchedules[0].deadlineDate).isEqualTo(today.minusMonths(1))
   }
 
   private fun createPlan(prisonNumber: String) {
@@ -178,7 +177,7 @@ class GetPlanCreationSchedulesTest : IntegrationTestBase() {
     examAccessArrangements = "examAccessArrangements",
     individualSupport = "individualSupport",
     detail = "detail",
-    reviewDate = LocalDate.now(),
+    reviewDate = today,
     planCreatedBy = PlanContributor("Fred Johns", "Manager"),
     otherContributors = listOf(PlanContributor("John Smith", "education coordinator")),
   )

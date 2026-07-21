@@ -38,8 +38,6 @@ class PlanActionStatusTest : IntegrationTestBase() {
     val PRISONER_10: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_11: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
     val PRISONER_12: Prisoner = aValidPrisoner(prisonerNumber = randomValidPrisonNumber())
-
-    val today = LocalDate.now()
   }
 
   @BeforeAll

@@ -13,7 +13,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.returnError
-import java.time.LocalDate
 import java.util.UUID
 
 class ArchiveChallengeTest : IntegrationTestBase() {
@@ -116,7 +115,7 @@ class ArchiveChallengeTest : IntegrationTestBase() {
 
     val alnScreener = alnScreenerRepository.saveAndFlush(
       ALNScreenerEntity(
-        screeningDate = LocalDate.now(),
+        screeningDate = today,
         createdAtPrison = "BXI",
         updatedAtPrison = "BXI",
         prisonNumber = prisonNumber,
