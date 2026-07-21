@@ -86,7 +86,7 @@ class SarEducationSupportPlanReviewResponseAssert(actual: SarEducationSupportPla
   fun hasReviewCreatedBy(name: String, jobRole: String): SarEducationSupportPlanReviewResponseAssert {
     isNotNull
     with(actual!!) {
-      if (reviewCreatedBy?.name != name || reviewCreatedBy?.jobRole != jobRole) {
+      if (reviewCreatedBy?.name != name || reviewCreatedBy.jobRole != jobRole) {
         failWithMessage("Expected reviewCreatedBy to be ($name, $jobRole), but was $reviewCreatedBy")
       }
     }
@@ -97,7 +97,7 @@ class SarEducationSupportPlanReviewResponseAssert(actual: SarEducationSupportPla
     isNotNull
     with(actual!!) {
       if (!otherContributors.isNullOrEmpty()) {
-        failWithMessage("Expected no other contributors but has ${otherContributors?.size}")
+        failWithMessage("Expected no other contributors but has ${otherContributors.size}")
       }
     }
     return this

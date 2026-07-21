@@ -6,6 +6,8 @@ import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidEducationDto
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidV2Education
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
@@ -60,7 +62,20 @@ class AdminToolsTest : IntegrationTestBase() {
     stubForBankHoliday()
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(prisonNumber, prisonId = "CFI")
-    stubGetCurious2InEducation(prisonNumber, inEducationResponse(prisonNumber, "PES"))
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        aValidV2Education(
+          prn = prisonNumber,
+          establishmentId = "CFI",
+          establishmentName = "CARDIFF (HMP)",
+          qualificationCode = "60322457",
+          qualificationName = "Award in Cycle Maintenance",
+          learningStartDate = LocalDate.parse("2025-10-02"),
+          learningPlannedEndDate = LocalDate.parse("2025-01-31"),
+        ),
+      ),
+    )
 
     // When
     webTestClient.post()
@@ -89,32 +104,3 @@ class AdminToolsTest : IntegrationTestBase() {
     assertThat(timelineEntries[0].event).isEqualTo(TimelineEventType.CURIOUS_EDUCATION_TRIGGER)
   }
 }
-
-fun inEducationResponse(prisonNumber: String, fundingType: String = "PES"): String = """{
-    "v1": [],
-    "v2": [
-        {
-            "prn": "$prisonNumber",
-            "establishmentId": "CFI",
-            "establishmentName": "CARDIFF (HMP)",
-            "qualificationCode": "60322457",
-            "qualificationName": "Award in Cycle Maintenance",
-            "learningStartDate": "2025-10-02",
-            "learningPlannedEndDate": "2025-01-31",
-            "learnerOnRemand": null,
-            "isAccredited": true,
-            "aimType": null,
-            "fundingType": "$fundingType",
-            "deliveryApproach": null,
-            "deliveryLocationpostcode": null,
-            "completionStatus": "Continuing",
-            "learningActualEndDate": null,
-            "outcome": null,
-            "outcomeGrade": null,
-            "outcomeDate": null,
-            "withdrawalReason": null,
-            "withdrawalReasonAgreed": null,
-            "withdrawalReviewed": false
-        }
-    ]
-}"""

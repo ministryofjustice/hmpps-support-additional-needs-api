@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.SendMessageResponse
 import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelper
 import uk.gov.justice.digital.hmpps.subjectaccessrequest.SarIntegrationTestHelperConfig
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.EducationDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.LearnerNeurodivergenceDTO
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.LegalStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
@@ -86,8 +87,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Cha
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationSupportPlanService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.NeedService
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.workingday.WorkingDayService
@@ -132,6 +135,7 @@ abstract class IntegrationTestBase {
     const val GET_CONDITIONS_URI_TEMPLATE = "/profile/{prisonNumber}/conditions"
     const val GET_SUPPORT_STRATEGIES_URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies"
     const val GET_ALN_SCREENERS_URI_TEMPLATE = "/profile/{prisonNumber}/aln-screener"
+    const val GET_PLAN_CREATION_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/plan-creation-schedule?includeAllHistory=true"
 
     val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
@@ -172,6 +176,9 @@ abstract class IntegrationTestBase {
 
   @Autowired
   lateinit var educationRepository: EducationRepository
+
+  @Autowired
+  lateinit var educationService: EducationService
 
   @Autowired
   protected lateinit var webTestClient: WebTestClient
@@ -296,9 +303,7 @@ abstract class IntegrationTestBase {
 
   protected fun stubGetCurious2LearnerAssessments(prisonId: String, response: String) = curiousApi.stubGetCurious2LearnerAssessments(prisonId, response)
 
-  protected fun stubGetCurious2InEducation(prisonId: String, response: String) = curiousApi.stubGetCurious2Education(prisonId, response)
-
-  protected fun stubGetCurious2OutEducation(prisonId: String, response: String) = curiousApi.stubGetCurious2Education(prisonId, response)
+  protected fun stubGetCurious2Education(prisonNumber: String, response: EducationDTO) = curiousApi.stubGetCurious2Education(prisonNumber, response)
 
   protected fun stubForBankHoliday() = bankHolidaysApi.stubBankHolidays()
 
@@ -391,14 +396,21 @@ abstract class IntegrationTestBase {
     conditionRepository.save(condition)
   }
 
-  fun prisonerInEducation(prisonNumber: String, learningStartDate: LocalDate = LocalDate.now(), establishmentId: String = "BXI") {
+  fun prisonerInEducation(
+    prisonNumber: String,
+    learningStartDate: LocalDate = LocalDate.now(),
+    endDate: LocalDate? = null,
+    establishmentId: String = "BXI",
+    qualificationCode: String = "123",
+    fundingType: String = "PES",
+  ) {
     val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
     educationRepository.save(educationEntity)
     val educationEnrolmentEntity = EducationEnrolmentEntity(
       prisonNumber = prisonNumber,
-      qualificationCode = "123",
-      fundingType = "PES",
-      endDate = null,
+      qualificationCode = qualificationCode,
+      fundingType = fundingType,
+      endDate = endDate,
       learningStartDate = learningStartDate,
       establishmentId = establishmentId,
     )
@@ -988,4 +1000,15 @@ abstract class IntegrationTestBase {
     .exchange()
     .returnResult<ALNScreeners>()
     .body()
+
+  fun getPlanCreationSchedules(prisonNumber: String): PlanCreationSchedulesResponse = webTestClient.get()
+    .uri(GET_PLAN_CREATION_SCHEDULES_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<PlanCreationSchedulesResponse>()
+    .body()
+
+  fun shortDelay(delay: Long = 200) {
+    Thread.sleep(delay)
+  }
 }

@@ -55,10 +55,14 @@ fun aValidPrisonerMergedAdditionalInformation(
   removedNomsNumber = removedNomsNumber,
 )
 
-fun aValidEducationALNAssessmentUpdateAdditionalInformation(curiousReference: UUID): EducationALNAssessmentUpdateAdditionalInformation = EducationALNAssessmentUpdateAdditionalInformation(
+fun aValidEducationALNAssessmentUpdateAdditionalInformation(
+  curiousReference: UUID = UUID.randomUUID(),
+): EducationALNAssessmentUpdateAdditionalInformation = EducationALNAssessmentUpdateAdditionalInformation(
   curiousExternalReference = curiousReference,
 )
 
-fun aValidEducationStatusUpdateAdditionalInformation(curiousReference: UUID): EducationStatusUpdateAdditionalInformation = EducationStatusUpdateAdditionalInformation(
+fun aValidEducationStatusUpdateAdditionalInformation(
+  curiousReference: UUID = UUID.randomUUID(),
+): EducationStatusUpdateAdditionalInformation = EducationStatusUpdateAdditionalInformation(
   curiousExternalReference = curiousReference,
 )
