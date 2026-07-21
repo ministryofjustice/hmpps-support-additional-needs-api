@@ -39,7 +39,7 @@ val testContainersVersion = "2.0.5"
 val buildDirectory: Directory = layout.buildDirectory.get()
 val springdocOpenapiVersion = "3.0.3"
 val hmppsSqsStarterVersion = "7.4.0"
-val hmppsKotlinSpringBootStarterVersion = "2.5.0"
+val hmppsKotlinSpringBootStarterVersion = "3.0.0"
 val awaitilityVersion = "4.3.0"
 val sarTestSupportLibraryVersion = "2.6.2"
 
