@@ -89,13 +89,6 @@ class ScheduleService(
     if (!inEducation) {
       planCreationScheduleService.exemptSchedule(info.nomsNumber, PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
       reviewScheduleService.exemptSchedule(info.nomsNumber, ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER, prisonId = info.prisonId)
-
-      log.info("Setting ${info.nomsNumber} to no longer in education due to transfer message.")
-      educationService.recordEducationRecord(
-        prisonNumber = info.nomsNumber,
-        inEducation = false,
-        curiousReference = null,
-      )
     }
     log.info("{${info.reason.name}} event for ${info.nomsNumber} received")
   }
