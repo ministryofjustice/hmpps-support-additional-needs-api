@@ -4,7 +4,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNull
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
@@ -81,7 +80,7 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasALNScreenerNeed returns true if latest ALN assessment has need`() {
+  fun `hasALNAssessmentNeed returns true if latest ALN assessment has need`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
@@ -93,16 +92,16 @@ class NeedServiceTest {
         ),
       )
 
-    assertTrue(needService.hasALNScreenerNeed(prisonNumber) == true)
+    assertTrue(needService.hasALNAssessmentNeed(prisonNumber) == true)
   }
 
   @Test
-  fun `hasALNScreenerNeed returns false if no ALN assessment found`() {
+  fun `hasALNAssessmentNeed returns null if no ALN assessment found`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertNull(needService.hasALNScreenerNeed(prisonNumber))
+    assertFalse(needService.hasALNAssessmentNeed(prisonNumber))
   }
 
   @Test
@@ -120,7 +119,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
 
-    assertNull(needService.hasLDDNeed(prisonNumber))
+    assertFalse(needService.hasLDDNeed(prisonNumber))
   }
 
   @Test
