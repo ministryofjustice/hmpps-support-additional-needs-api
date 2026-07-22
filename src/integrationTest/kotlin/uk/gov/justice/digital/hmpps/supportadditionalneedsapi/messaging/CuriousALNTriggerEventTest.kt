@@ -35,7 +35,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = true)
 
     // Then
-    Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
+    Assertions.assertThat(needService.hasALNAssessmentNeed(prisonNumber)).isTrue()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isTrue()
 
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
@@ -54,7 +54,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     createALNAssessmentMessageWithMultipleOnSameDay(prisonNumber, curiousReference, hasNeed = true)
 
     // Then
-    Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
+    Assertions.assertThat(needService.hasALNAssessmentNeed(prisonNumber)).isTrue()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isTrue()
 
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)
@@ -204,7 +204,7 @@ class CuriousALNTriggerEventTest : IntegrationTestBase() {
     val curiousReference = UUID.randomUUID()
     createALNAssessmentMessage(prisonNumber, curiousReference, hasNeed = false)
     // then
-    Assertions.assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
+    Assertions.assertThat(needService.hasALNAssessmentNeed(prisonNumber)).isFalse()
     Assertions.assertThat(needService.hasNeed(prisonNumber)).isFalse()
 
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)

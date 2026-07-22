@@ -220,7 +220,7 @@ class CreateConditionTest : IntegrationTestBase() {
     val elspAfter = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     assertThat(elspAfter!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
 
-    assertThat(needService.hasALNScreenerNeed(prisonNumber)).isFalse()
+    assertThat(needService.hasALNAssessmentNeed(prisonNumber)).isFalse()
     assertThat(needService.hasNeed(prisonNumber)).isTrue()
   }
 

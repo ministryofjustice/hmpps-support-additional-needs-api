@@ -46,7 +46,7 @@ class AdminToolsTest : IntegrationTestBase() {
       assertThat(alnAssessment.screeningDate).isEqualTo(LocalDate.of(2025, 1, 28))
     } matches { it != null }
 
-    assertThat(needService.hasALNScreenerNeed(prisonNumber)).isTrue()
+    assertThat(needService.hasALNAssessmentNeed(prisonNumber)).isTrue()
     assertThat(needService.hasNeed(prisonNumber)).isTrue()
 
     val timelineEntries = timelineRepository.findAllByPrisonNumberOrderByCreatedAt(prisonNumber)

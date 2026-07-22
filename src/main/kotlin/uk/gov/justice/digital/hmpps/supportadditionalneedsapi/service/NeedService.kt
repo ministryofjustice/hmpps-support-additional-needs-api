@@ -68,32 +68,46 @@ class NeedService(
   }
 
   /**
-   * With the most recent ALN screener from Curious determined the person
-   * has a need. Only consider the most recent ALN screener.
-   * If there is no ALN screener return false
+   * With the most recent ALN Assessment from Curious determined the person
+   * has a need. Only consider the most recent ALN assessment.
+   * If there is no ALN assessment return false
    */
-  fun hasALNScreenerNeed(prisonNumber: String): Boolean? = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed
+  fun hasALNAssessmentNeed(prisonNumber: String): Boolean = (alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed == true)
+    .also {
+      if (it) {
+        log.debug { "Prisoner [$prisonNumber]'s most recent ALN Assessment indicates the person has a need" }
+      }
+    }
 
-  fun hasLDDNeed(prisonNumber: String): Boolean? = lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed
+  fun hasLDDNeed(prisonNumber: String): Boolean = (lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed == true)
+    .also {
+      if (it) {
+        log.debug { "Prisoner [$prisonNumber] has an LDD need" }
+      }
+    }
 
   /**
    * Was a challenge or condition created in the SAN database and is it active - only the
    * Staff instigated ones are considered.
    */
-  fun hasActiveSANNeed(prisonNumber: String): Boolean = challengeRepository
-    .existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber) ||
-    conditionRepository
-      .existsByPrisonNumberAndActiveTrue(prisonNumber)
+  fun hasActiveSANNeed(prisonNumber: String): Boolean = (challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).also {
+    if (it) {
+      log.debug { "Prisoner [$prisonNumber] has an active Challenge associated to their latest SAN ALN Screener" }
+    }
+  } ||
+    (conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).also {
+      if (it) {
+        log.debug { "Prisoner [$prisonNumber] has an active Condition" }
+      }
+    }
 
   /**
    * Has need is only true if the person either has a non ALN SAN need OR
-   * has completed an ALN screener and was identified as having a need
-   * or has not completed an ALN Screener and the LDD Need is true.
+   * has completed an ALN Assessment and was identified as having a need
+   * or has not completed an ALN Assessment and the LDD Need is true.
    */
-  fun hasNeed(prisonNumber: String): Boolean {
-    val alnNeed = hasALNScreenerNeed(prisonNumber)
-    return hasActiveSANNeed(prisonNumber) ||
-      (alnNeed ?: hasLDDNeed(prisonNumber)) == true
+  fun hasNeed(prisonNumber: String): Boolean = (hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || hasLDDNeed(prisonNumber)).also {
+    log.debug { "Prison [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
   }
 
   fun getNeedSources(prisonNumber: String): SortedSet<NeedSource> {
@@ -102,12 +116,9 @@ class NeedService(
     val conditions = conditionRepository.findAllByPrisonNumber(prisonNumber)
 
     return sortedSetOf<NeedSource>().apply {
-      val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      if (alnAssessment != null) {
-        if (alnAssessment.hasNeed) {
-          add(NeedSource.ALN_SCREENER)
-        }
-      } else if (hasLDDNeed(prisonNumber) == true) {
+      if (hasALNAssessmentNeed(prisonNumber)) {
+        add(NeedSource.ALN_SCREENER)
+      } else if (hasLDDNeed(prisonNumber)) {
         add(NeedSource.LDD_SCREENER)
       }
 
@@ -122,6 +133,8 @@ class NeedService(
       if (conditions.any { it.active && it.source == Source.SELF_DECLARED }) {
         add(NeedSource.CONDITION_SELF_DECLARED)
       }
+    }.also {
+      log.debug { "Prisoner [$prisonNumber] needs sources: $it" }
     }
   }
 
