@@ -15,7 +15,7 @@ interface PrisonerOverviewRepository : JpaRepository<PrisonerOverviewEntity, Str
   fun findByPrisonNumber(prisonNumber: String): PrisonerOverviewEntity?
 
   @Query(
-    value = "select * from find_prisoner_overviews(cast(:prisonNumbers as text[]))",
+    "select * from find_prisoner_overviews(cast(:prisonNumbers as text[]))",
     nativeQuery = true,
   )
   fun findAllByPrisonNumbers(
