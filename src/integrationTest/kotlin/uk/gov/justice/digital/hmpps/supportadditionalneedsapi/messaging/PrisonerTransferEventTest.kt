@@ -39,8 +39,8 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER)
     // prisoner should no longer be in education
-    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(educationEntity?.inEducation).isFalse()
+    val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+    Assertions.assertThat(isInEducation).isFalse()
   }
 
   @Test
@@ -64,9 +64,9 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
-    // prisoner should no longer be in education
-    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(educationEntity?.inEducation).isTrue()
+    // prisoner should be in education
+    val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+    Assertions.assertThat(isInEducation).isTrue()
   }
 
   @Test
@@ -92,8 +92,8 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_PRISONER_TRANSFER)
     // prisoner should no longer be in education
-    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(educationEntity?.inEducation).isFalse()
+    val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+    Assertions.assertThat(isInEducation).isFalse()
   }
 
   @Test
@@ -117,9 +117,9 @@ class PrisonerTransferEventTest : IntegrationTestBase() {
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.SCHEDULED)
-    // prisoner should no longer be in education
-    val educationEntity = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-    Assertions.assertThat(educationEntity?.inEducation).isTrue()
+    // prisoner should be in education
+    val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+    Assertions.assertThat(isInEducation).isTrue()
   }
 
   private fun sendPrisonerTransferMessage(prisonNumber: String) {

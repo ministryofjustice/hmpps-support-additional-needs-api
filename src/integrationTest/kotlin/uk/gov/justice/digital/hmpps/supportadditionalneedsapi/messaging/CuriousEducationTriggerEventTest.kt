@@ -416,8 +416,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
     } matches { it == 0 }
     await untilCallTo {
-      val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(education).isNull()
+      val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+      Assertions.assertThat(isInEducation).isFalse()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved
@@ -504,9 +504,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
     } matches { it == 0 }
     await untilCallTo {
-      val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(education!!.inEducation).isTrue()
-      Assertions.assertThat(education.curiousReference).isEqualTo(curiousReference)
+      val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+      Assertions.assertThat(isInEducation).isTrue()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved
@@ -549,9 +548,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
     } matches { it == 0 }
     await untilCallTo {
-      val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(education!!.inEducation).isFalse()
-      Assertions.assertThat(education.curiousReference).isEqualTo(curiousReference)
+      val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+      Assertions.assertThat(isInEducation).isFalse()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved
@@ -594,9 +592,8 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
     } matches { it == 0 }
     await untilCallTo {
-      val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      Assertions.assertThat(education!!.inEducation).isTrue()
-      Assertions.assertThat(education.curiousReference).isEqualTo(curiousReference)
+      val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+      Assertions.assertThat(isInEducation).isTrue()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved

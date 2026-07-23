@@ -38,7 +38,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Chal
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ConditionEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Domain
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EhcpStatusEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspReviewEntity
@@ -60,7 +59,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.DataDeletionEventRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EhcpStatusRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanHistoryRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
@@ -173,9 +171,6 @@ abstract class IntegrationTestBase {
 
   @Autowired
   private lateinit var elspPlanMapper: ElspPlanMapper
-
-  @Autowired
-  lateinit var educationRepository: EducationRepository
 
   @Autowired
   lateinit var educationService: EducationService
@@ -404,8 +399,6 @@ abstract class IntegrationTestBase {
     qualificationCode: String = "123",
     fundingType: String = "PES",
   ) {
-    val educationEntity = EducationEntity(prisonNumber = prisonNumber, inEducation = true)
-    educationRepository.save(educationEntity)
     val educationEnrolmentEntity = EducationEnrolmentEntity(
       prisonNumber = prisonNumber,
       qualificationCode = qualificationCode,

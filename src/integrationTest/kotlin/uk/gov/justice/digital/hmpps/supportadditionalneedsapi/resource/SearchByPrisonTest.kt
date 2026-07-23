@@ -96,7 +96,6 @@ class SearchByPrisonTest : IntegrationTestBase() {
     stubForBankHoliday()
 
     educationEnrolmentRepository.deleteAll()
-    educationRepository.deleteAll()
     conditionRepository.deleteAll()
     planCreationScheduleRepository.deleteAll()
     elspReviewRepository.deleteAll()

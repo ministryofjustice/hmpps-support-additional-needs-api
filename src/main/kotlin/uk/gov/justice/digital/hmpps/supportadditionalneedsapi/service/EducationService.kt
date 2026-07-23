@@ -9,14 +9,12 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Edu
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.PrisonerSearchApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.DEFAULT_PRISON_ID
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType.CURIOUS_EDUCATION_TRIGGER
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
@@ -29,7 +27,6 @@ private val log = KotlinLogging.logger {}
 
 @Service
 class EducationService(
-  private val educationRepository: EducationRepository,
   private val curiousApiClient: CuriousApiClient,
   private val prisonerSearchApiClient: PrisonerSearchApiClient,
   private val educationEnrolmentRepository: EducationEnrolmentRepository,
@@ -44,22 +41,6 @@ class EducationService(
   fun hasActiveEducationEnrollment(prisonNumber: String): Boolean = educationEnrolmentRepository.existsWithNoEndDate(prisonNumber)
 
   fun getNonPESEducationStartDate(prisonNumber: String): LocalDate? = educationEnrolmentRepository.findEarliestLearningStartDateWithNoEndDate(prisonNumber)
-
-  /**
-   * Create the education record. Currently, this is simply whether the person is in education with the
-   * latest record being the current status.
-   * We record this record when we receive an education message from Curious.
-   */
-  @Transactional
-  fun recordEducationRecord(prisonNumber: String, inEducation: Boolean, curiousReference: UUID?) {
-    educationRepository.save(
-      EducationEntity(
-        inEducation = inEducation,
-        prisonNumber = prisonNumber,
-        curiousReference = curiousReference,
-      ),
-    )
-  }
 
   @Transactional
   @TimelineEvent(
@@ -91,8 +72,7 @@ class EducationService(
       educationData = educationDto.educationData.filter { it.establishmentId == currentEstablishment },
     )
 
-    // save the education record if it has changed.
-    val inEducation = recordOverallEducationStatus(filteredEducationDto, prisonNumber, info)
+    val inEducation = educationDto.educationData.any { it.isActive() }
     // Record the education enrolment if any have changed
     val enrolmentDiff = updateSanEnrolments(
       educationDto = filteredEducationDto,
@@ -204,30 +184,6 @@ class EducationService(
   }
 
   private fun findNewlyActiveEducationForStart(dto: EducationDTO, start: LocalDate): Education? = dto.educationData.firstOrNull { it.learningStartDate == start && it.learningActualEndDate == null }
-
-  // This sets the overall education status for the person
-  // this is used in a number of places for instance in the person search results page
-  @Transactional
-  fun recordOverallEducationStatus(
-    educationDto: EducationDTO,
-    prisonNumber: String,
-    info: EducationStatusUpdateAdditionalInformation,
-  ): Boolean {
-    val currentlyInEducation = educationDto.educationData.any { it.isActive() }
-    val previouslyInEducation = hasActiveEducationEnrollment(prisonNumber)
-
-    if (currentlyInEducation != previouslyInEducation) {
-      recordEducationRecord(
-        prisonNumber = prisonNumber,
-        inEducation = currentlyInEducation,
-        curiousReference = info.curiousExternalReference,
-      )
-      log.info("Education status changed for $prisonNumber: $previouslyInEducation -> $currentlyInEducation (recorded).")
-    } else {
-      log.info("Education status unchanged for $prisonNumber: $currentlyInEducation (no new record).")
-    }
-    return currentlyInEducation
-  }
 
   @Transactional
   fun updateSanEnrolments(

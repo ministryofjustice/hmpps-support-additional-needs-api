@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource
 
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -91,8 +92,8 @@ class AdminToolsTest : IntegrationTestBase() {
       domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
     } matches { it == 0 }
     await untilCallTo {
-      val education = educationRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-      assertThat(education!!.inEducation).isTrue()
+      val isInEducation = educationService.hasActiveEducationEnrollment(prisonNumber)
+      Assertions.assertThat(isInEducation).isTrue()
     } matches { it != null }
 
     // also check the education enrolment(s) have been saved
