@@ -4,6 +4,7 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.test.context.ActiveProfiles
@@ -11,6 +12,8 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBas
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousEducationCompletionStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidEducationDto
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.aValidV2Education
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.SqsMessage
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Pla
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewScheduleStatus as ReviewScheduleStatusApi
 
 /**
  * Test class testing scenarios that typically involve several messages
@@ -69,7 +73,7 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
-    // a prison exists in PVI with no needs, is on a PES course, and has no ELSP Plan Creation Schedule
+    // a prisoner exists in PVI with no needs, is on a PES course, and has no ELSP Plan Creation Schedule
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(
       prisonNumber = prisonNumber,
@@ -176,6 +180,169 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
 
   /**
    * Scenario:
+   * * Prisoner in HOI
+   *   * Has a previously withdrawn PES course from another prison
+   *   * Is on a PES course in current prison
+   *   * Has needs
+   *   * Has had their ELSP created
+   *   * Is in the review cycle
+   * * Prisoner completes PES course in current prison
+   *   * Review Schedule is marked as EXEMPT_NOT_IN_EDUCATION
+   * * Prisoner starts a new non-PES course in the current prison
+   *
+   * Expectation is that the review schedule is not re-scheduled, and it is left as EXEMPT_NOT_IN_EDUCATION.
+   *
+   * Prisoners should only need a plan and reviews if they are in PES education and have a need.
+   */
+  @Disabled("Enable this test when the implementation has been fixed")
+  @Test
+  fun `should not reschedule a previously exempted review schedule given a prisoner with needs and a non-PES course is started`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+
+    // a prisoner exists in HOI
+    val prisonNumber = randomValidPrisonNumber()
+    aPrisonerExists(
+      prisonNumber = prisonNumber,
+      prisonId = "HOI",
+    )
+
+    // prisoner has conditions
+    conditionsExist(prisonNumber)
+
+    // The SAN education_enrolment table has 2 courses recorded.
+    // The first is from a previous prison and has an end date.
+    // The second is for this prison and is an active course (no end date).
+    prisonerInEducation(
+      prisonNumber = prisonNumber,
+      learningStartDate = today.minusWeeks(10),
+      endDate = today.minusWeeks(2),
+      fundingType = "PES",
+      qualificationCode = "Bricklaying",
+      establishmentId = "PVI",
+    )
+    prisonerInEducation(
+      prisonNumber = prisonNumber,
+      learningStartDate = today.minusWeeks(2),
+      endDate = null,
+      fundingType = "PES",
+      qualificationCode = "Metalwork",
+      establishmentId = "HOI",
+    )
+
+    // The prisoner has had their plan created (schedule is completed, with 2 history records)
+    aValidPlanCreationScheduleExists(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.COMPLETED,
+    )
+    anElSPExists(prisonNumber)
+
+    // prisoner has a review scheduled
+    aValidReviewScheduleExists(
+      prisonNumber = prisonNumber,
+      status = ReviewScheduleStatus.SCHEDULED,
+    )
+
+    // The prisoner completes/un-enrols from the PES course in HOI.
+    // The Curious education data shows the PES HOI course as being completed, and also the PVI course as being withdrawn
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        listOf(
+          aValidV2Education(
+            prn = prisonNumber,
+            qualificationCode = "Bricklaying",
+            establishmentId = "PVI",
+            fundingType = "PES",
+            learningActualEndDate = today.minusWeeks(2),
+            completionStatus = CuriousEducationCompletionStatus.WITHDRAWN,
+          ),
+          aValidV2Education(
+            prn = prisonNumber,
+            fundingType = "PES",
+            qualificationCode = "Metalwork",
+            establishmentId = "HOI",
+            learningActualEndDate = today,
+            completionStatus = CuriousEducationCompletionStatus.COMPLETED,
+          ),
+        ),
+      ),
+    )
+    val educationStopMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_STATUS_UPDATE,
+      additionalInformation = aValidEducationStatusUpdateAdditionalInformation(),
+      description = "EDUCATION_STOPPED",
+    )
+    sendCuriousEducationMessage(educationStopMessage)
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+
+    // The review schedule should have been updated to be EXEMPT_NOT_IN_EDUCATION
+    assertThat(getReviewSchedules(prisonNumber))
+      .hasNumberOfReviewSchedules(2)
+      .reviewSchedule(1) { it.hasStatus(ReviewScheduleStatusApi.SCHEDULED) }
+      .reviewSchedule(2) { it.hasStatus(ReviewScheduleStatusApi.EXEMPT_NOT_IN_EDUCATION) }
+
+    shortDelay()
+
+    // When
+    // the prisoner starts a new non-PES course
+    // The Curious education data now shows the PVI course that was withdrawn, the PES HOI course that was completed, and
+    // now the new non-PES course that has started
+    stubGetCurious2Education(
+      prisonNumber,
+      aValidEducationDto(
+        listOf(
+          aValidV2Education(
+            prn = prisonNumber,
+            qualificationCode = "Bricklaying",
+            establishmentId = "PVI",
+            fundingType = "PES",
+            learningActualEndDate = today.minusWeeks(2),
+            completionStatus = CuriousEducationCompletionStatus.WITHDRAWN,
+          ),
+          aValidV2Education(
+            prn = prisonNumber,
+            fundingType = "PES",
+            qualificationCode = "Metalwork",
+            establishmentId = "HOI",
+            learningActualEndDate = today,
+            completionStatus = CuriousEducationCompletionStatus.COMPLETED,
+          ),
+          aValidV2Education(
+            prn = prisonNumber,
+            fundingType = "DPS",
+            qualificationCode = "Retrofit",
+            establishmentId = "HOI",
+            learningActualEndDate = null,
+            completionStatus = CuriousEducationCompletionStatus.IN_PROGRESS,
+          ),
+        ),
+      ),
+    )
+    val educationStartMessage = aValidHmppsDomainEventsSqsMessage(
+      prisonNumber = prisonNumber,
+      eventType = EventType.EDUCATION_STATUS_UPDATE,
+      additionalInformation = aValidEducationStatusUpdateAdditionalInformation(),
+      description = "EDUCATION_STARTED",
+    )
+    sendCuriousEducationMessage(educationStartMessage)
+    await untilCallTo {
+      domainEventQueueClient.countMessagesOnQueue(domainEventQueue.queueUrl).get()
+    } matches { it == 0 }
+
+    // Then
+    // we do not expect the Review Schedules to have been re-scheduled
+    assertThat(getReviewSchedules(prisonNumber))
+      .hasNumberOfReviewSchedules(2)
+      .reviewSchedule(1) { it.hasStatus(ReviewScheduleStatusApi.SCHEDULED) }
+      .reviewSchedule(2) { it.hasStatus(ReviewScheduleStatusApi.EXEMPT_NOT_IN_EDUCATION) }
+  }
+
+  /**
+   * Scenario:
    * * Prisoner
    *   * No needs
    *   * Does not have an ELSP Creation schedule
@@ -198,7 +365,7 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
-    // a prison exists with no needs, and has no ELSP Plan Creation Schedule
+    // a prisoner exists with no needs, and has no ELSP Plan Creation Schedule
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(
       prisonNumber = prisonNumber,
@@ -270,7 +437,7 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
-    // a prison exists with no needs, and has no ELSP Plan Creation Schedule
+    // a prisoner exists with no needs, and has no ELSP Plan Creation Schedule
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(
       prisonNumber = prisonNumber,
@@ -341,7 +508,7 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
-    // a prison exists with no needs, and has no ELSP Plan Creation Schedule
+    // a prisoner exists with no needs, and has no ELSP Plan Creation Schedule
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(
       prisonNumber = prisonNumber,
@@ -417,7 +584,7 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
     // Given
     stubGetTokenFromHmppsAuth()
 
-    // a prison exists with no needs, and has no ELSP Plan Creation Schedule
+    // a prisoner exists with no needs, and has no ELSP Plan Creation Schedule
     val prisonNumber = randomValidPrisonNumber()
     aPrisonerExists(
       prisonNumber = prisonNumber,

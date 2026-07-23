@@ -86,6 +86,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Con
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.StrengthListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.SupportStrategyListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service.EducationService
@@ -134,6 +135,7 @@ abstract class IntegrationTestBase {
     const val GET_SUPPORT_STRATEGIES_URI_TEMPLATE = "/profile/{prisonNumber}/support-strategies"
     const val GET_ALN_SCREENERS_URI_TEMPLATE = "/profile/{prisonNumber}/aln-screener"
     const val GET_PLAN_CREATION_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/plan-creation-schedule?includeAllHistory=true"
+    const val GET_REVIEW_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/reviews/review-schedules"
 
     val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
@@ -360,7 +362,6 @@ abstract class IntegrationTestBase {
 
   fun aValidReviewScheduleExists(
     prisonNumber: String,
-    reference: UUID = UUID.randomUUID(),
     status: ReviewScheduleStatus = ReviewScheduleStatus.SCHEDULED,
     deadlineDate: LocalDate = LocalDate.now().minusMonths(1),
   ): ReviewScheduleEntity {
@@ -999,6 +1000,13 @@ abstract class IntegrationTestBase {
     .bearerToken(aValidTokenWithAuthority(ELSP_RO))
     .exchange()
     .returnResult<PlanCreationSchedulesResponse>()
+    .body()
+
+  fun getReviewSchedules(prisonNumber: String): ReviewSchedulesResponse = webTestClient.get()
+    .uri(GET_REVIEW_SCHEDULES_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<ReviewSchedulesResponse>()
     .body()
 
   fun shortDelay(delay: Long = 200) {
