@@ -45,7 +45,7 @@ class SearchService(
 
     // Fetch overview data in chunks to avoid query length issues
     val prisonerOverviewResults = prisonNumbers.chunked(500).flatMap {
-      prisonerOverviewRepository.findByPrisonNumberIn(it)
+      prisonerOverviewRepository.findAllByPrisonNumbers(it.toTypedArray())
     }.associateBy { it.prisonNumber }
 
     // Map the final results

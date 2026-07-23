@@ -61,7 +61,7 @@ class PlanActionStatusServiceTest {
       hasAlnNeed = false,
       hasLddNeed = false,
     )
-    whenever(prisonerOverviewRepository.findByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
+    whenever(prisonerOverviewRepository.findOneByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
 
     val status = PlanStatus.PLAN_DUE
     given(searchService.determinePlanStatus(prisonerOverview)).willReturn(status)
@@ -99,7 +99,7 @@ class PlanActionStatusServiceTest {
       hasLddNeed = false,
       planDeclined = true,
     )
-    whenever(prisonerOverviewRepository.findByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
+    whenever(prisonerOverviewRepository.findOneByPrisonNumber(prisonNumber)).thenReturn(prisonerOverview)
 
     val exemptionReasonString = "EXEMPT_NOT_REQUIRED"
     val exemptionDetail = "about to be released"

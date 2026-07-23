@@ -16,7 +16,7 @@ class PlanActionStatusService(
   private val instantMapper: InstantMapper,
 ) {
   fun getPlanActionStatus(prisonNumber: String): PlanActionStatus {
-    val prisonerOverview = prisonerOverviewRepository.findByPrisonNumber(prisonNumber)
+    val prisonerOverview = prisonerOverviewRepository.findOneByPrisonNumber(prisonNumber)
     val status = searchService.determinePlanStatus(prisonerOverview)
     val isDeclined = prisonerOverview?.planDeclined == true
 
