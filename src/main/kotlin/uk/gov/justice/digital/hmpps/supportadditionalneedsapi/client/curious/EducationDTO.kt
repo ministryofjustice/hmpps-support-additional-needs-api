@@ -30,4 +30,8 @@ data class Education(
   val withdrawalReason: String? = null,
   val withdrawalReasonAgreed: String? = null,
   val withdrawalReviewed: Boolean? = null,
-)
+) {
+  fun isPesCourse() = fundingType.equals("PES", ignoreCase = true)
+
+  fun isActive(): Boolean = learningActualEndDate == null
+}

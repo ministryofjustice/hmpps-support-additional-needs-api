@@ -42,6 +42,10 @@ class EducationEnrolmentEntity(
   var lastCuriousReference: UUID? = null,
 
 ) : BaseAuditableEntity() {
+  fun isPesCourse() = fundingType.equals("PES", ignoreCase = true)
+
+  fun isActive(): Boolean = endDate == null
+
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     if (other == null || Hibernate.getClass(this) != Hibernate.getClass(other)) return false

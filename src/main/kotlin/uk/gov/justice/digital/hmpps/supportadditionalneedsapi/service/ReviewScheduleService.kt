@@ -90,7 +90,6 @@ class ReviewScheduleService(
   fun createOrUpdateDueToEducationUpdate(
     prisonNumber: String,
     startDate: LocalDate,
-    fundingType: String,
     prisonId: String,
   ) {
     log.info("Creating or updating review schedule for $prisonNumber")

@@ -4,7 +4,6 @@ import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.test.context.ActiveProfiles
@@ -194,7 +193,6 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    *
    * Prisoners should only need a plan and reviews if they are in PES education and have a need.
    */
-  @Disabled("Enable this test when the implementation has been fixed")
   @Test
   fun `should not reschedule a previously exempted review schedule given a prisoner with needs and a non-PES course is started`() {
     // Given
