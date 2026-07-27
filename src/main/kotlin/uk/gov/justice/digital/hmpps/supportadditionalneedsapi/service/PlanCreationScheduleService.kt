@@ -187,12 +187,12 @@ class PlanCreationScheduleService(
   fun createOrUpdateDueToEducationUpdate(
     prisonNumber: String,
     startDate: LocalDate,
-    fundingType: String,
+    isPesCourse: Boolean,
     subjectToKPIRules: Boolean,
     prisonId: String,
   ) {
     log.info("Creating or updating plan creation schedule for $prisonNumber")
-    val isKPI = fundingType.equals("PES", ignoreCase = true) && subjectToKPIRules
+    val isKPI = isPesCourse && subjectToKPIRules
     val earliestStart = if (isKPI) startDate else null
     val deadline = if (isKPI) getDeadlineDate(startDate) else IN_THE_FUTURE_DATE
 

@@ -83,7 +83,7 @@ class ScheduleService(
     // In this instance do not exempt the schedule.
 
     val currentEstablishment = prisonerSearchApiClient.getPrisoner(info.nomsNumber).prisonId ?: "N/A"
-    educationService.endNonCurrentEducationEnrollments(info.nomsNumber, currentEstablishment)
+    educationService.endAllEducationEnrolmentsNotInCurrentPrison(info.nomsNumber, currentEstablishment)
 
     val inEducation = educationService.hasActiveEducationEnrollment(info.nomsNumber)
     if (!inEducation) {
