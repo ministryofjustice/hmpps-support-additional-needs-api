@@ -33,3 +33,5 @@ generic-service:
 generic-prometheus-alerts:
   alertSeverity: hmpps-support-additional-needs-dev
   businessHoursOnly: true
+  sqsNumberAlertQueueNames:
+    - "hmpps-farsight-reduce-re-offend-dev-san_domain_events_dlq"

@@ -82,3 +82,4 @@ generic-service:
 
 generic-prometheus-alerts:
   targetApplication: hmpps-support-additional-needs-api
+  sqsAlertsTotalMessagesThreshold: "0"
