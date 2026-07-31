@@ -10,6 +10,7 @@ import reactor.netty.http.client.HttpClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ApiProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.ApisProperties
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.properties.HmppsAuthProperties
+import uk.gov.justice.hmpps.kotlin.auth.ServletRequestResponseNonNullFilterFunction
 import uk.gov.justice.hmpps.kotlin.auth.healthWebClient
 import java.time.Duration
 import kotlin.apply as kotlinApply
@@ -79,6 +80,7 @@ class WebClientConfiguration(
 
     return baseUrl(url)
       .clientConnector(ReactorClientHttpConnector(HttpClient.create().responseTimeout(timeout)))
+      .filter(ServletRequestResponseNonNullFilterFunction())
       .filter(oauth2Client)
       .build()
   }
