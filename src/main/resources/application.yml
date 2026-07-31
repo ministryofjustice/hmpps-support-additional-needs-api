@@ -75,6 +75,8 @@ spring:
     codecs:
       max-in-memory-size: 10MB
 
+springdoc.swagger-ui.version: 5.32.11
+
 hmpps:
   sar:
     template:
