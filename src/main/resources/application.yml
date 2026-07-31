@@ -116,6 +116,7 @@ management:
 springdoc:
   # swagger specification file served via /swagger-ui/index.html?configUrl=/v3/api-docs/swagger-config
   swagger-ui:
+    version: 5.32.11
     url: '/openapi/SupportAdditionalNeedsAPI.yml'
     tags-sorter: alpha
 
