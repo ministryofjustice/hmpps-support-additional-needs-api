@@ -80,6 +80,9 @@ generic-service:
     groups:
       - internal
 
+  retryDlqCronjob:
+    enabled: true
+
 generic-prometheus-alerts:
   targetApplication: hmpps-support-additional-needs-api
   sqsAlertsTotalMessagesThreshold: "0"
