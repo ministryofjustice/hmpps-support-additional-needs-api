@@ -16,10 +16,10 @@ data class Prisoner(
   val legalStatus: LegalStatus = LegalStatus.OTHER,
   val releaseDate: LocalDate?,
   val prisonId: String?,
-  @field:JsonProperty(value = "indeterminateSentence", defaultValue = "false")
-  val isIndeterminateSentence: Boolean,
-  @field:JsonProperty(value = "recall", defaultValue = "false")
-  val isRecall: Boolean,
+  @field:JsonProperty("indeterminateSentence")
+  val isIndeterminateSentence: Boolean = false,
+  @field:JsonProperty("recall")
+  val isRecall: Boolean = false,
   @field:JsonDeserialize(using = StringTrimDeserializer::class)
   val lastName: String,
   @field:JsonDeserialize(using = StringTrimDeserializer::class)

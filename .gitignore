@@ -78,3 +78,4 @@ sonar-project.properties
 #Misc
 /.env
 /.env.docker
+/.env.local
