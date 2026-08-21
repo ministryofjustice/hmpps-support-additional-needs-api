@@ -4,7 +4,7 @@ import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "11.0.6"
   kotlin("plugin.spring") version "2.4.10"
   kotlin("plugin.jpa") version "2.4.10"
   id("org.openapi.generator") version "7.24.0"
@@ -66,7 +66,7 @@ dependencies {
   integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:$hmppsKotlinSpringBootStarterVersion")
   integrationTestImplementation("uk.gov.justice.service.hmpps:hmpps-subject-access-request-test-support:$sarTestSupportLibraryVersion")
   integrationTestImplementation("org.wiremock:wiremock-standalone:3.13.2")
-  integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.46") {
+  integrationTestImplementation("io.swagger.parser.v3:swagger-parser:2.1.47") {
     exclude(group = "io.swagger.core.v3")
   }
   integrationTestImplementation("org.testcontainers:testcontainers-postgresql:$testContainersVersion")
