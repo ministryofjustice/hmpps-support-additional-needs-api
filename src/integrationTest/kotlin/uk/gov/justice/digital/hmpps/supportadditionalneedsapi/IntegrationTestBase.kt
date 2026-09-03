@@ -84,6 +84,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ALN
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ChallengeListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ConditionListResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.CreateEducationSupportPlanRequest
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanActionStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanContributor
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationSchedulesResponse
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ReviewSchedulesResponse
@@ -136,6 +137,7 @@ abstract class IntegrationTestBase {
     const val GET_ALN_SCREENERS_URI_TEMPLATE = "/profile/{prisonNumber}/aln-screener"
     const val GET_PLAN_CREATION_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/plan-creation-schedule?includeAllHistory=true"
     const val GET_REVIEW_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/reviews/review-schedules"
+    const val GET_PLAN_ACTION_STATUS_URI_TEMPLATE = "/profile/{prisonNumber}/plan-action-status"
 
     val pesContractDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
@@ -1007,6 +1009,13 @@ abstract class IntegrationTestBase {
     .bearerToken(aValidTokenWithAuthority(ELSP_RO))
     .exchange()
     .returnResult<ReviewSchedulesResponse>()
+    .body()
+
+  fun getPlanActionStatus(prisonNumber: String): PlanActionStatus = webTestClient.get()
+    .uri(GET_PLAN_ACTION_STATUS_URI_TEMPLATE, prisonNumber)
+    .bearerToken(aValidTokenWithAuthority(ELSP_RO))
+    .exchange()
+    .returnResult<PlanActionStatus>()
     .body()
 
   fun shortDelay(delay: Long = 200) {

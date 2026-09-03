@@ -1,11 +1,14 @@
 package uk.gov.justice.digital.hmpps.supportadditionalneedsapi.service
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PrisonerOverviewRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.InstantMapper
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanActionStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationScheduleExemptionReason
+import kotlin.reflect.full.memberProperties
 
 @Service
 class PlanActionStatusService(
@@ -15,8 +18,16 @@ class PlanActionStatusService(
   private val userService: ManageUserService,
   private val instantMapper: InstantMapper,
 ) {
+  private val logger: Logger = LoggerFactory.getLogger(PlanActionStatusService::class.java)
+
   fun getPlanActionStatus(prisonNumber: String): PlanActionStatus {
     val prisonerOverview = prisonerOverviewRepository.findOneByPrisonNumber(prisonNumber)
+    if (logger.isDebugEnabled) {
+      prisonerOverview?.let {
+        it::class.memberProperties.joinToString(", ") { "${it.name}=${it.getter.call(prisonerOverview,)}" }
+      }.also { logger.debug("Found prisoner overview: {}", it) }
+    }
+
     val status = searchService.determinePlanStatus(prisonerOverview)
     val isDeclined = prisonerOverview?.planDeclined == true
 
