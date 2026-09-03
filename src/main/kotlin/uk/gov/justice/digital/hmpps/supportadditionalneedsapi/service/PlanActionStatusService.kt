@@ -24,7 +24,7 @@ class PlanActionStatusService(
     val prisonerOverview = prisonerOverviewRepository.findOneByPrisonNumber(prisonNumber)
     if (logger.isDebugEnabled) {
       prisonerOverview?.let {
-        it::class.memberProperties.joinToString(", ") { "${it.name}=${it.getter.call(prisonerOverview,)}" }
+        it::class.memberProperties.joinToString(", ") { "${it.name}=${it.getter.call(prisonerOverview)}" }
       }.also { logger.debug("Found prisoner overview: {}", it) }
     }
 
