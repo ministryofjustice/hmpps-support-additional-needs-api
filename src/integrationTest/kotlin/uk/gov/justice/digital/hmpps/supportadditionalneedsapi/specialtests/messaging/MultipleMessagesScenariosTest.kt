@@ -6,6 +6,8 @@ import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.test.context.ActiveProfiles
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.CuriousEducationCompletionStatus
@@ -21,6 +23,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidHm
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.aValidPrisonerReceivedAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanCreationStatus
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.PlanStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.assertThat
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
@@ -35,6 +38,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.Rev
 @ActiveProfiles("integration-test", "ticking-clock")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MultipleMessagesScenariosTest : IntegrationTestBase() {
+  private val logger: Logger = LoggerFactory.getLogger(MultipleMessagesScenariosTest::class.java)
 
   private lateinit var today: LocalDate
 
@@ -175,6 +179,11 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
         it.hasStatus(PlanCreationStatus.SCHEDULED)
           .hasDeadlineDate(LocalDate.parse("2099-12-31"))
       }
+
+    // Plan status shall be no plan without plan creation deadline
+    assertThat(getPlanActionStatus(prisonNumber))
+      .hasStatus(PlanStatus.NO_PLAN)
+      .hasNoPlanCreationDeadlineDate()
   }
 
   /**
@@ -337,6 +346,15 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
       .hasNumberOfReviewSchedules(2)
       .reviewSchedule(1) { it.hasStatus(ReviewScheduleStatusApi.SCHEDULED) }
       .reviewSchedule(2) { it.hasStatus(ReviewScheduleStatusApi.EXEMPT_NOT_IN_EDUCATION) }
+
+    // Plan status shall be inactive without any deadline dates
+    getPlanActionStatus(prisonNumber).let { planActionStatus ->
+      logger.debug("PlanActionStatus: {} and today is {}", planActionStatus, today)
+      assertThat(planActionStatus)
+        .hasStatus(PlanStatus.INACTIVE_PLAN)
+        .hasNoPlanCreationDeadlineDate()
+        .hasNoReviewDeadlineDate()
+    }
   }
 
   /**
@@ -409,6 +427,11 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
         it.hasStatus(PlanCreationStatus.SCHEDULED)
           .hasDeadlineDate(LocalDate.parse("2099-12-31"))
       }
+
+    // Plan status shall be no plan, without plan creation deadline
+    assertThat(getPlanActionStatus(prisonNumber))
+      .hasStatus(PlanStatus.NO_PLAN)
+      .hasNoPlanCreationDeadlineDate()
   }
 
   /**
@@ -557,6 +580,11 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
         it.hasStatus(PlanCreationStatus.SCHEDULED)
           .hasDeadlineDate(LocalDate.parse("2099-12-31"))
       }
+
+    // No plan, without plan creation deadline
+    assertThat(getPlanActionStatus(prisonNumber))
+      .hasStatus(PlanStatus.NO_PLAN)
+      .hasNoPlanCreationDeadlineDate()
   }
 
   /**
@@ -633,6 +661,14 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
         it.hasStatus(PlanCreationStatus.SCHEDULED)
           .hasDeadlineDate(LocalDate.parse("2026-03-27")) // The test sets today as Saturday 2026-03-21. 5 working days from there is Friday 2026-03-27
       }
+
+    // Plan status shall be Plan due: today is 21-Mar (Sat) and plan is due within 5 working days from today: i.e. on or before 27-Mar
+    getPlanActionStatus(prisonNumber).let { planActionStatus ->
+      logger.debug("PlanActionStatus: {} and today is {}", planActionStatus, today)
+      assertThat(planActionStatus)
+        .hasStatus(PlanStatus.PLAN_DUE)
+        .hasPlanCreationDeadlineDate(LocalDate.parse("2026-03-27"))
+    }
   }
 
   private fun sendPrisonerTransferMessage(prisonNumber: String, prisonId: String) {
