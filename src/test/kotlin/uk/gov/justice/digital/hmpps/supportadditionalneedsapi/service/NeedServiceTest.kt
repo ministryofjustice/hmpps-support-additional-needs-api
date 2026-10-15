@@ -7,8 +7,10 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.same
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
@@ -52,7 +54,7 @@ class NeedServiceTest {
 
   @InjectMocks
   private lateinit var needService: NeedService
-  val curiousRef = UUID.randomUUID()
+  private val curiousRef = UUID.randomUUID()
   private val curiousRef2 = UUID.randomUUID()
 
   @Test
@@ -80,6 +82,23 @@ class NeedServiceTest {
   }
 
   @Test
+  fun `recordLddScreenerNeed updates hasNeed on existing LDD assessment`() {
+    val prisonNumber = randomValidPrisonNumber()
+    val hasNeed = false
+    val existingScreener = LddAssessmentEntity(
+      prisonNumber,
+      true,
+    )
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(existingScreener)
+
+    needService.recordLddScreenerNeed(prisonNumber, hasNeed)
+
+    verify(lddAssessmentRepository).save(same(existingScreener))
+    assertFalse(existingScreener.hasNeed)
+  }
+
+  @Test
   fun `hasALNAssessmentNeed returns true if latest ALN assessment has need`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
@@ -92,7 +111,7 @@ class NeedServiceTest {
         ),
       )
 
-    assertTrue(needService.hasALNAssessmentNeed(prisonNumber) == true)
+    assertTrue(needService.hasALNAssessmentNeed(prisonNumber))
   }
 
   @Test
@@ -110,7 +129,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
 
-    assertTrue(needService.hasLDDNeed(prisonNumber) == true)
+    assertTrue(needService.hasLDDNeed(prisonNumber))
   }
 
   @Test
@@ -123,7 +142,7 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasSANNeed returns true if any active non ALN challenge or condition exists`() {
+  fun `hasActiveSANNeed returns true if an active non ALN challenge exists`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(true)
 
@@ -131,7 +150,15 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasSANNeed returns false if no active challenges or conditions exist`() {
+  fun `hasActiveSANNeed returns true if an active condition exists`() {
+    val prisonNumber = randomValidPrisonNumber()
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(true)
+
+    assertTrue(needService.hasActiveSANNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasActiveSANNeed returns false if no active challenges or conditions exist`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(false)
     whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
@@ -139,34 +166,18 @@ class NeedServiceTest {
     assertFalse(needService.hasActiveSANNeed(prisonNumber))
   }
 
-  @Test
-  fun `hasNeed returns false if need is an ALN challenge`() {
-    val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-
-    assertFalse(needService.hasNeed(prisonNumber))
+  private fun mockHasSanNeed(prisonNumber: String) {
+    lenient().whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(true)
+    lenient().whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(true)
   }
 
-  @Test
-  fun `hasNeed returns true if need is not an ALN challenge`() {
-    val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        true,
-      )
-
-    assertTrue(needService.hasNeed(prisonNumber))
+  private fun mockHasNoSanNeed(prisonNumber: String) {
+    lenient().whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(false)
+    lenient().whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
   }
 
-  @Test
-  fun `hasNeed returns true if ALN assessment has need and ignores LDD`() {
-    val prisonNumber = randomValidPrisonNumber()
-
-    // ALN returns true
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+  private fun mockHasAlnNeed(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
         AlnAssessmentEntity(
           prisonNumber = prisonNumber,
@@ -175,22 +186,10 @@ class NeedServiceTest {
           screeningDate = LocalDate.now(),
         ),
       )
-
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
-    assertTrue(needService.hasNeed(prisonNumber))
   }
 
-  @Test
-  fun `hasNeed returns false if ALN assessment exists but has no need and ignores LDD`() {
-    val prisonNumber = randomValidPrisonNumber()
-
-    // ALN returns true
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+  private fun mockHasNoAlnNeed(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
         AlnAssessmentEntity(
           prisonNumber = prisonNumber,
@@ -199,36 +198,155 @@ class NeedServiceTest {
           screeningDate = LocalDate.now(),
         ),
       )
+  }
 
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
+  private fun mockHasNoAlnScreener(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+  }
+
+  private fun mockHasLddNeed(prisonNumber: String) {
+    lenient().whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
+  }
+
+  private fun mockHasNoLddNeed(prisonNumber: String) {
+    lenient().whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = false))
+  }
+
+  @Test
+  fun `Case 1, hasNeed returns true if has SAN need, has ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 2, hasNeed returns true if has SAN need, has ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 3, hasNeed returns true if has SAN need, doesn't have ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 4, hasNeed returns true if has SAN need, doesn't have ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 5, hasNeed returns true if has SAN need, doesn't have ALN screener and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 6, hasNeed returns true if has SAN need, doesn't have ALN screener and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 7, hasNeed returns true if doesn't have SAN need, has ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 8, hasNeed returns true if doesn't have SAN need, has ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  // This test deviates from the expected logic. hasNeed should return false in this case.
+  // This will be remediated in ESWE-2412.
+  @Test
+  fun `Case 9, hasNeed returns true if doesn't have SAN need, doesn't have ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 10, hasNeed returns false if doesn't have SAN need, doesn't have ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
-  fun `hasNeed returns true if ALN assessment is null has has LDD with need`() {
+  fun `Case 11, hasNeed returns true if doesn't have SAN need, doesn't have ALN screener and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
-    // ALN returns null
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(null)
-
-    // LDD returns true,
-    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
-
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
+    mockHasNoSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 12, hasNeed returns false if doesn't have SAN need, doesn't have ALN screener and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
+
+    assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
@@ -271,7 +389,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getChallengeEntity(prisonNumber, active = true, alnScreener = false)))
+      .thenReturn(listOf(getChallengeEntity(prisonNumber)))
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
 
     val result = needService.getNeedSources(prisonNumber)
@@ -286,7 +404,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.CONFIRMED_DIAGNOSIS)))
+      .thenReturn(listOf(getConditionEntity(prisonNumber).copy(source = Source.CONFIRMED_DIAGNOSIS)))
 
     val result = needService.getNeedSources(prisonNumber)
     assertTrue(result.contains(NeedSource.CONDITION_CONFIRMED_DIAGNOSIS))
@@ -300,7 +418,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.SELF_DECLARED)))
+      .thenReturn(listOf(getConditionEntity(prisonNumber).copy(source = Source.SELF_DECLARED)))
 
     val result = needService.getNeedSources(prisonNumber)
     assertTrue(result.contains(NeedSource.CONDITION_SELF_DECLARED))
@@ -353,23 +471,21 @@ class NeedServiceTest {
 
   private fun getChallengeEntity(
     prisonNumber: String,
-    active: Boolean = true,
-    alnScreener: Boolean = true,
   ): ChallengeEntity = ChallengeEntity(
     prisonNumber = prisonNumber,
     challengeType = getChallengeType(),
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
-    active = active,
-    alnScreenerId = if (alnScreener) UUID.randomUUID() else null,
+    active = true,
+    alnScreenerId = null,
   )
 
-  private fun getConditionEntity(prisonNumber: String, active: Boolean = true): ConditionEntity = ConditionEntity(
+  private fun getConditionEntity(prisonNumber: String): ConditionEntity = ConditionEntity(
     prisonNumber = prisonNumber,
     conditionType = getConditionType(),
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
-    active = active,
+    active = true,
     source = Source.SELF_DECLARED,
   )
 
