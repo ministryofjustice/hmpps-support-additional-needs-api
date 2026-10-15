@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
@@ -139,34 +140,13 @@ class NeedServiceTest {
     assertFalse(needService.hasActiveSANNeed(prisonNumber))
   }
 
-  @Test
-  fun `hasNeed returns false if need is an ALN challenge`() {
-    val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-
-    assertFalse(needService.hasNeed(prisonNumber))
+  private fun mockHasSanNeed(prisonNumber: String) {
+    lenient().whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(true)
+    lenient().whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(true)
   }
 
-  @Test
-  fun `hasNeed returns true if need is not an ALN challenge`() {
-    val prisonNumber = randomValidPrisonNumber()
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        true,
-      )
-
-    assertTrue(needService.hasNeed(prisonNumber))
-  }
-
-  @Test
-  fun `hasNeed returns true if ALN assessment has need and ignores LDD`() {
-    val prisonNumber = randomValidPrisonNumber()
-
-    // ALN returns true
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+  private fun mockHasAlnNeed(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
         AlnAssessmentEntity(
           prisonNumber = prisonNumber,
@@ -175,22 +155,10 @@ class NeedServiceTest {
           screeningDate = LocalDate.now(),
         ),
       )
-
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
-    assertTrue(needService.hasNeed(prisonNumber))
   }
 
-  @Test
-  fun `hasNeed returns false if ALN assessment exists but has no need and ignores LDD`() {
-    val prisonNumber = randomValidPrisonNumber()
-
-    // ALN returns true
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+  private fun mockHasNoAlnNeed(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
         AlnAssessmentEntity(
           prisonNumber = prisonNumber,
@@ -199,36 +167,138 @@ class NeedServiceTest {
           screeningDate = LocalDate.now(),
         ),
       )
+  }
 
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
+  private fun mockHasNoAlnScreener(prisonNumber: String) {
+    lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(null)
+  }
+
+  private fun mockHasLddNeed(prisonNumber: String) {
+    lenient().whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
+  }
+
+  @Test
+  fun `Case 1, hasNeed returns true if has SAN need, has ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 2, hasNeed returns true if has SAN need, has ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasAlnNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 3, hasNeed returns true if has SAN need, doesn't have ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 4, hasNeed returns true if has SAN need, doesn't have ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 5, hasNeed returns true if has SAN need, doesn't have ALN screener and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 6, hasNeed returns true if has SAN need, doesn't have ALN screener and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasSanNeed(prisonNumber)
+    mockHasNoAlnScreener(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 7, hasNeed returns true if doesn't have SAN need, has ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 8, hasNeed returns true if doesn't have SAN need, has ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasAlnNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  // This test deviates from the expected logic. hasNeed should return false in this case.
+  // This will be remediated in ESWE-2412.
+  @Test
+  fun `Case 9, hasNeed returns true if doesn't have SAN need, doesn't have ALN need and has LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoAlnNeed(prisonNumber)
+    mockHasLddNeed(prisonNumber)
+
+    assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 10, hasNeed returns false if doesn't have SAN need, doesn't have ALN need and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoAlnNeed(prisonNumber)
+
     assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
-  fun `hasNeed returns true if ALN assessment is null has has LDD with need`() {
+  fun `Case 11, hasNeed returns true if doesn't have SAN need, doesn't have ALN screener and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
-    // ALN returns null
-    whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(null)
-
-    // LDD returns true,
-    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
-      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
-
-    // No active SAN needs
-    whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber))
-      .thenReturn(
-        false,
-      )
-    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
+    mockHasNoAlnScreener(prisonNumber)
+    mockHasLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
+  }
+
+  @Test
+  fun `Case 12, hasNeed returns false if doesn't have SAN need, doesn't have ALN screener and doesn't have LDD need`() {
+    val prisonNumber = randomValidPrisonNumber()
+
+    mockHasNoAlnScreener(prisonNumber)
+
+    assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test
