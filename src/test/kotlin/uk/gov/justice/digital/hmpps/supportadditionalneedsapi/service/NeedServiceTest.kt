@@ -52,7 +52,7 @@ class NeedServiceTest {
 
   @InjectMocks
   private lateinit var needService: NeedService
-  val curiousRef = UUID.randomUUID()
+  private val curiousRef = UUID.randomUUID()
   private val curiousRef2 = UUID.randomUUID()
 
   @Test
@@ -92,7 +92,7 @@ class NeedServiceTest {
         ),
       )
 
-    assertTrue(needService.hasALNAssessmentNeed(prisonNumber) == true)
+    assertTrue(needService.hasALNAssessmentNeed(prisonNumber))
   }
 
   @Test
@@ -110,7 +110,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
 
-    assertTrue(needService.hasLDDNeed(prisonNumber) == true)
+    assertTrue(needService.hasLDDNeed(prisonNumber))
   }
 
   @Test
@@ -271,7 +271,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getChallengeEntity(prisonNumber, active = true, alnScreener = false)))
+      .thenReturn(listOf(getChallengeEntity(prisonNumber)))
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
 
     val result = needService.getNeedSources(prisonNumber)
@@ -286,7 +286,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.CONFIRMED_DIAGNOSIS)))
+      .thenReturn(listOf(getConditionEntity(prisonNumber).copy(source = Source.CONFIRMED_DIAGNOSIS)))
 
     val result = needService.getNeedSources(prisonNumber)
     assertTrue(result.contains(NeedSource.CONDITION_CONFIRMED_DIAGNOSIS))
@@ -300,7 +300,7 @@ class NeedServiceTest {
     whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).thenReturn(null)
     whenever(challengeRepository.findAllByPrisonNumber(prisonNumber)).thenReturn(emptyList())
     whenever(conditionRepository.findAllByPrisonNumber(prisonNumber))
-      .thenReturn(listOf(getConditionEntity(prisonNumber, active = true).copy(source = Source.SELF_DECLARED)))
+      .thenReturn(listOf(getConditionEntity(prisonNumber).copy(source = Source.SELF_DECLARED)))
 
     val result = needService.getNeedSources(prisonNumber)
     assertTrue(result.contains(NeedSource.CONDITION_SELF_DECLARED))
@@ -353,23 +353,21 @@ class NeedServiceTest {
 
   private fun getChallengeEntity(
     prisonNumber: String,
-    active: Boolean = true,
-    alnScreener: Boolean = true,
   ): ChallengeEntity = ChallengeEntity(
     prisonNumber = prisonNumber,
     challengeType = getChallengeType(),
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
-    active = active,
-    alnScreenerId = if (alnScreener) UUID.randomUUID() else null,
+    active = true,
+    alnScreenerId = null,
   )
 
-  private fun getConditionEntity(prisonNumber: String, active: Boolean = true): ConditionEntity = ConditionEntity(
+  private fun getConditionEntity(prisonNumber: String): ConditionEntity = ConditionEntity(
     prisonNumber = prisonNumber,
     conditionType = getConditionType(),
     createdAtPrison = "BXI",
     updatedAtPrison = "BXI",
-    active = active,
+    active = true,
     source = Source.SELF_DECLARED,
   )
 
