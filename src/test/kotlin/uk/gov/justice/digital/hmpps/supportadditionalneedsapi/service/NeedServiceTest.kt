@@ -10,6 +10,7 @@ import org.mockito.Mock
 import org.mockito.Mockito.lenient
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.same
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.AlnAssessmentEntity
@@ -81,6 +82,23 @@ class NeedServiceTest {
   }
 
   @Test
+  fun `recordLddScreenerNeed updates hasNeed on existing LDD assessment`() {
+    val prisonNumber = randomValidPrisonNumber()
+    val hasNeed = false
+    val existingScreener = LddAssessmentEntity(
+      prisonNumber,
+      true,
+    )
+    whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(existingScreener)
+
+    needService.recordLddScreenerNeed(prisonNumber, hasNeed)
+
+    verify(lddAssessmentRepository).save(same(existingScreener))
+    assertFalse(existingScreener.hasNeed)
+  }
+
+  @Test
   fun `hasALNAssessmentNeed returns true if latest ALN assessment has need`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
@@ -124,7 +142,7 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasSANNeed returns true if any active non ALN challenge or condition exists`() {
+  fun `hasActiveSANNeed returns true if an active non ALN challenge exists`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(true)
 
@@ -132,7 +150,15 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `hasSANNeed returns false if no active challenges or conditions exist`() {
+  fun `hasActiveSANNeed returns true if an active condition exists`() {
+    val prisonNumber = randomValidPrisonNumber()
+    whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(true)
+
+    assertTrue(needService.hasActiveSANNeed(prisonNumber))
+  }
+
+  @Test
+  fun `hasActiveSANNeed returns false if no active challenges or conditions exist`() {
     val prisonNumber = randomValidPrisonNumber()
     whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(false)
     whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
