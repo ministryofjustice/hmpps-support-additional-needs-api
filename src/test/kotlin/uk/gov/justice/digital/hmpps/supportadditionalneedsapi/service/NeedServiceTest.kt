@@ -171,6 +171,11 @@ class NeedServiceTest {
     lenient().whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(true)
   }
 
+  private fun mockHasNoSanNeed(prisonNumber: String) {
+    lenient().whenever(challengeRepository.existsByPrisonNumberAndActiveTrueAndAlnScreenerIdIsNull(prisonNumber)).thenReturn(false)
+    lenient().whenever(conditionRepository.existsByPrisonNumberAndActiveTrue(prisonNumber)).thenReturn(false)
+  }
+
   private fun mockHasAlnNeed(prisonNumber: String) {
     lenient().whenever(alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .thenReturn(
@@ -205,6 +210,11 @@ class NeedServiceTest {
       .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = true))
   }
 
+  private fun mockHasNoLddNeed(prisonNumber: String) {
+    lenient().whenever(lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .thenReturn(LddAssessmentEntity(prisonNumber = prisonNumber, hasNeed = false))
+  }
+
   @Test
   fun `Case 1, hasNeed returns true if has SAN need, has ALN need and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
@@ -222,6 +232,7 @@ class NeedServiceTest {
 
     mockHasSanNeed(prisonNumber)
     mockHasAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
   }
@@ -243,6 +254,7 @@ class NeedServiceTest {
 
     mockHasSanNeed(prisonNumber)
     mockHasNoAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
   }
@@ -264,6 +276,7 @@ class NeedServiceTest {
 
     mockHasSanNeed(prisonNumber)
     mockHasNoAlnScreener(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
   }
@@ -272,6 +285,7 @@ class NeedServiceTest {
   fun `Case 7, hasNeed returns true if doesn't have SAN need, has ALN need and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasAlnNeed(prisonNumber)
     mockHasLddNeed(prisonNumber)
 
@@ -282,7 +296,9 @@ class NeedServiceTest {
   fun `Case 8, hasNeed returns true if doesn't have SAN need, has ALN need and doesn't have LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertTrue(needService.hasNeed(prisonNumber))
   }
@@ -293,6 +309,7 @@ class NeedServiceTest {
   fun `Case 9, hasNeed returns true if doesn't have SAN need, doesn't have ALN need and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasNoAlnNeed(prisonNumber)
     mockHasLddNeed(prisonNumber)
 
@@ -303,7 +320,9 @@ class NeedServiceTest {
   fun `Case 10, hasNeed returns false if doesn't have SAN need, doesn't have ALN need and doesn't have LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasNoAlnNeed(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertFalse(needService.hasNeed(prisonNumber))
   }
@@ -312,6 +331,7 @@ class NeedServiceTest {
   fun `Case 11, hasNeed returns true if doesn't have SAN need, doesn't have ALN screener and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasNoAlnScreener(prisonNumber)
     mockHasLddNeed(prisonNumber)
 
@@ -322,7 +342,9 @@ class NeedServiceTest {
   fun `Case 12, hasNeed returns false if doesn't have SAN need, doesn't have ALN screener and doesn't have LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
+    mockHasNoSanNeed(prisonNumber)
     mockHasNoAlnScreener(prisonNumber)
+    mockHasNoLddNeed(prisonNumber)
 
     assertFalse(needService.hasNeed(prisonNumber))
   }
