@@ -84,11 +84,10 @@ class NeedService(
 
     return if (alnAssessment == null) {
       "No ALN Assessment"
-    }
-      else if (alnAssessment.hasNeed) {
-        "Has Need"
-      } else {
-        "No Need"
+    } else if (alnAssessment.hasNeed) {
+      "Has Need"
+    } else {
+      "No Need"
     }
   }
 
@@ -121,7 +120,8 @@ class NeedService(
    **/
 
   fun hasNeed(prisonNumber: String): Boolean = (
-    hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || (alnAssessmentOutcome(prisonNumber) == "No ALN Assessment" && hasLDDNeed(prisonNumber))).also {
+    hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || (alnAssessmentOutcome(prisonNumber) == "No ALN Assessment" && hasLDDNeed(prisonNumber))
+    ).also {
     log.debug { "Prison [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
   }
 
