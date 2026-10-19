@@ -123,10 +123,11 @@ class ScheduleServiceTest {
     }
 
     @Test
-    fun `should pass null dates through when the course is PES and no ALN assessment date is provided`() {
+    fun `should pass null dates through when the course is not PES and no ALN assessment date is provided`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
       whenever(educationService.hasActiveEducationEnrollment(prisonNumber)).thenReturn(true)
+      // getNonPESEducationStartDate returning null indicates the course is non PES
       whenever(educationService.getNonPESEducationStartDate(prisonNumber)).thenReturn(null)
       whenever(elspPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
 
