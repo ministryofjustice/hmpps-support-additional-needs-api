@@ -137,7 +137,7 @@ abstract class IntegrationTestBase {
     const val GET_PLAN_CREATION_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/plan-creation-schedule?includeAllHistory=true"
     const val GET_REVIEW_SCHEDULES_URI_TEMPLATE = "/profile/{prisonNumber}/reviews/review-schedules"
 
-    val pesContractDate = LocalDate.of(2025, 10, 1)
+    val pesContractDate: LocalDate = LocalDate.of(2025, 10, 1)
     private val pgContainer = PostgresContainer.instance
     private val localStackContainer = LocalStackContainer.instance
 
@@ -690,7 +690,7 @@ abstract class IntegrationTestBase {
     )
   }
 
-  fun aValidAlnAssessmentExists(
+  fun anAlnAssessmentExists(
     prisonNumber: String,
     screeningDate: LocalDate = LocalDate.now(),
     hasNeed: Boolean = false,
@@ -703,6 +703,10 @@ abstract class IntegrationTestBase {
       curiousReference = curiousReference,
     ),
   )
+
+  fun manuallyRecordedNeedsExist(prisonNumber: String) {
+    conditionsExist(prisonNumber)
+  }
 
   fun conditionsExist(prisonNumber: String) {
     val adhd = referenceDataRepository.findByKey(ReferenceDataKey(Domain.CONDITION, "ADHD"))
