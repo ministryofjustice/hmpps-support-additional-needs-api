@@ -304,7 +304,7 @@ class NeedServiceTest {
   }
 
   @Test
-  fun `Case 9, hasNeed returns false if doesn't have SAN need, doesn't have ALN need and has LDD need`() {
+  fun `Case 9, hasNeed returns false if doesn't have SAN need, has an ALN screener but doesn't have ALN need, and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
     mockHasNoSanNeed(prisonNumber)

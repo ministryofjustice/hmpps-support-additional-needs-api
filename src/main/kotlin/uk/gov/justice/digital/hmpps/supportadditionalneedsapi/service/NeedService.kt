@@ -115,7 +115,7 @@ class NeedService(
         (alnAssessment?.hasNeed == true) ||
         (alnAssessment == null && hasLDDNeed(prisonNumber))
       ).also {
-      log.debug { "Prison [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
+      log.debug { "Prisoner [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
     }
   }
 
