@@ -106,7 +106,6 @@ class NeedService(
    * MOST RECENT completed ALN Assessment identified a need OR
    * has NOT completed an ALN Assessment BUT HAS completed an LDD screener which has identified a need.
    **/
-
   fun hasNeed(prisonNumber: String): Boolean {
     val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
