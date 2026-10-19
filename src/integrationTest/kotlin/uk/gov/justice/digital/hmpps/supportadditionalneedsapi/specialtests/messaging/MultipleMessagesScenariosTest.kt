@@ -52,20 +52,12 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    *   * No needs
    *   * Does not have an ELSP Creation schedule
    * * Prisoner transfers to HOI
-   *   * Education stop message, but education staff in PVI have no yet marked the prisoner as withdrawn from the course
-   * Manually recorded needs exist
+   *   * Education stop message, but education staff in PVI have not yet marked the prisoner as withdrawn from the course
+   * Manually recorded needs added
    * Education staff in PVI mark the prisoner as having withdrawn from the course, but no education stop message is sent/received
    * Prisoner enrols in a non-PES course in HOI
    *
    * Expectation is that an ELSP Creation Schedule is created with no deadline.
-   *
-   * The prisoner has a need and is in education, though not a PES course. This means they can have an ELSP created if
-   * they wish, but there are no contractural deadlines to do so.
-   *
-   * This scenario is the prisoner is on both PES and non-PES courses, has manually recorded needs
-   * and does not have an ALN assessment.
-   * Prisoner needs to be on a PES course and have an ALN assessment indicating a need in order to create a
-   * Plan Creation Schedule with a deadline.
    */
   @Test
   fun `should create plan creation schedule with no deadline date given a prisoner with a need, PES course has ended, and a non-PES course is started`() {
@@ -334,16 +326,10 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    * * Prisoner
    *   * No needs
    *   * Does not have an ELSP Creation schedule
-   * Manually recorded needs exist
+   * Manually recorded needs added
    * Prisoner enrols in a non-PES course
    *
    * Expectation is that an ELSP Creation Schedule is created with no deadline.
-   *
-   * The prisoner has a need and is in education, though not a PES course. This means they can have an ELSP created if
-   * they wish, but there are no contractural deadlines to do so.
-   *
-   * This scenario is the prisoner is on a non-PES course, has manually recorded needs
-   * and does not have an ALN Assessment.
    */
   @Test
   fun `should create plan creation schedule with no deadline date given a prisoner with a need, and a non-PES course is started`() {
@@ -396,18 +382,14 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    * * Prisoner
    *   * No needs
    *   * Does not have an ELSP Creation schedule
-   * Manually recorded needs exist
+   * Manually recorded needs added
    * Prisoner enrols in a PES course
    *
    * Expectation is that an ELSP Creation Schedule is created with no deadline.
    *
-   * The prisoner has a need and is in education on a PES course. But the need does not include an ALN Assessment. This
-   * means they can have an ELSP created if they wish, but there are no contractural deadlines to do so.
-   *
-   * This scenario is the prisoner is on a PES course, has manually recorded needs
-   * and does not have an ALN Assessment.
-   * Prisoner needs to be on a PES course and have an ALN Assessment indicating a need in order to create a
-   * Plan Creation Schedule with a deadline.
+   * The prisoner has a need and is in education on a PES course. But the need does not come from an ALN assessment, 
+   * it was manually added. This means they can have an ELSP created if they wish, but there are no contractural
+   * deadlines to do so.
    */
   @Test
   fun `should create plan creation schedule with no deadline date given a prisoner with a need, and a PES course is started, but the need does not trigger the KPI rules`() {
@@ -464,13 +446,6 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    * Prisoner enrols in a non-PES course
    *
    * Expectation is that an ELSP Creation Schedule is created with no deadline.
-   *
-   * The prisoner has a need and is in education, though not a PES course. This means they can have an ELSP created if
-   * they wish, but there are no contractural deadlines to do so.
-   *
-   * This scenario is the prisoner is on a non-PES course and has needs indicated by an ALN Assessment.
-   * Prisoner needs to be on a PES course and have an ALN Assessment indicating a need in order to create a
-   * Plan Creation Schedule with a deadline.
    */
   @Test
   fun `should create plan creation schedule with no deadline date given a prisoner with an ALN Assessment need, and a non-PES course is started`() {
@@ -533,13 +508,6 @@ class MultipleMessagesScenariosTest : IntegrationTestBase() {
    *
    * Expectation is that an ELSP Creation Schedule is created, with a status of SCHEDULED and a deadline date of
    * today + 5 working days. (NOT calendar days)
-   *
-   * The prisoner has an ALN assessment indicating a need and is in education on a PES course.
-   * This means they need to have an ELSP created by the deadline.
-   *
-   * This scenario is the prisoner is on a PES course, and has needs indicated by an ALN Assessment.
-   * Prisoner needs to be on a PES course and have an ALN Assessment indicating a need in order to create a
-   * Plan Creation Schedule with a deadline.
    */
   @Test
   fun `should create plan creation schedule with a deadline date given a prisoner with an ALN Assessment need, and a PES course is started`() {
