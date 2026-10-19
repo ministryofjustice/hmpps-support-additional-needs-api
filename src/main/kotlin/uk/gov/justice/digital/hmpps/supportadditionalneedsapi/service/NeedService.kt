@@ -79,18 +79,6 @@ class NeedService(
       }
     }
 
-  fun alnAssessmentOutcome(prisonNumber: String): String {
-    val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
-
-    return if (alnAssessment == null) {
-      "No ALN Assessment"
-    } else if (alnAssessment.hasNeed) {
-      "Has Need"
-    } else {
-      "No Need"
-    }
-  }
-
   fun hasLDDNeed(prisonNumber: String): Boolean = (lddAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)?.hasNeed == true)
     .also {
       if (it) {
@@ -119,9 +107,8 @@ class NeedService(
    * has NOT completed an ALN Assessment BUT HAS completed an LDD screener which has identified a need.
    **/
 
-  fun hasNeed(prisonNumber: String): Boolean = (
-    hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || (alnAssessmentOutcome(prisonNumber) == "No ALN Assessment" && hasLDDNeed(prisonNumber))
-    ).also {
+  fun hasNeed(prisonNumber: String): Boolean = hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber) == null && hasLDDNeed(prisonNumber)
+  .also {
     log.debug { "Prison [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
   }
 
