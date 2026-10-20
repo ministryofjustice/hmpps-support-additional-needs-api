@@ -72,15 +72,15 @@ class PlanCreationScheduleServiceTest {
     val earliest = LocalDate.now()
 
     // When
-    service.createSchedule(prisonNumber = prisonNumber, prisonId = "MDI", deadlineDate = deadline, earliestStartDate = earliest)
+    service.createSchedule(prisonNumber = prisonNumber, prisonId = "BBB", deadlineDate = deadline, earliestStartDate = earliest)
 
     // Then
     verify(planCreationScheduleRepository).saveAndFlush(
       check<PlanCreationScheduleEntity> {
         assertEquals(prisonNumber, it.prisonNumber)
         assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
-        assertEquals("MDI", it.createdAtPrison)
-        assertEquals("MDI", it.updatedAtPrison)
+        assertEquals("BBB", it.createdAtPrison)
+        assertEquals("BBB", it.updatedAtPrison)
         assertEquals(deadline, it.deadlineDate)
         assertEquals(earliest, it.earliestStartDate)
         assertEquals(setOf(ALN_SCREENER), it.needSources)
@@ -94,7 +94,7 @@ class PlanCreationScheduleServiceTest {
     // Given
 
     // When
-    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = "BXI")
+    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = "AAA")
 
     // Then
     verify(needService).hasNeed(prisonNumber)
@@ -160,18 +160,18 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = LocalDate.now(),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = null,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
 
     // When
-    service.completeSchedule(prisonNumber, "MDI")
+    service.completeSchedule(prisonNumber, "BBB")
 
     // Then
     assertEquals(PlanCreationScheduleStatus.COMPLETED, existing.status)
-    assertEquals("MDI", existing.updatedAtPrison)
+    assertEquals("BBB", existing.updatedAtPrison)
     verify(planCreationScheduleRepository).save(existing)
   }
 
@@ -201,7 +201,7 @@ class PlanCreationScheduleServiceTest {
       startDate = startDate,
       isPesCourse = true,
       subjectToKPIRules = true,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -229,7 +229,7 @@ class PlanCreationScheduleServiceTest {
       startDate = LocalDate.parse("2025-10-02"),
       isPesCourse = true,
       subjectToKPIRules = false,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -250,7 +250,7 @@ class PlanCreationScheduleServiceTest {
       startDate = LocalDate.parse("2025-10-02"),
       isPesCourse = false,
       subjectToKPIRules = true,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -270,7 +270,7 @@ class PlanCreationScheduleServiceTest {
       startDate = LocalDate.parse("2025-10-02"),
       isPesCourse = false,
       subjectToKPIRules = false,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -286,8 +286,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
       deadlineDate = LocalDate.parse("2025-01-01"),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = null,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
@@ -298,7 +298,7 @@ class PlanCreationScheduleServiceTest {
       startDate = LocalDate.parse("2025-10-02"),
       isPesCourse = false,
       subjectToKPIRules = false,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -316,8 +316,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = expectedDeadline,
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = startDate,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
@@ -329,7 +329,7 @@ class PlanCreationScheduleServiceTest {
       startDate = startDate,
       isPesCourse = true,
       subjectToKPIRules = true,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -339,7 +339,7 @@ class PlanCreationScheduleServiceTest {
     assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
     assertEquals(expectedDeadline, existing.deadlineDate)
     assertEquals(startDate, existing.earliestStartDate)
-    assertEquals("BXI", existing.updatedAtPrison)
+    assertEquals("AAA", existing.updatedAtPrison)
   }
 
   @Test
@@ -358,7 +358,7 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = educationStartDate,
       alnAssessmentDate = alnAssessmentDate,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -385,7 +385,7 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = LocalDate.parse("2025-10-01"),
       alnAssessmentDate = LocalDate.parse("2025-10-02"),
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -405,7 +405,7 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = null,
       alnAssessmentDate = null,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -425,7 +425,7 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = LocalDate.parse("2025-10-02"),
       alnAssessmentDate = LocalDate.parse("2025-10-01"),
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -447,7 +447,7 @@ class PlanCreationScheduleServiceTest {
       // A null educationStartDate indicates a non-PES course
       educationStartDate = null,
       alnAssessmentDate = null,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -463,8 +463,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.EXEMPT_NO_NEED,
       deadlineDate = LocalDate.parse("2025-01-01"),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = null,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
@@ -474,7 +474,7 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = null,
       alnAssessmentDate = null,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
@@ -483,7 +483,7 @@ class PlanCreationScheduleServiceTest {
     verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
     assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
     assertEquals(IN_THE_FUTURE_DATE, existing.deadlineDate)
-    assertEquals("MDI", existing.updatedAtPrison)
+    assertEquals("BBB", existing.updatedAtPrison)
   }
 
   /**
@@ -509,8 +509,8 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.EXEMPT_NO_NEED,
       deadlineDate = LocalDate.parse("2025-01-01"),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = null,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
@@ -521,14 +521,14 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       educationStartDate = educationStartDate,
       alnAssessmentDate = alnAssessmentDate,
-      prisonId = "MDI",
+      prisonId = "BBB",
     )
 
     // Then
     assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
     assertEquals(IN_THE_FUTURE_DATE, existing.deadlineDate)
     assertEquals(educationStartDate, existing.earliestStartDate)
-    assertEquals("MDI", existing.updatedAtPrison)
+    assertEquals("BBB", existing.updatedAtPrison)
     verify(needService, never()).hasNeed(any())
     verify(planCreationScheduleRepository, times(2)).saveAndFlush(existing)
     verify(eventPublisher, times(2)).createAndPublishPlanCreationSchedule(prisonNumber)
