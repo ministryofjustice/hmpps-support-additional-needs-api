@@ -186,7 +186,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with deadline when no existing schedule and person has need and enrolled in PES course`() {
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with deadline when no existing schedule and prisoner has need and is subject to KPI rules and enrolled in PES course`() {
     // Given
     val startDate = LocalDate.parse("2025-10-02")
     val expectedDeadline = LocalDate.parse("2025-10-09")
@@ -217,7 +217,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and person has need and person isn't subject to KPI rules and enrolled in PES course`() {
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and prisoner isn't subject to KPI rules and enrolled in PES course`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(true)
@@ -238,7 +238,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and person has need and enrolled in non-PES course and subject to KPI rules`() {
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and enrolled in non-PES course and subject to KPI rules`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(true)
@@ -257,9 +257,30 @@ class PlanCreationScheduleServiceTest {
     verifyNoDeadlineForPlanCreation()
     verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
   }
+  
+    @Test
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and enrolled in non-PES course and isn't subject to KPI rules`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = false,
+      subjectToKPIRules = false,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
 
   @Test
-  fun `createOrUpdateDueToEducationUpdate does not save plan creation schedule when no existing schedule and person has no need`() {
+  fun `createOrUpdateDueToEducationUpdate does not save plan creation schedule when no existing schedule and prisoner has no need`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(false)
@@ -343,7 +364,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange saves plan creation schedule with deadline when no existing schedule, person has need and education started on or after ALN assessment`() {
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with deadline when no existing schedule, prisoner has need and education started on or after ALN assessment`() {
     // Given
     val educationStartDate = LocalDate.parse("2025-10-02")
     val alnAssessmentDate = LocalDate.parse("2025-10-01")
@@ -374,7 +395,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, person has need and ALN assessment was after education start`() {
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, prisoner has need and ALN assessment was after education start`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(true)
@@ -394,7 +415,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, person has need and no dates provided`() {
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, prisoner has need and no dates provided`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(true)
@@ -414,7 +435,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, person has no need and education started on or after ALN assessment`() {
+  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, prisoner has no need and education started on or after ALN assessment`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(false)
@@ -436,7 +457,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, person has no need and prisoner is on non-PES course`() {
+  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, prisoner has no need and prisoner is on non-PES course`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
     given(needService.hasNeed(prisonNumber)).willReturn(false)
@@ -457,7 +478,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `createOrUpdateDueToNeedChange does not check need and reschedules when existing schedule is EXEMPT_NO_NEED`() {
+  fun `createOrUpdateDueToNeedChange does not check need and reschedules when existing schedule is EXEMPT_NO_NEED and there is no education start date and no ALN assessment date`() {
     // Given
     val existing = PlanCreationScheduleEntity(
       prisonNumber = prisonNumber,
