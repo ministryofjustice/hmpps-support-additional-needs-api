@@ -11,6 +11,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.given
 import org.mockito.kotlin.never
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource.ALN_SCREENER
@@ -71,20 +72,21 @@ class PlanCreationScheduleServiceTest {
     val earliest = LocalDate.now()
 
     // When
-    service.createSchedule(prisonNumber = prisonNumber, prisonId = "MDI", deadlineDate = deadline, earliestStartDate = earliest)
+    service.createSchedule(prisonNumber = prisonNumber, prisonId = "BBB", deadlineDate = deadline, earliestStartDate = earliest)
 
     // Then
     verify(planCreationScheduleRepository).saveAndFlush(
       check<PlanCreationScheduleEntity> {
         assertEquals(prisonNumber, it.prisonNumber)
         assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
-        assertEquals("MDI", it.createdAtPrison)
-        assertEquals("MDI", it.updatedAtPrison)
+        assertEquals("BBB", it.createdAtPrison)
+        assertEquals("BBB", it.updatedAtPrison)
         assertEquals(deadline, it.deadlineDate)
         assertEquals(earliest, it.earliestStartDate)
         assertEquals(setOf(ALN_SCREENER), it.needSources)
       },
     )
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
   }
 
   @Test
@@ -92,14 +94,17 @@ class PlanCreationScheduleServiceTest {
     // Given
 
     // When
-    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = "BXI")
+    service.createSchedule(prisonNumber, deadlineDate = IN_THE_FUTURE_DATE, earliestStartDate = null, prisonId = "AAA")
 
     // Then
+    verify(needService).hasNeed(prisonNumber)
+    verify(needService, never()).getNeedSources(any())
     verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+    verify(eventPublisher, never()).createAndPublishPlanCreationSchedule(any())
   }
 
   @Test
-  fun `should return deadline date based on PES Contact Date given PES Contact Date plus DEADLINE_DAYS_TO_ADD is greater than education start date plus DEADLINE_DAYS_TO_ADD`() {
+  fun `should return deadline date based on PES contract date given PES contract date plus DEADLINE_DAYS_TO_ADD is greater than education start date plus DEADLINE_DAYS_TO_ADD`() {
     // Given
     val expectedNumberOfDaysToAdd = 5L // PES rules adds 5 days to dates
 
@@ -124,7 +129,7 @@ class PlanCreationScheduleServiceTest {
   }
 
   @Test
-  fun `should return deadline date based on education start date given education start date plus DEADLINE_DAYS_TO_ADD is greater than PES Contact Date plus DEADLINE_DAYS_TO_ADD`() {
+  fun `should return deadline date based on education start date given education start date plus DEADLINE_DAYS_TO_ADD is greater than PES contract date plus DEADLINE_DAYS_TO_ADD`() {
     // Given
     val expectedNumberOfDaysToAdd = 5L // PES rules adds 5 days to dates
 
@@ -155,18 +160,398 @@ class PlanCreationScheduleServiceTest {
       prisonNumber = prisonNumber,
       status = PlanCreationScheduleStatus.SCHEDULED,
       deadlineDate = LocalDate.now(),
-      createdAtPrison = "BXI",
-      updatedAtPrison = "BXI",
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
       earliestStartDate = null,
     )
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
 
     // When
-    service.completeSchedule(prisonNumber, "MDI")
+    service.completeSchedule(prisonNumber, "BBB")
 
     // Then
     assertEquals(PlanCreationScheduleStatus.COMPLETED, existing.status)
-    assertEquals("MDI", existing.updatedAtPrison)
+    assertEquals("BBB", existing.updatedAtPrison)
     verify(planCreationScheduleRepository).save(existing)
+  }
+
+  private fun verifyNoDeadlineForPlanCreation() {
+    verify(planCreationScheduleRepository).saveAndFlush(
+      check<PlanCreationScheduleEntity> {
+        assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
+        assertEquals(IN_THE_FUTURE_DATE, it.deadlineDate)
+        assertEquals(null, it.earliestStartDate)
+      },
+    )
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with deadline when no existing schedule and prisoner has need and is subject to KPI rules and enrolled in PES course`() {
+    // Given
+    val startDate = LocalDate.parse("2025-10-02")
+    val expectedDeadline = LocalDate.parse("2025-10-09")
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+    given(workingDayService.getNextWorkingDayNDaysFromDate(any(), any())).willReturn(expectedDeadline)
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = startDate,
+      isPesCourse = true,
+      subjectToKPIRules = true,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(planCreationScheduleRepository).saveAndFlush(
+      check<PlanCreationScheduleEntity> {
+        assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
+        assertEquals(expectedDeadline, it.deadlineDate)
+        assertEquals(startDate, it.earliestStartDate)
+        assertEquals(setOf(ALN_SCREENER), it.needSources)
+      },
+    )
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and prisoner isn't subject to KPI rules and enrolled in PES course`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = true,
+      subjectToKPIRules = false,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and enrolled in non-PES course and subject to KPI rules`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = false,
+      subjectToKPIRules = true,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and enrolled in non-PES course and isn't subject to KPI rules`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = false,
+      subjectToKPIRules = false,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate does not save plan creation schedule when no existing schedule and prisoner has no need`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(false)
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = false,
+      subjectToKPIRules = false,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService).hasNeed(prisonNumber)
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+    verify(eventPublisher, never()).createAndPublishPlanCreationSchedule(any())
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate does not check need when schedule already exists`() {
+    // Given
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.EXEMPT_PRISONER_TRANSFER,
+      deadlineDate = LocalDate.parse("2025-01-01"),
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
+      earliestStartDate = null,
+    )
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = LocalDate.parse("2025-10-02"),
+      isPesCourse = false,
+      subjectToKPIRules = false,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService, never()).hasNeed(any())
+    verify(planCreationScheduleRepository).saveAndFlush(existing)
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
+  }
+
+  @Test
+  fun `createOrUpdateDueToEducationUpdate does not update plan creation schedule when existing schedule is already scheduled with the same deadline and earliest start date`() {
+    // Given
+    val startDate = LocalDate.parse("2025-10-02")
+    val expectedDeadline = LocalDate.parse("2025-10-09")
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.SCHEDULED,
+      deadlineDate = expectedDeadline,
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
+      earliestStartDate = startDate,
+    )
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
+    given(workingDayService.getNextWorkingDayNDaysFromDate(any(), any())).willReturn(expectedDeadline)
+
+    // When
+    service.createOrUpdateDueToEducationUpdate(
+      prisonNumber = prisonNumber,
+      startDate = startDate,
+      isPesCourse = true,
+      subjectToKPIRules = true,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService, never()).hasNeed(any())
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+    verify(eventPublisher, never()).createAndPublishPlanCreationSchedule(any())
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
+    assertEquals(expectedDeadline, existing.deadlineDate)
+    assertEquals(startDate, existing.earliestStartDate)
+    assertEquals("AAA", existing.updatedAtPrison)
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with deadline when no existing schedule, prisoner has need and education started on or after ALN assessment`() {
+    // Given
+    val educationStartDate = LocalDate.parse("2025-10-02")
+    val alnAssessmentDate = LocalDate.parse("2025-10-01")
+    val expectedDeadline = LocalDate.parse("2025-10-09")
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+    given(workingDayService.getNextWorkingDayNDaysFromDate(any(), any())).willReturn(expectedDeadline)
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = educationStartDate,
+      alnAssessmentDate = alnAssessmentDate,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(planCreationScheduleRepository).saveAndFlush(
+      check<PlanCreationScheduleEntity> {
+        assertEquals(PlanCreationScheduleStatus.SCHEDULED, it.status)
+        assertEquals(expectedDeadline, it.deadlineDate)
+        assertEquals(educationStartDate, it.earliestStartDate)
+        assertEquals(setOf(ALN_SCREENER), it.needSources)
+      },
+    )
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, prisoner has need and ALN assessment was after education start`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = LocalDate.parse("2025-10-01"),
+      alnAssessmentDate = LocalDate.parse("2025-10-02"),
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange saves plan creation schedule with no deadline when no existing schedule, prisoner has need and no dates provided`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(true)
+    given(needService.getNeedSources(prisonNumber)).willReturn(sortedSetOf(ALN_SCREENER))
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = null,
+      alnAssessmentDate = null,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verifyNoDeadlineForPlanCreation()
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, prisoner has no need and education started on or after ALN assessment`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(false)
+    given(workingDayService.getNextWorkingDayNDaysFromDate(any(), any())).willReturn(LocalDate.parse("2025-10-09"))
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = LocalDate.parse("2025-10-02"),
+      alnAssessmentDate = LocalDate.parse("2025-10-01"),
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService).hasNeed(prisonNumber)
+    verify(needService, never()).getNeedSources(any())
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+    verify(eventPublisher, never()).createAndPublishPlanCreationSchedule(any())
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange does not save plan creation schedule when no existing schedule, prisoner has no need and prisoner is on non-PES course`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+    given(needService.hasNeed(prisonNumber)).willReturn(false)
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      // A null educationStartDate indicates a non-PES course
+      educationStartDate = null,
+      alnAssessmentDate = null,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService).hasNeed(prisonNumber)
+    verify(planCreationScheduleRepository, never()).saveAndFlush(any())
+    verify(eventPublisher, never()).createAndPublishPlanCreationSchedule(any())
+  }
+
+  @Test
+  fun `createOrUpdateDueToNeedChange does not check need and reschedules when existing schedule is EXEMPT_NO_NEED and there is no education start date and no ALN assessment date`() {
+    // Given
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.EXEMPT_NO_NEED,
+      deadlineDate = LocalDate.parse("2025-01-01"),
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
+      earliestStartDate = null,
+    )
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = null,
+      alnAssessmentDate = null,
+      prisonId = "BBB",
+    )
+
+    // Then
+    verify(needService, never()).hasNeed(any())
+    verify(planCreationScheduleRepository).saveAndFlush(existing)
+    verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
+    assertEquals(IN_THE_FUTURE_DATE, existing.deadlineDate)
+    assertEquals("BBB", existing.updatedAtPrison)
+  }
+
+  /**
+   * This logic is incorrect and will be fixed in ESWE-2439.
+   * 
+   * When an existing schedule is EXEMPT_NO_NEED and education started on or after the ALN assessment, both update
+   * branches in createOrUpdateDueToNeedChange run: the first sets the education based (KPI) deadline, then the
+   * EXEMPT_NO_NEED branch overwrites it with IN_THE_FUTURE_DATE, saving and publishing an event twice.
+   *
+   * Expected behaviour:
+   *  - status is SCHEDULED
+   *  - deadlineDate is the education based deadline (getDeadlineDate(educationStartDate)), not IN_THE_FUTURE_DATE
+   *  - earliestStartDate is educationStartDate
+   *  - the schedule is saved once and a single event is published
+   */
+  @Test
+  fun `createOrUpdateDueToNeedChange overwrites education based deadline and saves twice when existing schedule is EXEMPT_NO_NEED and education started on or after ALN assessment`() {
+    // Given
+    val educationStartDate = LocalDate.parse("2025-10-02")
+    val alnAssessmentDate = LocalDate.parse("2025-10-01")
+    val expectedDeadline = LocalDate.parse("2025-10-09")
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.EXEMPT_NO_NEED,
+      deadlineDate = LocalDate.parse("2025-01-01"),
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
+      earliestStartDate = null,
+    )
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
+    given(workingDayService.getNextWorkingDayNDaysFromDate(any(), any())).willReturn(expectedDeadline)
+
+    // When
+    service.createOrUpdateDueToNeedChange(
+      prisonNumber = prisonNumber,
+      educationStartDate = educationStartDate,
+      alnAssessmentDate = alnAssessmentDate,
+      prisonId = "BBB",
+    )
+
+    // Then
+    assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
+    assertEquals(IN_THE_FUTURE_DATE, existing.deadlineDate)
+    assertEquals(educationStartDate, existing.earliestStartDate)
+    assertEquals("BBB", existing.updatedAtPrison)
+    verify(needService, never()).hasNeed(any())
+    verify(planCreationScheduleRepository, times(2)).saveAndFlush(existing)
+    verify(eventPublisher, times(2)).createAndPublishPlanCreationSchedule(prisonNumber)
   }
 }
