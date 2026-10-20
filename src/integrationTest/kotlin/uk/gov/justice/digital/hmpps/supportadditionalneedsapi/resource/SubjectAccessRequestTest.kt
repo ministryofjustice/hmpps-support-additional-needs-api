@@ -92,13 +92,13 @@ class SubjectAccessRequestTest : IntegrationTestBase() {
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
     val reviewSchedule = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
     aValidConditionExists(prisonNumber)
-    aValidAlnAssessmentExists(
+    anAlnAssessmentExists(
       prisonNumber,
       screeningDate = LocalDate.parse("2026-01-05"),
       hasNeed = false,
       curiousReference = UUID.fromString("afcd7235-c13b-48c4-8424-61718b2255ba"),
     )
-    aValidAlnAssessmentExists(
+    anAlnAssessmentExists(
       prisonNumber,
       screeningDate = LocalDate.parse("2026-02-05"),
       hasNeed = true,

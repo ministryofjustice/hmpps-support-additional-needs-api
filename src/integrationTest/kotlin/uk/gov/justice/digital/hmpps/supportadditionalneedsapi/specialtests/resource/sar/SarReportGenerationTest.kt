@@ -60,8 +60,8 @@ class SarReportGenerationTest :
     aValidPlanCreationScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-03-15"))
     val reviewSchedule = aValidReviewScheduleExists(prisonNumber, deadlineDate = LocalDate.parse("2026-04-15"))
     aValidConditionExists(prisonNumber)
-    aValidAlnAssessmentExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-05"), hasNeed = false)
-    aValidAlnAssessmentExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-05"), hasNeed = true)
+    anAlnAssessmentExists(prisonNumber, screeningDate = LocalDate.parse("2026-01-05"), hasNeed = false)
+    anAlnAssessmentExists(prisonNumber, screeningDate = LocalDate.parse("2026-02-05"), hasNeed = true)
     // Update the EHCP answer, creating a second EHCP version, to exercise the EHCP section's iteration
     anEhcpStatusUpdateExists(prisonNumber, hasCurrentEhcp = false)
     // A review, which updates the plan (creating the plan history version paired with the review)
