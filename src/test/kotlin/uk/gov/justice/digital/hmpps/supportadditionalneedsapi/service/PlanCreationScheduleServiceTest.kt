@@ -257,8 +257,8 @@ class PlanCreationScheduleServiceTest {
     verifyNoDeadlineForPlanCreation()
     verify(eventPublisher).createAndPublishPlanCreationSchedule(prisonNumber)
   }
-  
-    @Test
+
+  @Test
   fun `createOrUpdateDueToEducationUpdate saves plan creation schedule with no deadline when no existing schedule and prisoner has need and enrolled in non-PES course and isn't subject to KPI rules`() {
     // Given
     given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
