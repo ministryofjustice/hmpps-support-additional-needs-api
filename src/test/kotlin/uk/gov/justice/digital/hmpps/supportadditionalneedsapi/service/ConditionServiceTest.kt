@@ -20,8 +20,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Refe
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Source
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ConditionRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ConditionNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ConditionMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveConditionRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 
 @ExtendWith(MockitoExtension::class)
@@ -54,13 +56,13 @@ class ConditionServiceTest {
    *  * createConditions
    *  * getCondition
    *  * updateCondition
-   *  * archiveCondition
    */
 
   @Nested
   inner class DeleteCondition {
-    val prisonNumber = "A1234AB"
-    val prisonId = "BXI"
+    val prisonNumber = "A1234AA"
+    val createdAtPrisonId = "AAA"
+    val prisonId = "BBB"
     val reason = DeletionReason.ENTERED_IN_ERROR
 
     val condition = ConditionEntity(
@@ -70,8 +72,8 @@ class ConditionServiceTest {
         key = ReferenceDataKey(domain = CONDITION, code = "ADHD"),
         description = "Attention Deficit Hyperactivity Disorder (ADHD / ADD)",
       ),
-      createdAtPrison = prisonId,
-      updatedAtPrison = prisonId,
+      createdAtPrison = createdAtPrisonId,
+      updatedAtPrison = createdAtPrisonId,
     )
 
     val conditionReference = condition.reference
@@ -130,7 +132,109 @@ class ConditionServiceTest {
       assertThat(actual.reference).isEqualTo(conditionReference)
       verify(conditionRepository).getConditionEntityByPrisonNumberAndReference(prisonNumber, conditionReference)
       verify(conditionRepository, never()).delete(any())
-      verifyNoInteractions(dataDeletionEventService)
+      verifyNoInteractions(needService, scheduleService, dataDeletionEventService)
+    }
+  }
+
+  @Nested
+  inner class ArchiveCondition {
+    val prisonNumber = "A1234AA"
+    val createdAtPrisonId = "AAA"
+    val request = ArchiveConditionRequest(archiveReason = "No longer relevant", prisonId = "BBB")
+
+    val condition = ConditionEntity(
+      prisonNumber = prisonNumber,
+      source = Source.SELF_DECLARED,
+      conditionType = ReferenceDataEntity(
+        key = ReferenceDataKey(domain = CONDITION, code = "ADHD"),
+        description = "Attention Deficit Hyperactivity Disorder (ADHD / ADD)",
+      ),
+      createdAtPrison = createdAtPrisonId,
+      updatedAtPrison = createdAtPrisonId,
+      active = true,
+    )
+
+    @Test
+    fun `should archive condition given active condition and prisoner has no needs after archiving`() {
+      // Given
+      given(conditionRepository.getConditionEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(condition)
+      given(needService.hasNeed(any())).willReturn(false)
+
+      // When
+      service.archiveCondition(prisonNumber, condition.reference, request)
+
+      // Then
+      assertThat(condition.active).isFalse()
+      assertThat(condition.archiveReason).isEqualTo("No longer relevant")
+      assertThat(condition.updatedAtPrison).isEqualTo("BBB")
+      verify(conditionRepository).getConditionEntityByPrisonNumberAndReference(prisonNumber, condition.reference)
+      verify(conditionRepository).save(condition)
+      verify(needService).hasNeed(prisonNumber)
+      verify(scheduleService).processNeedChange(prisonNumber, false, null, "BBB")
+    }
+
+    @Test
+    fun `should archive condition given active condition and prisoner still has needs after archiving`() {
+      // Given
+      given(conditionRepository.getConditionEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(condition)
+      given(needService.hasNeed(any())).willReturn(true)
+
+      // When
+      service.archiveCondition(prisonNumber, condition.reference, request)
+
+      // Then
+      assertThat(condition.active).isFalse()
+      assertThat(condition.archiveReason).isEqualTo("No longer relevant")
+      assertThat(condition.updatedAtPrison).isEqualTo("BBB")
+      verify(conditionRepository).getConditionEntityByPrisonNumberAndReference(prisonNumber, condition.reference)
+      verify(conditionRepository).save(condition)
+      verify(needService).hasNeed(prisonNumber)
+      verifyNoInteractions(scheduleService)
+    }
+
+    @Test
+    fun `should not archive condition given condition is already archived`() {
+      // Given
+      condition.active = false
+      condition.archiveReason = "Previously archived"
+
+      given(conditionRepository.getConditionEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(condition)
+
+      // When
+      val actual = catchThrowableOfType(ConditionArchivedException::class.java) {
+        service.archiveCondition(prisonNumber, condition.reference, request)
+      }
+
+      // Then
+      assertThat(actual)
+        .hasMessage("Condition with reference [${condition.reference}] has been archived for prisoner [$prisonNumber]")
+      assertThat(condition.archiveReason).isEqualTo("Previously archived")
+      assertThat(condition.updatedAtPrison).isEqualTo(createdAtPrisonId)
+      verify(conditionRepository).getConditionEntityByPrisonNumberAndReference(prisonNumber, condition.reference)
+      verify(conditionRepository, never()).save(any())
+      verifyNoInteractions(needService, scheduleService)
+    }
+
+    @Test
+    fun `should not archive condition given condition does not exist`() {
+      // Given
+      given(conditionRepository.getConditionEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(null)
+
+      // When
+      val actual = catchThrowableOfType(ConditionNotFoundException::class.java) {
+        service.archiveCondition(prisonNumber, condition.reference, request)
+      }
+
+      // Then
+      assertThat(actual.prisonNumber).isEqualTo(prisonNumber)
+      assertThat(actual.reference).isEqualTo(condition.reference)
+      verify(conditionRepository).getConditionEntityByPrisonNumberAndReference(prisonNumber, condition.reference)
+      verify(conditionRepository, never()).save(any())
+      verifyNoInteractions(needService, scheduleService)
     }
   }
 }
