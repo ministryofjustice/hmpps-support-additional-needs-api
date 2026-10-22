@@ -21,8 +21,10 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ChallengeRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ReferenceDataRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeAlnScreenerException
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeArchivedException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.exceptions.ChallengeNotFoundException
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.mapper.ChallengeMapper
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.ArchiveChallengeRequest
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.resource.model.DeletionReason
 import java.util.UUID
 
@@ -60,7 +62,6 @@ class ChallengeServiceTest {
    *  * createAlnChallenges
    *  * updateChallenge
    *  * getChallenge
-   *  * archiveChallenge
    *  * archiveAllScreenerChallenges
    *  * hasActiveNonALNChallenge
    */
@@ -68,7 +69,7 @@ class ChallengeServiceTest {
   @Nested
   inner class DeleteChallenge {
     val prisonNumber = "A1234AB"
-    val prisonId = "BXI"
+    val prisonId = "AAA"
     val reason = DeletionReason.ENTERED_IN_ERROR
 
     val challenge = ChallengeEntity(
@@ -143,7 +144,7 @@ class ChallengeServiceTest {
       assertThat(actual.reference).isEqualTo(challengeReference)
       verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       verify(challengeRepository, never()).delete(any())
-      verifyNoInteractions(dataDeletionEventService)
+      verifyNoInteractions(needService, scheduleService, dataDeletionEventService)
     }
 
     @Test
@@ -162,7 +163,133 @@ class ChallengeServiceTest {
       assertThat(actual.reference).isEqualTo(challengeReference)
       verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
       verify(challengeRepository, never()).delete(any())
-      verifyNoInteractions(dataDeletionEventService)
+      verifyNoInteractions(needService, scheduleService, dataDeletionEventService)
+    }
+  }
+
+  @Nested
+  inner class ArchiveChallenge {
+    val prisonNumber = "A1234AB"
+    val createdAtPrisonId = "AAA"
+    val request = ArchiveChallengeRequest(archiveReason = "No longer relevant", prisonId = "BBB")
+
+    val challenge = ChallengeEntity(
+      prisonNumber = prisonNumber,
+      challengeType = ReferenceDataEntity(
+        key = ReferenceDataKey(domain = CHALLENGE, code = "READING"),
+        description = "Reading",
+      ),
+      createdAtPrison = createdAtPrisonId,
+      updatedAtPrison = createdAtPrisonId,
+      active = true,
+    )
+
+    val challengeReference = challenge.reference
+
+    @Test
+    fun `should archive challenge given active non-ALN challenge and prisoner has no needs after archiving`() {
+      // Given
+      given(challengeRepository.getChallengeEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(challenge)
+      given(needService.hasNeed(any())).willReturn(false)
+
+      // When
+      service.archiveChallenge(prisonNumber, challengeReference, request)
+
+      // Then
+      assertThat(challenge.active).isFalse()
+      assertThat(challenge.archiveReason).isEqualTo("No longer relevant")
+      assertThat(challenge.updatedAtPrison).isEqualTo("BBB")
+      verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      verify(challengeRepository).save(challenge)
+      verify(needService).hasNeed(prisonNumber)
+      verify(scheduleService).processNeedChange(prisonNumber, false, null, "BBB")
+    }
+
+    @Test
+    fun `should archive challenge given active non-ALN challenge and prisoner still has needs after archiving`() {
+      // Given
+      given(challengeRepository.getChallengeEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(challenge)
+      given(needService.hasNeed(any())).willReturn(true)
+
+      // When
+      service.archiveChallenge(prisonNumber, challengeReference, request)
+
+      // Then
+      assertThat(challenge.active).isFalse()
+      assertThat(challenge.archiveReason).isEqualTo("No longer relevant")
+      assertThat(challenge.updatedAtPrison).isEqualTo("BBB")
+      verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      verify(challengeRepository).save(challenge)
+      verify(needService).hasNeed(prisonNumber)
+      verifyNoInteractions(scheduleService)
+    }
+
+    @Test
+    fun `should not archive challenge given challenge is already archived`() {
+      // Given
+      challenge.active = false
+      challenge.archiveReason = "Previously archived"
+
+      given(challengeRepository.getChallengeEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(challenge)
+
+      // When
+      val actual = catchThrowableOfType(ChallengeArchivedException::class.java) {
+        service.archiveChallenge(prisonNumber, challengeReference, request)
+      }
+
+      // Then
+      assertThat(actual)
+        .hasMessage("Challenge with reference [$challengeReference] has been archived for prisoner [$prisonNumber]")
+      assertThat(challenge.archiveReason).isEqualTo("Previously archived")
+      assertThat(challenge.updatedAtPrison).isEqualTo(createdAtPrisonId)
+      verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      verify(challengeRepository, never()).save(any())
+      verifyNoInteractions(needService, scheduleService)
+    }
+
+    @Test
+    fun `should not archive challenge given challenge is an ALN challenge`() {
+      // Given
+      challenge.alnScreenerId = UUID.randomUUID()
+
+      given(challengeRepository.getChallengeEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(challenge)
+
+      // When
+      val actual = catchThrowableOfType(ChallengeAlnScreenerException::class.java) {
+        service.archiveChallenge(prisonNumber, challengeReference, request)
+      }
+
+      // Then
+      assertThat(actual.prisonNumber).isEqualTo(prisonNumber)
+      assertThat(actual.reference).isEqualTo(challengeReference)
+      assertThat(challenge.active).isTrue()
+      assertThat(challenge.archiveReason).isNull()
+      verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      verify(challengeRepository, never()).save(any())
+      verifyNoInteractions(needService, scheduleService)
+    }
+
+    @Test
+    fun `should not archive challenge given challenge does not exist`() {
+      // Given
+      given(challengeRepository.getChallengeEntityByPrisonNumberAndReference(any(), any()))
+        .willReturn(null)
+
+      // When
+      val actual = catchThrowableOfType(ChallengeNotFoundException::class.java) {
+        service.archiveChallenge(prisonNumber, challengeReference, request)
+      }
+
+      // Then
+      assertThat(actual.prisonNumber).isEqualTo(prisonNumber)
+      assertThat(actual.reference).isEqualTo(challengeReference)
+      verify(challengeRepository).getChallengeEntityByPrisonNumberAndReference(prisonNumber, challengeReference)
+      verify(challengeRepository, never()).save(any())
+      verifyNoInteractions(needService, scheduleService)
     }
   }
 }
