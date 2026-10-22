@@ -228,7 +228,7 @@ class ALNScreenerServiceTest {
     @ValueSource(booleans = [true, false])
     fun `should record ALN need but not process need change given overall need is unchanged`(overallNeed: Boolean) {
       // Given
-      given(needService.hasNeed(any())).willReturn(overallNeed, overallNeed)
+      given(needService.hasNeed(any())).willReturn(overallNeed)
       given(curiousApiClient.getALNAssessment(any()))
         .willReturn(curiousResponse(anAlnAssessment(assessmentDate = assessmentDate, outcome = "YES", establishmentId = "AAA")))
 
