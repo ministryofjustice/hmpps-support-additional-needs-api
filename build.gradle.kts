@@ -109,6 +109,11 @@ tasks.named("jar") {
   enabled = true
 }
 
+tasks.withType<Test> {
+  // Tests use the agent jar produced by this task.
+  dependsOn("copyAgent")
+}
+
 tasks.register<Test>("initialiseDatabase") {
   val integrationTest = tasks.named<Test>("integrationTest").get()
   testClassesDirs = integrationTest.testClassesDirs
@@ -118,8 +123,13 @@ tasks.register<Test>("initialiseDatabase") {
 }
 
 tasks.named("assemble") {
-  // `assemble` task assembles the classes and dependencies into a fat jar
-  // Beforehand we need to remove the plain jar and test-fixtures jars if they exist
+  // Assemble removes the plain and test-fixtures jars, which test tasks need on their classpaths.
+  mustRunAfter(
+    "test",
+    "integrationTest",
+    "specialTests",
+  )
+  // Test tasks need the plain and test-fixtures jars, so remove them only after tests have run.
   doFirst {
     delete(
       fileTree(buildDirectory)

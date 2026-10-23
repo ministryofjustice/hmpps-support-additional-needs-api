@@ -222,11 +222,11 @@ class EducationServiceTest {
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository, times(2)).findAllByPrisonNumber(prisonNumber)
 
-        // assert any schedules were exempted
-        verify(planCreationScheduleService)
-          .exemptSchedule(prisonNumber = prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = "BXI")
-        verify(reviewScheduleService)
-          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
+        // A non-PES course stop must not affect schedules.
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
 
         // assert a call to the planCreationScheduleService was not made
         verify(planCreationScheduleService, never())
