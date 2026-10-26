@@ -507,7 +507,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
       ),
     )
 
-    // Wait for the enrolment transaction to commit before inspecting scheduling in the calling test.
+    // Wait for the enrolment transaction to commit before inspecting scheduling in the calling test. The stop message
+    // is consumed asynchronously from an SQL queue, so when sendCuriousEducationMessage returns, the service may not
+    // have processed it yet.
     await.untilAsserted {
       val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
       Assertions.assertThat(enrolments).hasSize(if (anotherPesCourse) 2 else 1)

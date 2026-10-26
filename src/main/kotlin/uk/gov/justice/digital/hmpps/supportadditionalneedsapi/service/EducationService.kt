@@ -306,6 +306,7 @@ class EducationService(
     var endedCourseCount = 0
     // Keep the PES stop signal separate from general enrolment changes so non-PES stops cannot exempt schedules. Only PES stops can exempt schedules.
     var endedPesCourse = false
+
     endedCourseKeys.forEach { key ->
       val curiousCourse = curiousCoursesInCurrentPrisonByKey[key]
       val educationEnrolment = allInProgressEducationEnrolmentRecordsByKey.getValue(key)

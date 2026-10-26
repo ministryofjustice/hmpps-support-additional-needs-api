@@ -222,7 +222,7 @@ class EducationServiceTest {
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository, times(2)).findAllByPrisonNumber(prisonNumber)
 
-        // A non-PES course stop must not affect schedules.
+        // assert that a non-PES course stop must not affect schedules
         verify(planCreationScheduleService, never())
           .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
         verify(reviewScheduleService, never())
