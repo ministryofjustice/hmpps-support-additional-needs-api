@@ -68,13 +68,12 @@ class PrisonerOverviewRepositoryTest : IntegrationTestBase() {
       assertThat(inEducation(prisonNumber)).isTrue()
     }
 
-    // The result of this test does not align with business rules and will be fixed in ESWE-2437.
     @Test
-    fun `should be in education for non PES course`() {
+    fun `should not be in education for non PES course`() {
       val prisonNumber = randomValidPrisonNumber()
       prisonerInEducation(prisonNumber, learningStartDate = today.minusDays(1), fundingType = "DPS")
 
-      assertThat(inEducation(prisonNumber)).isTrue()
+      assertThat(inEducation(prisonNumber)).isFalse()
     }
 
     @Test
