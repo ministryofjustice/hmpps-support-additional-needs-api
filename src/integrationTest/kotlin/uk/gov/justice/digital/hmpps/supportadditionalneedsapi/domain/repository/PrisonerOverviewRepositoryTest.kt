@@ -69,7 +69,7 @@ class PrisonerOverviewRepositoryTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should be in education for non PES course`() {
+    fun `should not be in education for non PES course`() {
       val prisonNumber = randomValidPrisonNumber()
       prisonerInEducation(prisonNumber, learningStartDate = today.minusDays(1), fundingType = "DPS")
 
