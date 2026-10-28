@@ -90,7 +90,10 @@ class EducationService(
     if (enrolmentDiff.anyChanges) {
       log.debug { "There have been changes to the EducationEnrolments for $prisonNumber" }
 
-      if (!enrolmentDiff.onAnyPesCourseInCurrentPrison) {
+      // For EDUCATION_STOPPED events, only exempt schedules if a PES course was ended (stopping a non-PES course must not change scheduling).
+      // For all other events (eg: EDUCATION_STARTED) the original rule applies unchanged: exempt whenever there is no active PES course.
+      val hasPesCourseStopped = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
+      if (hasPesCourseStopped && !enrolmentDiff.onAnyPesCourseInCurrentPrison) {
         log.info { "Prisoner $prisonNumber is no longer in PES education at $currentEstablishment. Exempt any Plan Creation and Review schedules" }
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
@@ -302,6 +305,9 @@ class EducationService(
 
     // Now process the courses that have ended, processing each as a database record update.
     var endedCourseCount = 0
+    // Keep the PES stop signal separate from general enrolment changes so non-PES stops cannot exempt schedules. Only PES stops can exempt schedules.
+    var endedPesCourse = false
+
     endedCourseKeys.forEach { key ->
       val curiousCourse = curiousCoursesInCurrentPrisonByKey[key]
       val educationEnrolment = allInProgressEducationEnrolmentRecordsByKey.getValue(key)
@@ -316,6 +322,10 @@ class EducationService(
         educationEnrolment.completionStatus = curiousCourse?.completionStatus ?: educationEnrolment.completionStatus
         educationEnrolment.lastCuriousReference = curiousRef
         educationEnrolmentRepository.save(educationEnrolment)
+
+        if (educationEnrolment.isPesCourse()) {
+          endedPesCourse = true
+        }
         endedCourseCount++
       }
     }
@@ -329,6 +339,7 @@ class EducationService(
       closedCourseCount = endedCourseCount,
       anyChanges = createdCourseCount > 0 || endedCourseCount > 0 || reopenedCourseCount > 0,
       onAnyPesCourseInCurrentPrison = inProgressPesCourseKeys.isNotEmpty(),
+      hasEndedPesCourse = endedPesCourse,
       hasCreatedOrRestartedPesCourse = createdOrRestartedPesCourses > 0,
       firstNewEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedCourses,
       reopenedCourseCount = reopenedCourseCount,
@@ -347,6 +358,7 @@ class EducationService(
     val closedCourseCount: Int,
     val anyChanges: Boolean,
     val onAnyPesCourseInCurrentPrison: Boolean,
+    val hasEndedPesCourse: Boolean,
     val hasCreatedOrRestartedPesCourse: Boolean,
     val firstNewEnrolmentStart: LocalDate?,
   )

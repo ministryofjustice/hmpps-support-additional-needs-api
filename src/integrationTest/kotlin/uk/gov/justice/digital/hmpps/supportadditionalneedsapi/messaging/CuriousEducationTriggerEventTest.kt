@@ -159,6 +159,84 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `ESWE-2425 - AC01 - stopping a non-PES course records the stop without changing schedules`() {
+    val prisonNumber = randomValidPrisonNumber()
+    aValidPlanCreationScheduleExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+    val originalPlanSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    val originalReviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "DPS", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
+
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
+      .usingRecursiveComparison().isEqualTo(originalPlanSchedule)
+    Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .usingRecursiveComparison().isEqualTo(originalReviewSchedule)
+  }
+
+  @Test
+  fun `ESWE-2425 - AC02 - stopping the last PES course with an active ESP exempts the review schedule`() {
+    val prisonNumber = randomValidPrisonNumber()
+    anElSPExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = true)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
+
+    val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+    Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
+  }
+
+  @Test
+  fun `ESWE-2425 - AC03 - stopping a PES course with an active ESP and another active PES course leaves scheduling unchanged`() {
+    val prisonNumber = randomValidPrisonNumber()
+    anElSPExists(prisonNumber)
+    aValidReviewScheduleExists(prisonNumber)
+    val originalSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = true, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
+
+    Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
+      .usingRecursiveComparison().isEqualTo(originalSchedule)
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
+  }
+
+  @Test
+  fun `ESWE-2425 - AC04 - stopping the last PES course with plan creation scheduled exempts the plan creation schedule`() {
+    val prisonNumber = randomValidPrisonNumber()
+    aValidPlanCreationScheduleExists(prisonNumber)
+
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
+
+    val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
+    Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).isNull()
+  }
+
+  @Test
+  fun `ESWE-2425 - AC05 - stopping a PES course with plan creation scheduled and another active PES course leaves scheduling unchanged`() {
+    val prisonNumber = randomValidPrisonNumber()
+    aValidPlanCreationScheduleExists(prisonNumber)
+    val originalSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = true, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
+
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
+      .usingRecursiveComparison().isEqualTo(originalSchedule)
+    Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).isNull()
+  }
+
+  @Test
   fun `should put someone in education then out and then back in on the same course`() {
     // Given
     val prisonNumber = randomValidPrisonNumber()
@@ -382,6 +460,126 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule!!.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
     Assertions.assertThat(planCreationSchedule.earliestStartDate).isNull()
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
+  }
+
+  private val stopTestPrisonId = "CFI"
+  private val stopTestCourseStartDate = LocalDate.now().minusMonths(2)
+
+  private data class CourseStopScenario(
+    val prisonNumber: String,
+    val stoppedCourseFundingType: String,
+    val hasOtherActivePesCourse: Boolean,
+    val hasOtherActiveNonPesCourse: Boolean,
+  )
+
+  private data class StoppedCourse(
+    val endDate: LocalDate,
+    val curiousReference: UUID,
+  )
+
+  // Arrange: enrol the prisoner on the course that will be stopped and any other active PES or non-PES courses.
+  private fun givenPrisonerOnCourses(
+    prisonNumber: String,
+    stoppedCourseFundingType: String,
+    hasOtherActivePesCourse: Boolean,
+    hasOtherActiveNonPesCourse: Boolean,
+  ): CourseStopScenario {
+    stubGetTokenFromHmppsAuth()
+    aPrisonerExists(prisonNumber, prisonId = stopTestPrisonId)
+    prisonerInEducation(
+      prisonNumber,
+      learningStartDate = stopTestCourseStartDate,
+      establishmentId = stopTestPrisonId,
+      qualificationCode = "STOPPED",
+      fundingType = stoppedCourseFundingType,
+    )
+    if (hasOtherActivePesCourse) {
+      prisonerInEducation(
+        prisonNumber,
+        learningStartDate = stopTestCourseStartDate,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE",
+      )
+    }
+    if (hasOtherActiveNonPesCourse) {
+      prisonerInEducation(
+        prisonNumber,
+        learningStartDate = stopTestCourseStartDate,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE_NON_PES",
+        fundingType = "DPS",
+      )
+    }
+    return CourseStopScenario(prisonNumber, stoppedCourseFundingType, hasOtherActivePesCourse, hasOtherActiveNonPesCourse)
+  }
+
+  // Act: Curious reports the course as ended, and the EDUCATION_STOPPED message is sent
+  private fun whenCourseIsStopped(scenario: CourseStopScenario): StoppedCourse {
+    val endDate = LocalDate.now().minusDays(1)
+    val curiousReference = UUID.randomUUID()
+    val courses = mutableListOf(
+      aValidV2Education(
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "STOPPED",
+        learningStartDate = stopTestCourseStartDate,
+        learningActualEndDate = endDate,
+        fundingType = scenario.stoppedCourseFundingType,
+        completionStatus = CuriousEducationCompletionStatus.WITHDRAWN,
+      ),
+    )
+    if (scenario.hasOtherActivePesCourse) {
+      courses += aValidV2Education(
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE",
+        learningStartDate = stopTestCourseStartDate,
+      )
+    }
+    if (scenario.hasOtherActiveNonPesCourse) {
+      courses += aValidV2Education(
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE_NON_PES",
+        learningStartDate = stopTestCourseStartDate,
+        fundingType = "DPS",
+      )
+    }
+    stubGetCurious2Education(scenario.prisonNumber, aValidEducationDto(courses))
+
+    sendCuriousEducationMessage(
+      aValidHmppsDomainEventsSqsMessage(
+        prisonNumber = scenario.prisonNumber,
+        eventType = EventType.EDUCATION_STATUS_UPDATE,
+        additionalInformation = aValidEducationStatusUpdateAdditionalInformation(curiousReference),
+        description = "EDUCATION_STOPPED",
+      ),
+    )
+    return StoppedCourse(endDate, curiousReference)
+  }
+
+  // Assert: the stop is recorded in the education enrolment table
+  private fun thenStoppedCourseIsRecorded(scenario: CourseStopScenario, stoppedCourse: StoppedCourse) {
+    // The stop message is consumed asynchronously from an SQS queue, so wait for the enrolment transaction to commit
+    // before the calling test inspects scheduling.
+    await.untilAsserted {
+      val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(scenario.prisonNumber)
+      val expectedEnrolmentCount = 1 + listOf(scenario.hasOtherActivePesCourse, scenario.hasOtherActiveNonPesCourse).count { it }
+      Assertions.assertThat(enrolments).hasSize(expectedEnrolmentCount)
+      val stopped = enrolments.single { it.qualificationCode == "STOPPED" }
+      Assertions.assertThat(stopped.endDate).isEqualTo(stoppedCourse.endDate)
+      Assertions.assertThat(stopped.fundingType).isEqualTo(scenario.stoppedCourseFundingType)
+      Assertions.assertThat(stopped.completionStatus).isEqualTo(CuriousEducationCompletionStatus.WITHDRAWN.value)
+      Assertions.assertThat(stopped.lastCuriousReference).isEqualTo(stoppedCourse.curiousReference)
+      if (scenario.hasOtherActivePesCourse) {
+        Assertions.assertThat(enrolments.single { it.qualificationCode == "ACTIVE" }.endDate).isNull()
+      }
+      if (scenario.hasOtherActiveNonPesCourse) {
+        val activeNonPesCourse = enrolments.single { it.qualificationCode == "ACTIVE_NON_PES" }
+        Assertions.assertThat(activeNonPesCourse.endDate).isNull()
+        Assertions.assertThat(activeNonPesCourse.fundingType).isEqualTo("DPS")
+      }
+    }
   }
 
   private fun processEducationAndValidatePrisonerNotInEducation(
