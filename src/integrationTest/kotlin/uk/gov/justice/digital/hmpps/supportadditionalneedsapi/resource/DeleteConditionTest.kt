@@ -358,6 +358,58 @@ class DeleteConditionTest : IntegrationTestBase() {
   }
 
   @Test
+  fun `deleting the only need-source for a non-PES course remains as remains without an ELSP or plan creation schedule`() {
+    // Given
+    stubForBankHoliday()
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    // Set non PES course by setting fundingType to DPS
+    prisonerInEducation(prisonNumber, fundingType = "DPS")
+
+    // create a single condition via the existing API so the schedule is set up correctly
+    val createResponse = webTestClient.post()
+      .uri("/profile/{prisonNumber}/conditions", prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(
+        CreateConditionsRequest(
+          listOf(
+            ConditionRequest(
+              source = ModelSource.SELF_DECLARED,
+              prisonId = "BXI",
+              conditionTypeCode = "ADHD",
+            ),
+          ),
+        ),
+      )
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult<ConditionListResponse>()
+
+    val created = createResponse.body()
+    val conditionReference = created.conditions.first().reference
+
+    val scheduleBefore = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(scheduleBefore).isNull()
+
+    // When
+    webTestClient.delete()
+      .uri("$URI_TEMPLATE$DEFAULT_QUERY", prisonNumber, conditionReference)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .exchange()
+      .expectStatus()
+      .isNoContent
+
+    // Then
+    assertThat(needService.hasNeed(prisonNumber)).isFalse()
+    val scheduleAfter = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(scheduleAfter).isNull()
+    val elspAfter = elspPlanRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspAfter).isNull()
+  }
+
+  @Test
   fun `deleting one condition does NOT cascade when prisoner still has another need source`() {
     // Given
     stubForBankHoliday()

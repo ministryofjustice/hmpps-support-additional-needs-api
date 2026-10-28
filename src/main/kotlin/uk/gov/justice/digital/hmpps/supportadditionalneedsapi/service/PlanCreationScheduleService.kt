@@ -250,29 +250,32 @@ class PlanCreationScheduleService(
       )
     } else {
       // need to do check in here to see if the ALN assessment was done before the education start
-      // if it was then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
-      if (alnAssessmentDate != null && educationStartDate != null) {
-        if (educationStartDate >= alnAssessmentDate) {
-          updateSchedule(
-            prisonNumber = prisonNumber,
-            schedule = existing,
-            newStatus = existing.status,
-            earliestStartDate = educationStartDate,
-            deadlineDate = getDeadlineDate(educationStartDate),
-            prisonId = prisonId,
-          )
+      val deadlineDate =
+        if (alnAssessmentDate != null && educationStartDate != null && educationStartDate >= alnAssessmentDate) {
+          getDeadlineDate(educationStartDate)
+        } else {
+          null
         }
-      }
-      // this was nothing to do with an aln change probably a new need added.
-      // need to un exempt if the person was exempt due to no need.
+      // if this is a scenario where the prisoner was exempt due to no need and now has a need, need to updated to SCHEDULED and set the deadline/earliestStartDate date based on the education start date
       if (existing.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED) {
         updateSchedule(
-          prisonNumber = prisonNumber,
           schedule = existing,
           newStatus = PlanCreationScheduleStatus.SCHEDULED,
+          deadlineDate = deadlineDate ?: IN_THE_FUTURE_DATE,
           earliestStartDate = educationStartDate,
-          deadlineDate = IN_THE_FUTURE_DATE,
           prisonId = prisonId,
+          prisonNumber = prisonNumber,
+        )
+      }
+      // else if the ALN assessment was done before the education start then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
+      else if (deadlineDate != null) {
+        updateSchedule(
+          schedule = existing,
+          newStatus = existing.status,
+          deadlineDate = deadlineDate,
+          earliestStartDate = educationStartDate,
+          prisonId = prisonId,
+          prisonNumber = prisonNumber,
         )
       }
     }

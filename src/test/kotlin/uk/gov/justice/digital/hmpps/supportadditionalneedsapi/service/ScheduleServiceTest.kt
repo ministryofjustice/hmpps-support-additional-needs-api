@@ -47,7 +47,7 @@ class ScheduleServiceTest {
   inner class ProcessNeedChange {
 
     @Test
-    fun `should exempt plan creation and review schedules when the person no longer has a need`() {
+    fun `should exempt plan creation and review schedules when the person no longer has a need, regardless of PES or non PES course`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
 
@@ -77,7 +77,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    fun `should create or update plan creation schedule when the person has a need, is in education and has no plan`() {
+    fun `should create or update plan creation schedule when the person has a need, is in PES education and has no plan`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
       val educationStartDate = LocalDate.now().minusDays(10)
@@ -100,7 +100,7 @@ class ScheduleServiceTest {
     }
 
     @Test
-    fun `should create or update review schedule when the person has a need, is in education and has a plan`() {
+    fun `should create or update review schedule when the person has a need, is in PES education and has a plan`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
       val educationStartDate = LocalDate.now().minusDays(10)
@@ -123,25 +123,18 @@ class ScheduleServiceTest {
     }
 
     @Test
-    fun `should pass null dates through when the course is not PES and no ALN assessment date is provided`() {
+    fun `should not create a schedule when the person has a need but is in a non-PES course and not in any PES courses`() {
       // Given
       val prisonNumber = randomValidPrisonNumber()
       whenever(educationService.hasActiveEducationEnrollment(prisonNumber)).thenReturn(true)
       // getNonPESEducationStartDate returning null indicates the course is non PES
       whenever(educationService.getNonPESEducationStartDate(prisonNumber)).thenReturn(null)
-      whenever(elspPlanRepository.findByPrisonNumber(prisonNumber)).thenReturn(null)
 
       // When
       scheduleService.processNeedChange(prisonNumber, hasNeed = true, prisonId = prisonId)
 
       // Then
-      verify(planCreationScheduleService).createOrUpdateDueToNeedChange(
-        prisonNumber = prisonNumber,
-        educationStartDate = null,
-        alnAssessmentDate = null,
-        prisonId = prisonId,
-      )
-      verifyNoInteractions(reviewScheduleService)
+      verifyNoInteractions(planCreationScheduleService, reviewScheduleService, elspPlanRepository)
     }
   }
 
