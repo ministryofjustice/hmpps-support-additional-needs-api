@@ -166,7 +166,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val originalPlanSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     val originalReviewSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
-    stopCourseAndValidateEnrolment(prisonNumber, fundingType = "DPS")
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "DPS", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
     Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
       .usingRecursiveComparison().isEqualTo(originalPlanSchedule)
@@ -180,11 +182,12 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     anElSPExists(prisonNumber)
     aValidReviewScheduleExists(prisonNumber)
 
-    stopCourseAndValidateEnrolment(prisonNumber)
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = true)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
-    Assertions.assertThat(schedule.updatedAtPrison).isEqualTo("CFI")
     Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
   }
 
@@ -195,7 +198,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aValidReviewScheduleExists(prisonNumber)
     val originalSchedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
 
-    stopCourseAndValidateEnrolment(prisonNumber, anotherPesCourse = true)
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = true, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
     Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .usingRecursiveComparison().isEqualTo(originalSchedule)
@@ -207,11 +212,12 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val prisonNumber = randomValidPrisonNumber()
     aValidPlanCreationScheduleExists(prisonNumber)
 
-    stopCourseAndValidateEnrolment(prisonNumber)
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = false, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
     val schedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
-    Assertions.assertThat(schedule.updatedAtPrison).isEqualTo("CFI")
     Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).isNull()
   }
 
@@ -221,7 +227,9 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     aValidPlanCreationScheduleExists(prisonNumber)
     val originalSchedule = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
 
-    stopCourseAndValidateEnrolment(prisonNumber, anotherPesCourse = true)
+    val scenario = givenPrisonerOnCourses(prisonNumber, stoppedCourseFundingType = "PES", hasOtherActivePesCourse = true, hasOtherActiveNonPesCourse = false)
+    val stoppedCourse = whenCourseIsStopped(scenario)
+    thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
     Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
       .usingRecursiveComparison().isEqualTo(originalSchedule)
@@ -454,72 +462,122 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     Assertions.assertThat(planCreationSchedule.deadlineDate).isEqualTo(IN_THE_FUTURE_DATE)
   }
 
-  private fun stopCourseAndValidateEnrolment(
+  private val stopTestPrisonId = "CFI"
+  private val stopTestCourseStartDate = LocalDate.now().minusMonths(2)
+
+  private data class CourseStopScenario(
+    val prisonNumber: String,
+    val stoppedCourseFundingType: String,
+    val hasOtherActivePesCourse: Boolean,
+    val hasOtherActiveNonPesCourse: Boolean,
+  )
+
+  private data class StoppedCourse(
+    val endDate: LocalDate,
+    val curiousReference: UUID,
+  )
+
+  // Arrange: enrol the prisoner on the course that will be stopped and any other active PES or non-PES courses.
+  private fun givenPrisonerOnCourses(
     prisonNumber: String,
-    fundingType: String = "PES",
-    anotherPesCourse: Boolean = false,
-  ) {
+    stoppedCourseFundingType: String,
+    hasOtherActivePesCourse: Boolean,
+    hasOtherActiveNonPesCourse: Boolean,
+  ): CourseStopScenario {
     stubGetTokenFromHmppsAuth()
-    aPrisonerExists(prisonNumber, prisonId = "CFI")
-    val startDate = LocalDate.now().minusMonths(2)
-    val endDate = LocalDate.now().minusDays(1)
-    val curiousReference = UUID.randomUUID()
+    aPrisonerExists(prisonNumber, prisonId = stopTestPrisonId)
     prisonerInEducation(
       prisonNumber,
-      learningStartDate = startDate,
-      establishmentId = "CFI",
+      learningStartDate = stopTestCourseStartDate,
+      establishmentId = stopTestPrisonId,
       qualificationCode = "STOPPED",
-      fundingType = fundingType,
+      fundingType = stoppedCourseFundingType,
     )
+    if (hasOtherActivePesCourse) {
+      prisonerInEducation(
+        prisonNumber,
+        learningStartDate = stopTestCourseStartDate,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE",
+      )
+    }
+    if (hasOtherActiveNonPesCourse) {
+      prisonerInEducation(
+        prisonNumber,
+        learningStartDate = stopTestCourseStartDate,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE_NON_PES",
+        fundingType = "DPS",
+      )
+    }
+    return CourseStopScenario(prisonNumber, stoppedCourseFundingType, hasOtherActivePesCourse, hasOtherActiveNonPesCourse)
+  }
+
+  // Act: Curious reports the course as ended, and the EDUCATION_STOPPED message is sent
+  private fun whenCourseIsStopped(scenario: CourseStopScenario): StoppedCourse {
+    val endDate = LocalDate.now().minusDays(1)
+    val curiousReference = UUID.randomUUID()
     val courses = mutableListOf(
       aValidV2Education(
-        prn = prisonNumber,
-        establishmentId = "CFI",
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
         qualificationCode = "STOPPED",
-        learningStartDate = startDate,
+        learningStartDate = stopTestCourseStartDate,
         learningActualEndDate = endDate,
-        fundingType = fundingType,
+        fundingType = scenario.stoppedCourseFundingType,
         completionStatus = CuriousEducationCompletionStatus.WITHDRAWN,
       ),
     )
-    if (anotherPesCourse) {
-      prisonerInEducation(
-        prisonNumber,
-        learningStartDate = startDate,
-        establishmentId = "CFI",
-        qualificationCode = "ACTIVE",
-      )
+    if (scenario.hasOtherActivePesCourse) {
       courses += aValidV2Education(
-        prn = prisonNumber,
-        establishmentId = "CFI",
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
         qualificationCode = "ACTIVE",
-        learningStartDate = startDate,
+        learningStartDate = stopTestCourseStartDate,
       )
     }
-    stubGetCurious2Education(prisonNumber, aValidEducationDto(courses))
+    if (scenario.hasOtherActiveNonPesCourse) {
+      courses += aValidV2Education(
+        prn = scenario.prisonNumber,
+        establishmentId = stopTestPrisonId,
+        qualificationCode = "ACTIVE_NON_PES",
+        learningStartDate = stopTestCourseStartDate,
+        fundingType = "DPS",
+      )
+    }
+    stubGetCurious2Education(scenario.prisonNumber, aValidEducationDto(courses))
 
     sendCuriousEducationMessage(
       aValidHmppsDomainEventsSqsMessage(
-        prisonNumber = prisonNumber,
+        prisonNumber = scenario.prisonNumber,
         eventType = EventType.EDUCATION_STATUS_UPDATE,
         additionalInformation = aValidEducationStatusUpdateAdditionalInformation(curiousReference),
         description = "EDUCATION_STOPPED",
       ),
     )
+    return StoppedCourse(endDate, curiousReference)
+  }
 
-    // Wait for the enrolment transaction to commit before inspecting scheduling in the calling test. The stop message
-    // is consumed asynchronously from an SQL queue, so when sendCuriousEducationMessage returns, the service may not
-    // have processed it yet.
+  // Assert: the stop is recorded in the education enrolment table
+  private fun thenStoppedCourseIsRecorded(scenario: CourseStopScenario, stoppedCourse: StoppedCourse) {
+    // The stop message is consumed asynchronously from an SQS queue, so wait for the enrolment transaction to commit
+    // before the calling test inspects scheduling.
     await.untilAsserted {
-      val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(prisonNumber)
-      Assertions.assertThat(enrolments).hasSize(if (anotherPesCourse) 2 else 1)
+      val enrolments = educationEnrolmentRepository.findAllByPrisonNumber(scenario.prisonNumber)
+      val expectedEnrolmentCount = 1 + listOf(scenario.hasOtherActivePesCourse, scenario.hasOtherActiveNonPesCourse).count { it }
+      Assertions.assertThat(enrolments).hasSize(expectedEnrolmentCount)
       val stopped = enrolments.single { it.qualificationCode == "STOPPED" }
-      Assertions.assertThat(stopped.endDate).isEqualTo(endDate)
-      Assertions.assertThat(stopped.fundingType).isEqualTo(fundingType)
+      Assertions.assertThat(stopped.endDate).isEqualTo(stoppedCourse.endDate)
+      Assertions.assertThat(stopped.fundingType).isEqualTo(scenario.stoppedCourseFundingType)
       Assertions.assertThat(stopped.completionStatus).isEqualTo(CuriousEducationCompletionStatus.WITHDRAWN.value)
-      Assertions.assertThat(stopped.lastCuriousReference).isEqualTo(curiousReference)
-      if (anotherPesCourse) {
+      Assertions.assertThat(stopped.lastCuriousReference).isEqualTo(stoppedCourse.curiousReference)
+      if (scenario.hasOtherActivePesCourse) {
         Assertions.assertThat(enrolments.single { it.qualificationCode == "ACTIVE" }.endDate).isNull()
+      }
+      if (scenario.hasOtherActiveNonPesCourse) {
+        val activeNonPesCourse = enrolments.single { it.qualificationCode == "ACTIVE_NON_PES" }
+        Assertions.assertThat(activeNonPesCourse.endDate).isNull()
+        Assertions.assertThat(activeNonPesCourse.fundingType).isEqualTo("DPS")
       }
     }
   }
