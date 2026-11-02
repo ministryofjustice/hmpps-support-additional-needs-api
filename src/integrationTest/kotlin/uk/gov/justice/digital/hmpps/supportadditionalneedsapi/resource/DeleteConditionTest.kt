@@ -42,8 +42,8 @@ class DeleteConditionTest : IntegrationTestBase() {
         prisonNumber = prisonNumber,
         source = Source.SELF_DECLARED,
         conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+        createdAtPrison = "AAA",
+        updatedAtPrison = "AAA",
       ),
     )
 
@@ -80,8 +80,8 @@ class DeleteConditionTest : IntegrationTestBase() {
         prisonNumber = prisonNumber,
         source = Source.SELF_DECLARED,
         conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+        createdAtPrison = "AAA",
+        updatedAtPrison = "AAA",
       ),
     )
     val dyslexiaCondition = conditionRepository.saveAndFlush(
@@ -89,8 +89,8 @@ class DeleteConditionTest : IntegrationTestBase() {
         prisonNumber = prisonNumber,
         source = Source.SELF_DECLARED,
         conditionType = dyslexia,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+        createdAtPrison = "AAA",
+        updatedAtPrison = "AAA",
       ),
     )
 
@@ -130,8 +130,8 @@ class DeleteConditionTest : IntegrationTestBase() {
         prisonNumber = prisonNumber,
         source = Source.SELF_DECLARED,
         conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+        createdAtPrison = "AAA",
+        updatedAtPrison = "AAA",
         active = false,
         archiveReason = "previously archived",
       ),
@@ -196,8 +196,8 @@ class DeleteConditionTest : IntegrationTestBase() {
         prisonNumber = prisonerA,
         source = Source.SELF_DECLARED,
         conditionType = adhd,
-        createdAtPrison = "BXI",
-        updatedAtPrison = "BXI",
+        createdAtPrison = "AAA",
+        updatedAtPrison = "AAA",
       ),
     )
 
@@ -326,7 +326,7 @@ class DeleteConditionTest : IntegrationTestBase() {
           listOf(
             ConditionRequest(
               source = ModelSource.SELF_DECLARED,
-              prisonId = "BXI",
+              prisonId = "AAA",
               conditionTypeCode = "ADHD",
             ),
           ),
@@ -358,7 +358,7 @@ class DeleteConditionTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `deleting the only need-source for a non-PES course remains as remains without an ELSP or plan creation schedule`() {
+  fun `deleting the only need-source for a non-PES course remains without an ELSP or plan creation schedule`() {
     // Given
     stubForBankHoliday()
     stubGetTokenFromHmppsAuth()
@@ -376,7 +376,7 @@ class DeleteConditionTest : IntegrationTestBase() {
           listOf(
             ConditionRequest(
               source = ModelSource.SELF_DECLARED,
-              prisonId = "BXI",
+              prisonId = "AAA",
               conditionTypeCode = "ADHD",
             ),
           ),
@@ -426,12 +426,12 @@ class DeleteConditionTest : IntegrationTestBase() {
           listOf(
             ConditionRequest(
               source = ModelSource.SELF_DECLARED,
-              prisonId = "BXI",
+              prisonId = "AAA",
               conditionTypeCode = "ADHD",
             ),
             ConditionRequest(
               source = ModelSource.SELF_DECLARED,
-              prisonId = "BXI",
+              prisonId = "AAA",
               conditionTypeCode = "DYSLEXIA",
             ),
           ),

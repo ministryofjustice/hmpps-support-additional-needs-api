@@ -116,7 +116,7 @@ class ScheduleService(
     val educationStartDate = educationService.getNonPESEducationStartDate(prisonNumber)
     // if the educationStartDate is null at this point then it was a non PES course, so do nothing
     if (educationStartDate == null) {
-      log.debug { "Prisoner $prisonNumber has a need and is in education but not on a PES course - no action " }
+      log.debug { "Prisoner $prisonNumber has a need and is in education but not on a PES course - no action" }
       return
     }
 

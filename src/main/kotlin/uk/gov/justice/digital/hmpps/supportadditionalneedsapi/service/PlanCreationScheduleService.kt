@@ -254,25 +254,25 @@ class PlanCreationScheduleService(
         if (alnAssessmentDate != null && educationStartDate != null && educationStartDate >= alnAssessmentDate) {
           getDeadlineDate(educationStartDate)
         } else {
-          null
+          IN_THE_FUTURE_DATE
         }
       // if this is a scenario where the prisoner was exempt due to no need and now has a need, need to updated to SCHEDULED and set the deadline/earliestStartDate date based on the education start date
       if (existing.status == PlanCreationScheduleStatus.EXEMPT_NO_NEED) {
         updateSchedule(
           schedule = existing,
           newStatus = PlanCreationScheduleStatus.SCHEDULED,
-          deadlineDate = deadlineDate ?: IN_THE_FUTURE_DATE,
+          deadlineDate = deadlineDate,
           earliestStartDate = educationStartDate,
           prisonId = prisonId,
           prisonNumber = prisonNumber,
         )
       }
       // else if the ALN assessment was done before the education start then we need to UPDATE the schedule where the deadline/earliestStartDate date is based on the education start date
-      else if (deadlineDate != null) {
+      else {
         updateSchedule(
           schedule = existing,
           newStatus = existing.status,
-          deadlineDate = deadlineDate,
+          deadlineDate = minOf(existing.deadlineDate, deadlineDate),
           earliestStartDate = educationStartDate,
           prisonId = prisonId,
           prisonNumber = prisonNumber,
