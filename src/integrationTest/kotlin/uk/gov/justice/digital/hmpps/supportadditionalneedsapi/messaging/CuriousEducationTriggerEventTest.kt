@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Educ
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.TimelineEventType
+import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.randomValidPrisonNumber
 import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.time.LocalDate
@@ -170,8 +171,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val stoppedCourse = whenCourseIsStopped(scenario)
     thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
-    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
-      .usingRecursiveComparison().isEqualTo(originalPlanSchedule)
+    assertPlanCreationScheduleUnchanged(prisonNumber, originalPlanSchedule)
     Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .usingRecursiveComparison().isEqualTo(originalReviewSchedule)
   }
@@ -188,7 +188,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
 
     val schedule = reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
     Assertions.assertThat(schedule!!.status).isEqualTo(ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION)
-    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
+    assertNoPlanCreationSchedule(prisonNumber)
   }
 
   @Test
@@ -204,7 +204,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
 
     Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber))
       .usingRecursiveComparison().isEqualTo(originalSchedule)
-    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
+    assertNoPlanCreationSchedule(prisonNumber)
   }
 
   @Test
@@ -231,8 +231,7 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
     val stoppedCourse = whenCourseIsStopped(scenario)
     thenStoppedCourseIsRecorded(scenario, stoppedCourse)
 
-    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
-      .usingRecursiveComparison().isEqualTo(originalSchedule)
+    assertPlanCreationScheduleUnchanged(prisonNumber, originalSchedule)
     Assertions.assertThat(reviewScheduleRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)).isNull()
   }
 
@@ -806,5 +805,15 @@ class CuriousEducationTriggerEventTest : IntegrationTestBase() {
 
   private fun sendCuriousEducationMessage(sqsMessage: SqsMessage) {
     sendDomainEvent(sqsMessage)
+  }
+
+  private fun assertNoPlanCreationSchedule(prisonNumber: String) {
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).isNull()
+  }
+
+  private fun assertPlanCreationScheduleUnchanged(prisonNumber: String, originalSchedule: PlanCreationScheduleEntity?) {
+    Assertions.assertThat(planCreationScheduleRepository.findByPrisonNumber(prisonNumber))
+      .usingRecursiveComparison()
+      .isEqualTo(originalSchedule)
   }
 }

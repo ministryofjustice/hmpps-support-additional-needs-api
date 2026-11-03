@@ -91,9 +91,9 @@ class EducationService(
       log.debug { "There have been changes to the EducationEnrolments for $prisonNumber" }
 
       // For EDUCATION_STOPPED events, only exempt schedules if a PES course was ended (stopping a non-PES course must not change scheduling).
-      // For all other events (eg: EDUCATION_STARTED) the original rule applies unchanged: exempt whenever there is no active PES course.
-      val hasPesCourseStopped = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
-      if (hasPesCourseStopped && !enrolmentDiff.onAnyPesCourseInCurrentPrison) {
+      // For all other events, exempt whenever there is no active PES course.
+      val shouldConsiderScheduleExemption = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
+      if (shouldConsiderScheduleExemption && !enrolmentDiff.onAnyPesCourseInCurrentPrison) {
         log.info { "Prisoner $prisonNumber is no longer in PES education at $currentEstablishment. Exempt any Plan Creation and Review schedules" }
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
