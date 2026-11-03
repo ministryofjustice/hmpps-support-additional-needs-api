@@ -303,17 +303,15 @@ class NeedServiceTest {
     assertTrue(needService.hasNeed(prisonNumber))
   }
 
-  // This test deviates from the expected logic. hasNeed should return false in this case.
-  // This will be remediated in ESWE-2412.
   @Test
-  fun `Case 9, hasNeed returns true if doesn't have SAN need, doesn't have ALN need and has LDD need`() {
+  fun `Case 9, hasNeed returns false if doesn't have SAN need, has an ALN screener but doesn't have ALN need, and has LDD need`() {
     val prisonNumber = randomValidPrisonNumber()
 
     mockHasNoSanNeed(prisonNumber)
     mockHasNoAlnNeed(prisonNumber)
     mockHasLddNeed(prisonNumber)
 
-    assertTrue(needService.hasNeed(prisonNumber))
+    assertFalse(needService.hasNeed(prisonNumber))
   }
 
   @Test

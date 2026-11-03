@@ -102,12 +102,20 @@ class NeedService(
     }
 
   /**
-   * Has need is only true if the person either has a non ALN SAN need OR
-   * has completed an ALN Assessment and was identified as having a need
-   * or has not completed an ALN Assessment and the LDD Need is true.
-   */
-  fun hasNeed(prisonNumber: String): Boolean = (hasActiveSANNeed(prisonNumber) || hasALNAssessmentNeed(prisonNumber) || hasLDDNeed(prisonNumber)).also {
-    log.debug { "Prison [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
+   * Has need is ONLY true if the person has an active SAN need OR
+   * MOST RECENT completed ALN Assessment identified a need OR
+   * has NOT completed an ALN Assessment BUT HAS completed an LDD screener which has identified a need.
+   **/
+  fun hasNeed(prisonNumber: String): Boolean {
+    val alnAssessment = alnAssessmentRepository.findFirstByPrisonNumberOrderByUpdatedAtDesc(prisonNumber)
+
+    return (
+      hasActiveSANNeed(prisonNumber) ||
+        (alnAssessment?.hasNeed == true) ||
+        (alnAssessment == null && hasLDDNeed(prisonNumber))
+      ).also {
+      log.debug { "Prisoner [$prisonNumber] ${if (it) "has" else "does not have"} a need" }
+    }
   }
 
   fun getNeedSources(prisonNumber: String): SortedSet<NeedSource> {
