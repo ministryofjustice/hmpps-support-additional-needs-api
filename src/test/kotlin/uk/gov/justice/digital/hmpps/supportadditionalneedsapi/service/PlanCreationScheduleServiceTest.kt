@@ -507,21 +507,8 @@ class PlanCreationScheduleServiceTest {
     assertEquals("BBB", existing.updatedAtPrison)
   }
 
-  /**
-   * This logic is incorrect and will be fixed in ESWE-2439.
-   * 
-   * When an existing schedule is EXEMPT_NO_NEED and education started on or after the ALN assessment, both update
-   * branches in createOrUpdateDueToNeedChange run: the first sets the education based (KPI) deadline, then the
-   * EXEMPT_NO_NEED branch overwrites it with IN_THE_FUTURE_DATE, saving and publishing an event twice.
-   *
-   * Expected behaviour:
-   *  - status is SCHEDULED
-   *  - deadlineDate is the education based deadline (getDeadlineDate(educationStartDate)), not IN_THE_FUTURE_DATE
-   *  - earliestStartDate is educationStartDate
-   *  - the schedule is saved once and a single event is published
-   */
   @Test
-  fun `createOrUpdateDueToNeedChange overwrites education based deadline and saves twice when existing schedule is EXEMPT_NO_NEED and education started on or after ALN assessment`() {
+  fun `createOrUpdateDueToNeedChange overwrites education based deadline and saves once when existing schedule is EXEMPT_NO_NEED and education started on or after ALN assessment`() {
     // Given
     val educationStartDate = LocalDate.parse("2025-10-02")
     val alnAssessmentDate = LocalDate.parse("2025-10-01")
@@ -547,11 +534,11 @@ class PlanCreationScheduleServiceTest {
 
     // Then
     assertEquals(PlanCreationScheduleStatus.SCHEDULED, existing.status)
-    assertEquals(IN_THE_FUTURE_DATE, existing.deadlineDate)
+    assertEquals(expectedDeadline, existing.deadlineDate)
     assertEquals(educationStartDate, existing.earliestStartDate)
     assertEquals("BBB", existing.updatedAtPrison)
     verify(needService, never()).hasNeed(any())
-    verify(planCreationScheduleRepository, times(2)).saveAndFlush(existing)
-    verify(eventPublisher, times(2)).createAndPublishPlanCreationSchedule(prisonNumber)
+    verify(planCreationScheduleRepository, times(1)).saveAndFlush(existing)
+    verify(eventPublisher, times(1)).createAndPublishPlanCreationSchedule(prisonNumber)
   }
 }
