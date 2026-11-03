@@ -99,7 +99,7 @@ class CreateConditionTest : IntegrationTestBase() {
   }
 
   @Test
-  fun `Create a list of conditions for a prisoner where a person is in education - and has a plan creation schedule`() {
+  fun `Create a list of conditions for a prisoner where a person is in PES education - and has a plan creation schedule`() {
     // Given
     stubGetTokenFromHmppsAuth()
     stubGetDisplayName("testuser")
@@ -126,6 +126,38 @@ class CreateConditionTest : IntegrationTestBase() {
     // check that this new need doesn't change the deadline date
     assertThat(planCreationScheduleEntity?.deadlineDate).isNotNull()
     assertThat(planCreationScheduleEntity?.status).isEqualTo(PlanCreationScheduleStatus.SCHEDULED)
+  }
+
+  @Test
+  fun `should not create a plan or schedule when a need is added during non-PES education`() {
+    // Given
+    stubGetTokenFromHmppsAuth()
+    stubGetDisplayName("testuser")
+    val prisonNumber = randomValidPrisonNumber()
+    val conditionsList: CreateConditionsRequest = createConditionsList()
+    // Set non PES course by setting fundingType to DPS
+    prisonerInEducation(prisonNumber, fundingType = "DPS")
+
+    // When
+    val response = webTestClient.post()
+      .uri(URI_TEMPLATE, prisonNumber)
+      .headers(setAuthorisation(roles = listOf("ROLE_SUPPORT_ADDITIONAL_NEEDS__ELSP__RW"), username = "testuser"))
+      .bodyValue(conditionsList)
+      .exchange()
+      .expectStatus()
+      .isCreated
+      .returnResult(ConditionListResponse::class.java)
+
+    // Then
+    val actual = response.responseBody.blockFirst()
+    assertThat(actual).isNotNull()
+
+    // check that new need exists BUT doesn't create a plan or schedule
+    assertThat(needService.hasNeed(prisonNumber)).isTrue()
+    val scheduleAfter = planCreationScheduleRepository.findByPrisonNumber(prisonNumber)
+    assertThat(scheduleAfter).isNull()
+    val elspAfter = elspPlanRepository.findByPrisonNumber(prisonNumber)
+    assertThat(elspAfter).isNull()
   }
 
   @Test
