@@ -388,11 +388,6 @@ class EducationServiceTest {
         inboundEvent = educationStatusUpdateInboundEvent(prisonNumber, "EDUCATION_STARTED")
       }
 
-      /*
-      TODO: This test is wrong currently.  If the person isn't on any PES courses and doesn't have a plan, then enrolling on a non-PES course should _NOT_ trigger
-      a plan creation schedule to be set up.
-      However currently the code will create or update a plan creation schedule with deadline 2099 on receiving a non-PES course enrolment.
-       */
       @Test
       fun `ESWE-2415 AC1 Given a prisoner without a plan and with needs is starting a non-PES course and has no existing course enrolments, should store the new non-PES course enrolment and not make any schedule updates`() {
         // Given
@@ -424,7 +419,7 @@ class EducationServiceTest {
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
         verify(needService).hasNeed(prisonNumber)
-        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
@@ -438,14 +433,8 @@ class EducationServiceTest {
         verify(reviewScheduleService)
           .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
 
-        // assert a call to the planCreationScheduleService with isPesCourse being false
-        verify(planCreationScheduleService).createOrUpdateDueToEducationUpdate(
-          prisonNumber = prisonNumber,
-          startDate = today,
-          isPesCourse = false,
-          subjectToKPIRules = true,
-          prisonId = "BXI",
-        )
+        // assert a call to create or update a plan creation schedule was not made
+        verify(planCreationScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
 
         // assert a call to create or update the review schedule was not made
         verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
@@ -506,7 +495,7 @@ class EducationServiceTest {
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
         verify(needService).hasNeed(prisonNumber)
-        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
@@ -647,7 +636,7 @@ class EducationServiceTest {
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
         verify(needService).hasNeed(prisonNumber)
-        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
@@ -678,11 +667,7 @@ class EducationServiceTest {
           assertThat(fundingType).isEqualTo("DPS")
         }
       }
-
-      /*
-      TODO: This test currently fails, as the code updates the plan creation schedule when a non-PES course is started, and sets the
-      deadline to 2099, instead of leaving it as it is with a deadline of PES start date + 5 days.
-       */
+      
       @Test
       fun `ESWE-2415 AC1 Given a prisoner with no plan yet but with needs and a current PES enrolment is starting a non-PES course, should store the new non-PES course enrolment and not make any schedule updates`() {
         // Given
@@ -730,7 +715,7 @@ class EducationServiceTest {
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
         verify(needService).hasNeed(prisonNumber)
-        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 

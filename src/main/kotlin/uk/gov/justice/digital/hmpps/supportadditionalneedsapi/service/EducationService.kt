@@ -94,7 +94,7 @@ class EducationService(
       // For all other events, exempt whenever there is no active PES course.
       val shouldConsiderScheduleExemption = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
       if (shouldConsiderScheduleExemption && !enrolmentDiff.onAnyPesCourseInCurrentPrison) {
-        log.info { "Prisoner $prisonNumber is no longer in PES education at $currentEstablishment. Exempt any Plan Creation and Review schedules" }
+        log.info { "Prisoner $prisonNumber is not in PES education at $currentEstablishment. Exempt any existing Plan Creation and Review schedules" }
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
         planCreationScheduleService.exemptSchedule(
@@ -109,48 +109,44 @@ class EducationService(
         )
       }
 
-      // Irrespective of whether the prisoner is on a PES course or not, if they have needs and have started/re-started ANY course, we need to check their Plan and Reviews, and potentially update/create them.
+      // If the prisoner has needs and has (re-)started a PES course, we need to create or reschedule their Plan Creation Schedule or Review Schedule
+      // If they have (re-)started a non-PES course, we don't need to create or update any schedules.
       val prisonerHasNeeds = needService.hasNeed(prisonNumber)
-      val hasStartedOrRestartedAnyCourse = enrolmentDiff.createdCourseCount > 0 || enrolmentDiff.reopenedCourseCount > 0
-      if (prisonerHasNeeds && hasStartedOrRestartedAnyCourse) {
-        log.debug { "Prisoner $prisonNumber has a need and has started or re-started a course (PES or non-PES)" }
+      //val hasStartedOrRestartedAnyCourse = enrolmentDiff.createdCourseCount > 0 || enrolmentDiff.reopenedCourseCount > 0
+      if (prisonerHasNeeds && enrolmentDiff.hasCreatedOrRestartedPesCourse) {
+        log.debug { "Prisoner $prisonNumber has a need and has started or re-started a PES course" }
 
         // If the prisoner does not yet have a Plan we need to create a Plan Creation Schedule
         if (elspPlanRepository.findByPrisonNumber(prisonNumber) == null) {
-          log.debug { "Prisoner $prisonNumber has started or restarted a course but does not yet have a Plan. Creating their Plan Creation Schedule" }
+          log.debug { "Prisoner $prisonNumber has started or restarted a PES course but does not yet have a Plan. Creating their Plan Creation Schedule" }
           // The details of how the Plan Creation Schedule is created is the responsibility of the PlanCreationScheduleService, but is based on whether
           // it is subject to the KPI rules (which is based on the prisoner's needs and the enrolment start date) and whether it is a PES course or not.
           val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
           val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
-          val isPesCourse = enrolmentDiff.hasCreatedOrRestartedPesCourse
 
           // create the plan creation schedule
           planCreationScheduleService.createOrUpdateDueToEducationUpdate(
             prisonNumber,
             startDate,
-            isPesCourse,
+            isPesCourse = enrolmentDiff.hasCreatedOrRestartedPesCourse,
             subjectToKPIRules,
             prisonId = currentEstablishment,
           )
         } else {
-          // Prisoner has a Plan. If they have started or restarted a PES course we need to create or reschedule their Review Schedule
-          if (enrolmentDiff.hasCreatedOrRestartedPesCourse) {
-            log.debug { "Prisoner $prisonNumber has started or restarted a PES course. Creating or updating their Review Schedule" }
-            val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
-            reviewScheduleService.createOrUpdateDueToEducationUpdate(
-              prisonNumber,
-              startDate,
-              prisonId = currentEstablishment,
-            )
-          } else {
-            log.debug { "Prisoner $prisonNumber already has a Plan and has started or restarted a non-PES course. Review Schedule does not need to be rescheduled." }
-          }
+          // Prisoner has a Plan, so we need to create or reschedule their Review Schedule
+          log.debug { "Prisoner $prisonNumber has started or restarted a PES course. Creating or updating their Review Schedule" }
+          val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
+          reviewScheduleService.createOrUpdateDueToEducationUpdate(
+            prisonNumber,
+            startDate,
+            prisonId = currentEstablishment,
+          )
         }
       } else {
         log.debug {
           "No need to update prisoner $prisonNumber's Plan Schedule or Review Schedule.\n" +
             "Prisoner has needs: $prisonerHasNeeds \n" +
-            "Prisoner has started or restarted any course: $hasStartedOrRestartedAnyCourse"
+            "Prisoner has started or restarted a PES course: ${enrolmentDiff.hasCreatedOrRestartedPesCourse}"
         }
       }
     }
