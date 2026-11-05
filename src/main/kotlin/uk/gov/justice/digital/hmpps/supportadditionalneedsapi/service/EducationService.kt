@@ -125,13 +125,13 @@ class EducationService(
       if (prisonerHasNeeds && enrolmentDiff.hasCreatedOrRestartedPesCourse) {
         log.debug { "Prisoner $prisonNumber has a need and has started or re-started a PES course" }
 
-        // If the prisoner does not yet have a Plan we need to create a Plan Creation Schedule
+        // If the prisoner does not yet have a Plan we need to create or update a Plan Creation Schedule
         if (elspPlanRepository.findByPrisonNumber(prisonNumber) == null) {
-          log.debug { "Prisoner $prisonNumber has started or restarted a PES course but does not yet have a Plan. Creating their Plan Creation Schedule" }
+          log.debug { "Prisoner $prisonNumber has started or restarted a PES course but does not yet have a Plan. Creating or updating their Plan Creation Schedule" }
           // The details of how the Plan Creation Schedule is created is the responsibility of the PlanCreationScheduleService, but is based on whether
           // it is subject to the KPI rules (which is based on the prisoner's needs and the enrolment start date) and whether it is a PES course or not.
           val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
-          val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
+          val startDate = enrolmentDiff.firstCurrentPesEnrolmentStart ?: LocalDate.now(clock)
 
           // create the plan creation schedule
           planCreationScheduleService.createOrUpdateDueToEducationUpdate(
@@ -347,6 +347,7 @@ class EducationService(
       hasEndedPesCourse = endedPesCourse,
       hasCreatedOrRestartedPesCourse = createdOrRestartedPesCourses > 0,
       firstNewEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedCourses,
+      firstCurrentPesEnrolmentStart = inProgressPesCourseKeys.minByOrNull { it.start }?.start,
       reopenedCourseCount = reopenedCourseCount,
     )
 
@@ -365,7 +366,8 @@ class EducationService(
     val onAnyPesCourseInCurrentPrison: Boolean,
     val hasEndedPesCourse: Boolean,
     val hasCreatedOrRestartedPesCourse: Boolean,
-    val firstNewEnrolmentStart: LocalDate?,
+    val firstNewEnrolmentStart: LocalDate?, // the earliest start date of all new courses in the current prison (PES or non-PES)
+    val firstCurrentPesEnrolmentStart: LocalDate?, // the earliest start date of all In-Progress PES courses in the current prison
   )
 
   fun Education.key(): EnrolmentKey = EnrolmentKey(establishmentId!!, qualificationCode, learningStartDate)

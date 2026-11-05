@@ -1235,10 +1235,8 @@ class EducationServiceTest {
         }
       }
 
-      // TODO: This test currently fails - the code updates the existing plan creation schedule to re-set the deadline to the start date of the new PES course + 5 days. It should
-      // instead keep the original deadline, since the original PES course is still in progress.
       @Test
-      fun `ESWE-2415 AC5 Given a prisoner without a plan and with needs is starting a PES course and is already on an active PES course, should store the new PES course enrollment and not change the plan creation schedule`() {
+      fun `ESWE-2415 AC5 Given a prisoner without a plan and with needs is starting a PES course and is already on an active PES course, should store the new PES course enrollment and update the plan creation schedule`() {
         // Given
         given(needService.hasNeed(any())).willReturn(true)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
@@ -1278,6 +1276,7 @@ class EducationServiceTest {
         verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+        verify(planCreationScheduleService).getCurrentStatus(prisonNumber)
 
         // assert it did not exempt any schedules
         verify(planCreationScheduleService, never())
@@ -1285,8 +1284,13 @@ class EducationServiceTest {
         verify(reviewScheduleService, never())
           .exemptSchedule(any(), any(), any())
 
-        // assert a call to create or update the plan creation schedule was not made
-        verify(planCreationScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any()
+        // assert it did update the plan creation schedule
+        verify(planCreationScheduleService).createOrUpdateDueToEducationUpdate(
+          prisonNumber = prisonNumber,
+          startDate = today.minusWeeks(1), // start date is the date of the first PES course, not the new one.
+          prisonId = "BXI",
+          subjectToKPIRules = true,
+          isPesCourse = true
         )
 
         // assert a call to create or update the review schedule was not made
