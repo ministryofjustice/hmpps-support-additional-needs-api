@@ -90,6 +90,10 @@ class PlanCreationScheduleService(
     return PlanCreationSchedulesResponse(models)
   }
 
+  fun getCurrentStatus(prisonNumber: String): PlanCreationScheduleStatus? {
+    return planCreationScheduleRepository.findByPrisonNumber(prisonNumber)?.status
+  }
+
   @Transactional
   fun exemptScheduleWithValidate(
     prisonNumber: String,

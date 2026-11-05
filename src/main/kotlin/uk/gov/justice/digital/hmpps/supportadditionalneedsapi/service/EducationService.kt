@@ -90,6 +90,15 @@ class EducationService(
     if (enrolmentDiff.anyChanges) {
       log.debug { "There have been changes to the EducationEnrolments for $prisonNumber" }
 
+      // If the prisoner has declined a plan, don't create or update any schedules.
+      if (planCreationScheduleService.getCurrentStatus(prisonNumber) == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY) {
+        log.debug {
+          "No need to update prisoner $prisonNumber's Plan Schedule or Review Schedule. Prisoner has declined a plan."
+        }
+        return
+      }
+
+      if (!enrolmentDiff.onAnyPesCourseInCurrentPrison) {
       // For EDUCATION_STOPPED events, only exempt schedules if a PES course was ended (stopping a non-PES course must not change scheduling).
       // For all other events, exempt whenever there is no active PES course.
       val shouldConsiderScheduleExemption = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse

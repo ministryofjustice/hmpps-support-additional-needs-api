@@ -22,7 +22,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.curious.Edu
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.Prisoner
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.PrisonerSearchApiClient
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersearch.aValidPrisoner
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.config.Constants.Companion.IN_THE_FUTURE_DATE
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
@@ -32,7 +31,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.Revi
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.EducationEnrolmentRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.ElspPlanRepository
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.PlanCreationScheduleRepository
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.AdditionalInformation.EducationStatusUpdateAdditionalInformation
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.EventType
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.messaging.InboundEvent
@@ -48,7 +46,6 @@ class EducationServiceTest {
   private val curiousApiClient: CuriousApiClient = mock()
   private val prisonerSearchApiClient: PrisonerSearchApiClient = mock()
   private val educationEnrolmentRepository: EducationEnrolmentRepository = mock()
-  private val planCreationScheduleRepository: PlanCreationScheduleRepository = mock()
   private val needService: NeedService = mock()
   private val reviewScheduleService: ReviewScheduleService = mock()
   private val planCreationScheduleService: PlanCreationScheduleService = mock()
@@ -667,7 +664,7 @@ class EducationServiceTest {
           assertThat(fundingType).isEqualTo("DPS")
         }
       }
-      
+
       @Test
       fun `ESWE-2415 AC1 Given a prisoner with no plan yet but with needs and a current PES enrolment is starting a non-PES course, should store the new non-PES course enrolment and not make any schedule updates`() {
         // Given
@@ -1038,23 +1035,13 @@ class EducationServiceTest {
         }
       }
 
-      // TODO: This test currently fails, as the code doesn't take into account any existing exemptions, and will update the plan creation schedule regardless.
-      // It should first check the plan creation status and only update the plan creation schedule if the status is not EXEMPT_PRISONER_NOT_COMPLY.
       @Test
       fun `ESWE-2415 AC4 Given a prisoner with needs is starting a PES course and has previously declined having a plan, should store the new PES enrollment and not create or update any schedules`() {
         // Given
         given(needService.hasNeed(any())).willReturn(true)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
         // Plan creation schedule is exempt due to prisoner declining a plan
-        given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(
-          aPlanCreationSchedule(
-            prisonNumber = prisonNumber,
-            prisonId = "BXI",
-            status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
-            deadline = IN_THE_FUTURE_DATE
-          )
-        )
-
+        given(planCreationScheduleService.getCurrentStatus(prisonNumber)).willReturn(PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
 
         val educationDto = EducationDTO(
           educationData = listOf(
@@ -1079,11 +1066,11 @@ class EducationServiceTest {
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
-        verify(needService).hasNeed(prisonNumber)
+        verifyNoInteractions(needService)
         verifyNoInteractions(elspPlanRepository)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
-        verify(planCreationScheduleRepository).findByPrisonNumber(prisonNumber)
+        verify(planCreationScheduleService).getCurrentStatus(prisonNumber)
 
         // assert it did not exempt any schedules
         verify(planCreationScheduleService, never())
@@ -1381,7 +1368,7 @@ class EducationServiceTest {
 
 
         @Test
-        fun `should process education-start given no changes were made to the course enrolments`() {
+        fun `Given an EDUCATION_STARTED message is received but no changes were made to the course enrolments, no changes are stored and no updates are made to schedules`() {
           // Given
 
           val educationDto = EducationDTO(
@@ -1434,10 +1421,13 @@ class EducationServiceTest {
         }
 
         @Test
-        fun `should process education-start given a previously ended PES course is restarted`() {
+        fun `Given a prisoner with needs and an inactive plan restarts a previously ended PES course, should update the database record for that course and reschedule the review schedule`() {
           // Given
-          given(needService.hasNeed(any())).willReturn(false)
-          given(needService.getNeedSources(any())).willReturn(sortedSetOf())
+          given(needService.hasNeed(any())).willReturn(true)
+          given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+          given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+          val courseStartDate = today.minusWeeks(2)
 
           given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
             listOf(
@@ -1445,7 +1435,7 @@ class EducationServiceTest {
                 prisonNumber,
                 "BXI",
                 "Maths",
-                today.minusWeeks(2),
+                courseStartDate,
                 "PES",
                 endDate = today.minusWeeks(1)
               ),
@@ -1459,7 +1449,7 @@ class EducationServiceTest {
                 prisonId = "BXI",
                 courseCode = "Maths",
                 // even though Curious is telling us the course is restarting today, they do not change their startDate field. This is CRUCIAL for us to find the right course in our DB because the composite key uses this field
-                startDate = today.minusWeeks(2),
+                startDate = courseStartDate,
                 endDate = null,
               ),
             ),
@@ -1476,7 +1466,7 @@ class EducationServiceTest {
           // Then
           verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
           verify(needService).hasNeed(prisonNumber)
-          verifyNoInteractions(elspPlanRepository)
+          verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
           verify(curiousApiClient).getEducation(prisonNumber)
           verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
@@ -1490,8 +1480,12 @@ class EducationServiceTest {
           verify(planCreationScheduleService, never())
             .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
 
-          // assert a call to create or update the review schedule was not made
-          verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+          // assert it did update the review schedule
+          verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+            prisonNumber = prisonNumber,
+            startDate = courseStartDate,
+            prisonId = "BXI",
+          )
 
           // assert the records written/updated to the EducationEnrolmentRepository
           val captor = argumentCaptor<EducationEnrolmentEntity>()
