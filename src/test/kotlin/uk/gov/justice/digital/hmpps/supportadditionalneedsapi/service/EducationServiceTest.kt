@@ -385,7 +385,713 @@ class EducationServiceTest {
       }
 
       @Test
-      fun `should process education-start given a prisoner without a plan and with needs is starting a PES course and has no existing course enrolments`() {
+      fun `ESWE-2415 AC1 Given a prisoner without a plan and with needs is starting a non-PES course and has no existing course enrolments, should store the new non-PES course enrolment and not make any schedule updates`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(null)
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aNonPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert any schedules were exempted
+        verify(planCreationScheduleService)
+          .exemptSchedule(
+            prisonNumber = prisonNumber,
+            status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+            prisonId = "BXI",
+          )
+        verify(reviewScheduleService)
+          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
+
+        // assert a call to create or update a plan creation schedule was not made
+        verify(planCreationScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("DPS")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC1 Given a prisoner with a plan and needs and already on a PES course is starting a non-PES course, should store the new non-PES course enrolment and not make any schedule changes`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            // Existing PES course
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+            ),
+            // New non-PES course
+            aNonPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        // The prisoner is already on a PES course, so they have an existing course enrolment
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES"),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("DPS")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC1 Given a prisoner without needs is starting a non-PES course and has no existing course enrolments, should store the new non-PES course enrolment and not make any schedule updates`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(false)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf())
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aNonPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verifyNoInteractions(elspPlanRepository)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert any schedules were exempted
+        verify(planCreationScheduleService)
+          .exemptSchedule(
+            prisonNumber = prisonNumber,
+            status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+            prisonId = "BXI",
+          )
+        verify(reviewScheduleService)
+          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("DPS")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC1 Given a prisoner with an inactive plan and with needs is starting a non-PES course and has no current PES enrolments, should store the new non-PES course enrolment and not make any schedule updates`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aNonPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+              endDate = today.minusDays(1),
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(
+              prisonNumber,
+              "BXI",
+              "English",
+              today.minusWeeks(1),
+              "PES",
+              endDate = today.minusDays(1),
+            ),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // we will call exemptSchedule() even though the schedule(s) will already been exempted when the previous . The exemptSchedule() function handles
+        // not re-exempting the schedule if it is already exempted due to not being in PES education.
+        verify(planCreationScheduleService)
+          .exemptSchedule(
+            prisonNumber = prisonNumber,
+            status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
+            prisonId = "BXI",
+          )
+        verify(reviewScheduleService)
+          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("DPS")
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC1 Given a prisoner with no plan yet but with needs and a current PES enrolment is starting a non-PES course, should store the new non-PES course enrolment and not make any schedule updates`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(null)
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aNonPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(
+              prisonNumber,
+              "BXI",
+              "English",
+              today.minusWeeks(1),
+              "PES",
+            ),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository, never()).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("DPS")
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC2 Given a prisoner with a plan and needs and an active PES course is starting a new PES course, should store the new PES course enrollment and update the review schedule`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        // The prisoner has an existing PES course
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES"),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert it did update the review schedule
+        verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+          prisonNumber = prisonNumber,
+          startDate = today,
+          prisonId = "BXI",
+        )
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC2 Given a prisoner with an inactive plan (due to completed PES course) and needs is starting a new PES course, should store the new PES course enrollment and update the review schedule`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        // The prisoner has a completed PES course
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+              endDate = today.minusDays(1),
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES", endDate = today.minusDays(1)),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert it did update the review schedule
+        verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+          prisonNumber = prisonNumber,
+          startDate = today,
+          prisonId = "BXI",
+        )
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC3 Given a prisoner with no needs and with plan and on an active PES course, is starting a new PES course, should store the new PES course enrollment and not update the review schedule`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(false)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf())
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES"),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to the reviewScheduleService was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC3 Given a prisoner with no needs and with an inactive plan (due to a completed PES course), is starting a new PES course, should store the new PES course enrollment and not update the review schedule`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(false)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf())
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+              endDate = today.minusDays(1),
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES", today.minusDays(1)),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to the reviewScheduleService was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC4 Given a prisoner with needs is starting a PES course and has previously declined having a plan, should store the new PES enrollment and not create or update any schedules`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        // Plan creation schedule is exempt due to prisoner declining a plan
+        given(planCreationScheduleService.getCurrentStatus(prisonNumber)).willReturn(PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
+
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verifyNoInteractions(needService)
+        verifyNoInteractions(elspPlanRepository)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+        verify(planCreationScheduleService).getCurrentStatus(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today)
+          assertThat(endDate).isNull()
+        }
+      }
+
+      @Test
+      fun `ESWE-2415 AC5 Given a prisoner without a plan and with needs is starting a PES course and has no existing course enrolments, should store the new PES course enrollment and create the plan creation schedule`() {
         // Given
         given(needService.hasNeed(any())).willReturn(true)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
@@ -406,7 +1112,11 @@ class EducationServiceTest {
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
@@ -446,7 +1156,7 @@ class EducationServiceTest {
       }
 
       @Test
-      fun `should process education-start given a prisoner without a plan and with needs is starting a non-PES course and has no existing course enrolments`() {
+      fun `ESWE-2415 AC5 Given a prisoner without a plan and with needs is starting a PES course and already has an active non-PES course, should store the new PES course enrollment and update the plan creation schedule to remove the exemption`() {
         // Given
         given(needService.hasNeed(any())).willReturn(true)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
@@ -457,6 +1167,12 @@ class EducationServiceTest {
             aNonPesCourse(
               prisonNumber = prisonNumber,
               prisonId = "BXI",
+              courseCode = "English",
+              startDate = today.minusWeeks(1),
+            ),
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
               courseCode = "Maths",
               startDate = today,
             ),
@@ -464,10 +1180,16 @@ class EducationServiceTest {
         )
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
-        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "DPS")),
+        )
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
@@ -476,17 +1198,17 @@ class EducationServiceTest {
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
-        // assert any schedules were exempted
-        verify(planCreationScheduleService)
-          .exemptSchedule(prisonNumber = prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = "BXI")
-        verify(reviewScheduleService)
-          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
 
-        // assert a call to the planCreationScheduleService with isPesCourse being false
+        // assert a call to the planCreationScheduleService with isPesCourse being true
         verify(planCreationScheduleService).createOrUpdateDueToEducationUpdate(
           prisonNumber = prisonNumber,
           startDate = today,
-          isPesCourse = false,
+          isPesCourse = true,
           subjectToKPIRules = true,
           prisonId = "BXI",
         )
@@ -500,20 +1222,19 @@ class EducationServiceTest {
         with(captor.singleValue) {
           assertThat(prisonNumber).isEqualTo(prisonNumber)
           assertThat(qualificationCode).isEqualTo("Maths")
-          assertThat(fundingType).isEqualTo("DPS")
+          assertThat(fundingType).isEqualTo("PES")
           assertThat(learningStartDate).isEqualTo(today)
           assertThat(endDate).isNull()
         }
       }
 
       @Test
-      fun `should process education-start given a prisoner with a plan and needs is starting a new PES course`() {
+      fun `ESWE-2415 AC5 Given a prisoner without a plan and with needs is starting a PES course and is already on an active PES course, should store the new PES course enrollment and update the plan creation schedule`() {
         // Given
         given(needService.hasNeed(any())).willReturn(true)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
-        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(null)
 
-        // Given the prisoner already has a plan they by definition have an existing PES course
         val educationDto = EducationDTO(
           educationData = listOf(
             aPesCourse(
@@ -532,15 +1253,16 @@ class EducationServiceTest {
         )
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
-        // Given the prisoner already has a plan they by definition must be on a course already
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-          listOf(
-            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES"),
-          ),
+          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES")),
         )
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
@@ -548,6 +1270,7 @@ class EducationServiceTest {
         verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+        verify(planCreationScheduleService).getCurrentStatus(prisonNumber)
 
         // assert it did not exempt any schedules
         verify(planCreationScheduleService, never())
@@ -555,16 +1278,17 @@ class EducationServiceTest {
         verify(reviewScheduleService, never())
           .exemptSchedule(any(), any(), any())
 
-        // assert it did update the review schedule
-        verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+        // assert it did update the plan creation schedule
+        verify(planCreationScheduleService).createOrUpdateDueToEducationUpdate(
           prisonNumber = prisonNumber,
-          startDate = today,
+          startDate = today.minusWeeks(1), // start date is the date of the first PES course, not the new one.
           prisonId = "BXI",
+          subjectToKPIRules = true,
+          isPesCourse = true,
         )
 
-        // assert a call to the planCreationScheduleService was not made
-        verify(planCreationScheduleService, never())
-          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
 
         // assert the records written/updated to the EducationEnrolmentRepository
         val captor = argumentCaptor<EducationEnrolmentEntity>()
@@ -579,75 +1303,7 @@ class EducationServiceTest {
       }
 
       @Test
-      fun `should process education-start given a prisoner with a plan and needs is starting a non-PES course`() {
-        // Given
-        given(needService.hasNeed(any())).willReturn(true)
-        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
-        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
-
-        // Given the prisoner already has a plan they by definition have an existing PES course
-        val educationDto = EducationDTO(
-          educationData = listOf(
-            aPesCourse(
-              prisonNumber = prisonNumber,
-              prisonId = "BXI",
-              courseCode = "English",
-              startDate = today.minusWeeks(1),
-            ),
-            aNonPesCourse(
-              prisonNumber = prisonNumber,
-              prisonId = "BXI",
-              courseCode = "Maths",
-              startDate = today,
-            ),
-          ),
-        )
-        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
-
-        // Given the prisoner already has a plan they by definition must be on a course already
-        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-          listOf(
-            anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES"),
-          ),
-        )
-
-        // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
-
-        // Then
-        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
-        verify(needService).hasNeed(prisonNumber)
-        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
-        verify(curiousApiClient).getEducation(prisonNumber)
-        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
-
-        // assert it did not exempt any schedules
-        verify(planCreationScheduleService, never())
-          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
-        verify(reviewScheduleService, never())
-          .exemptSchedule(any(), any(), any())
-
-        // assert a call to create or update the review schedule was not made
-        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
-
-        // assert a call to the planCreationScheduleService was not made
-        verify(planCreationScheduleService, never())
-          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
-
-        // assert the records written/updated to the EducationEnrolmentRepository
-        val captor = argumentCaptor<EducationEnrolmentEntity>()
-        verify(educationEnrolmentRepository).save(captor.capture())
-        with(captor.singleValue) {
-          assertThat(prisonNumber).isEqualTo(prisonNumber)
-          assertThat(qualificationCode).isEqualTo("Maths")
-          assertThat(fundingType).isEqualTo("DPS")
-          assertThat(learningStartDate).isEqualTo(today)
-          assertThat(endDate).isNull()
-        }
-      }
-
-      @Test
-      fun `should process education-start given a prisoner without needs is starting a PES course and has no existing course enrolments`() {
+      fun `ESWE-2415 AC6 Given a prisoner without needs is starting a PES course and has no existing course enrolments, should store the new PES enrollment and not create or update any schedules`() {
         // Given
         given(needService.hasNeed(any())).willReturn(false)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf())
@@ -667,7 +1323,11 @@ class EducationServiceTest {
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
@@ -702,62 +1362,7 @@ class EducationServiceTest {
       }
 
       @Test
-      fun `should process education-start given a prisoner without needs is starting a non-PES course and has no existing course enrolments`() {
-        // Given
-        given(needService.hasNeed(any())).willReturn(false)
-        given(needService.getNeedSources(any())).willReturn(sortedSetOf())
-
-        val educationDto = EducationDTO(
-          educationData = listOf(
-            aNonPesCourse(
-              prisonNumber = prisonNumber,
-              prisonId = "BXI",
-              courseCode = "Maths",
-              startDate = today,
-            ),
-          ),
-        )
-        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
-
-        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(emptyList())
-
-        // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
-
-        // Then
-        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
-        verify(needService).hasNeed(prisonNumber)
-        verifyNoInteractions(elspPlanRepository)
-        verify(curiousApiClient).getEducation(prisonNumber)
-        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
-
-        // assert any schedules were exempted
-        verify(planCreationScheduleService)
-          .exemptSchedule(prisonNumber = prisonNumber, status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION, prisonId = "BXI")
-        verify(reviewScheduleService)
-          .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
-
-        // assert a call to the planCreationScheduleService was not made
-        verify(planCreationScheduleService, never())
-          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
-
-        // assert a call to create or update the review schedule was not made
-        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
-
-        // assert the records written/updated to the EducationEnrolmentRepository
-        val captor = argumentCaptor<EducationEnrolmentEntity>()
-        verify(educationEnrolmentRepository).save(captor.capture())
-        with(captor.singleValue) {
-          assertThat(prisonNumber).isEqualTo(prisonNumber)
-          assertThat(qualificationCode).isEqualTo("Maths")
-          assertThat(fundingType).isEqualTo("DPS")
-          assertThat(learningStartDate).isEqualTo(today)
-          assertThat(endDate).isNull()
-        }
-      }
-
-      @Test
-      fun `should process education-start given no changes were made to the course enrolments`() {
+      fun `Given an EDUCATION_STARTED message is received but no changes were made to the course enrolments, no changes are stored and no updates are made to schedules`() {
         // Given
 
         val educationDto = EducationDTO(
@@ -779,7 +1384,11 @@ class EducationServiceTest {
         )
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
@@ -806,14 +1415,24 @@ class EducationServiceTest {
       }
 
       @Test
-      fun `should process education-start given a previously ended course is restarted`() {
+      fun `Given a prisoner with needs and an inactive plan restarts a previously ended PES course, should update the database record for that course and reschedule the review schedule`() {
         // Given
-        given(needService.hasNeed(any())).willReturn(false)
-        given(needService.getNeedSources(any())).willReturn(sortedSetOf())
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val courseStartDate = today.minusWeeks(2)
 
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
           listOf(
-            anEducationEnrolment(prisonNumber, "BXI", "Maths", today.minusWeeks(2), "PES", endDate = today.minusWeeks(1)),
+            anEducationEnrolment(
+              prisonNumber,
+              "BXI",
+              "Maths",
+              courseStartDate,
+              "PES",
+              endDate = today.minusWeeks(1),
+            ),
           ),
         )
 
@@ -824,7 +1443,7 @@ class EducationServiceTest {
               prisonId = "BXI",
               courseCode = "Maths",
               // even though Curious is telling us the course is restarting today, they do not change their startDate field. This is CRUCIAL for us to find the right course in our DB because the composite key uses this field
-              startDate = today.minusWeeks(2),
+              startDate = courseStartDate,
               endDate = null,
             ),
           ),
@@ -832,12 +1451,16 @@ class EducationServiceTest {
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
         // When
-        educationService.processEducationStatusUpdate(prisonNumber, educationStatusUpdateAdditionalInformation, inboundEvent)
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
         // Then
         verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
         verify(needService).hasNeed(prisonNumber)
-        verifyNoInteractions(elspPlanRepository)
+        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
         verify(curiousApiClient).getEducation(prisonNumber)
         verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
@@ -851,8 +1474,12 @@ class EducationServiceTest {
         verify(planCreationScheduleService, never())
           .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
 
-        // assert a call to create or update the review schedule was not made
-        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+        // assert it did update the review schedule
+        verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+          prisonNumber = prisonNumber,
+          startDate = courseStartDate,
+          prisonId = "BXI",
+        )
 
         // assert the records written/updated to the EducationEnrolmentRepository
         val captor = argumentCaptor<EducationEnrolmentEntity>()

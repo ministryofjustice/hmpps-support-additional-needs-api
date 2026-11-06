@@ -90,11 +90,19 @@ class EducationService(
     if (enrolmentDiff.anyChanges) {
       log.debug { "There have been changes to the EducationEnrolments for $prisonNumber" }
 
+      // If the prisoner has declined a plan, don't create or update any schedules.
+      if (planCreationScheduleService.getCurrentStatus(prisonNumber) == PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY) {
+        log.debug {
+          "No need to update prisoner $prisonNumber's Plan Schedule or Review Schedule. Prisoner has declined a plan."
+        }
+        return
+      }
+
       // For EDUCATION_STOPPED events, only exempt schedules if a PES course was ended (stopping a non-PES course must not change scheduling).
       // For all other events, exempt whenever there is no active PES course.
       val shouldConsiderScheduleExemption = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
       if (shouldConsiderScheduleExemption && !enrolmentDiff.onAnyPesCourseInCurrentPrison) {
-        log.info { "Prisoner $prisonNumber is no longer in PES education at $currentEstablishment. Exempt any Plan Creation and Review schedules" }
+        log.info { "Prisoner $prisonNumber is not in PES education at $currentEstablishment. Exempt any existing Plan Creation and Review schedules" }
         // exempt any schedules
         // this will exempt schedules if they exist AND sent messages to MN.
         planCreationScheduleService.exemptSchedule(
@@ -109,48 +117,44 @@ class EducationService(
         )
       }
 
-      // Irrespective of whether the prisoner is on a PES course or not, if they have needs and have started/re-started ANY course, we need to check their Plan and Reviews, and potentially update/create them.
+      // If the prisoner has needs and has (re-)started a PES course, we need to create or reschedule their Plan Creation Schedule or Review Schedule
+      // If they have (re-)started a non-PES course, we don't need to create or update any schedules.
       val prisonerHasNeeds = needService.hasNeed(prisonNumber)
-      val hasStartedOrRestartedAnyCourse = enrolmentDiff.createdCourseCount > 0 || enrolmentDiff.reopenedCourseCount > 0
-      if (prisonerHasNeeds && hasStartedOrRestartedAnyCourse) {
-        log.debug { "Prisoner $prisonNumber has a need and has started or re-started a course (PES or non-PES)" }
 
-        // If the prisoner does not yet have a Plan we need to create a Plan Creation Schedule
+      if (prisonerHasNeeds && enrolmentDiff.hasCreatedOrRestartedPesCourse) {
+        log.debug { "Prisoner $prisonNumber has a need and has started or re-started a PES course" }
+
+        // If the prisoner does not yet have a Plan we need to create or update a Plan Creation Schedule
         if (elspPlanRepository.findByPrisonNumber(prisonNumber) == null) {
-          log.debug { "Prisoner $prisonNumber has started or restarted a course but does not yet have a Plan. Creating their Plan Creation Schedule" }
+          log.debug { "Prisoner $prisonNumber has started or restarted a PES course but does not yet have a Plan. Creating or updating their Plan Creation Schedule" }
           // The details of how the Plan Creation Schedule is created is the responsibility of the PlanCreationScheduleService, but is based on whether
           // it is subject to the KPI rules (which is based on the prisoner's needs and the enrolment start date) and whether it is a PES course or not.
           val subjectToKPIRules = subjectToKPIRules(prisonNumber = prisonNumber, enrolmentDiff = enrolmentDiff)
-          val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
-          val isPesCourse = enrolmentDiff.hasCreatedOrRestartedPesCourse
+          val startDate = enrolmentDiff.firstCurrentPesEnrolmentStart ?: LocalDate.now(clock)
 
           // create the plan creation schedule
           planCreationScheduleService.createOrUpdateDueToEducationUpdate(
             prisonNumber,
             startDate,
-            isPesCourse,
+            isPesCourse = enrolmentDiff.hasCreatedOrRestartedPesCourse,
             subjectToKPIRules,
             prisonId = currentEstablishment,
           )
         } else {
-          // Prisoner has a Plan. If they have started or restarted a PES course we need to create or reschedule their Review Schedule
-          if (enrolmentDiff.hasCreatedOrRestartedPesCourse) {
-            log.debug { "Prisoner $prisonNumber has started or restarted a PES course. Creating or updating their Review Schedule" }
-            val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
-            reviewScheduleService.createOrUpdateDueToEducationUpdate(
-              prisonNumber,
-              startDate,
-              prisonId = currentEstablishment,
-            )
-          } else {
-            log.debug { "Prisoner $prisonNumber already has a Plan and has started or restarted a non-PES course. Review Schedule does not need to be rescheduled." }
-          }
+          // Prisoner has a Plan, so we need to create or reschedule their Review Schedule
+          log.debug { "Prisoner $prisonNumber has started or restarted a PES course. Creating or updating their Review Schedule" }
+          val startDate = enrolmentDiff.firstNewPesEnrolmentStart ?: LocalDate.now(clock)
+          reviewScheduleService.createOrUpdateDueToEducationUpdate(
+            prisonNumber,
+            startDate,
+            prisonId = currentEstablishment,
+          )
         }
       } else {
         log.debug {
           "No need to update prisoner $prisonNumber's Plan Schedule or Review Schedule.\n" +
             "Prisoner has needs: $prisonerHasNeeds \n" +
-            "Prisoner has started or restarted any course: $hasStartedOrRestartedAnyCourse"
+            "Prisoner has started or restarted a PES course: ${enrolmentDiff.hasCreatedOrRestartedPesCourse}"
         }
       }
     }
@@ -182,7 +186,7 @@ class EducationService(
       // Special rule only when the ALN screener has been processed but was after the education start date.
       // The prisoner will be marked as has need when the education record is processed but shouldn't make the person
       // in scope for KPI.
-      val enrolmentStart = enrolmentDiff.firstNewEnrolmentStart
+      val enrolmentStart = enrolmentDiff.firstNewPesEnrolmentStart
       if (screeningDate != null && enrolmentStart != null) {
         // Not subject to KPI if enrolment starts before the screening date
         if (enrolmentStart < screeningDate) return false
@@ -330,7 +334,7 @@ class EducationService(
       }
     }
 
-    val earliestStartDateOfAllCreatedOrUpdatedCourses = createdOrUpdatedEntities
+    val earliestStartDateOfAllCreatedOrUpdatedPesCourses = createdOrUpdatedEntities.filter( { it.isPesCourse() })
       .minByOrNull { it.learningStartDate }
       ?.learningStartDate
 
@@ -341,7 +345,8 @@ class EducationService(
       onAnyPesCourseInCurrentPrison = inProgressPesCourseKeys.isNotEmpty(),
       hasEndedPesCourse = endedPesCourse,
       hasCreatedOrRestartedPesCourse = createdOrRestartedPesCourses > 0,
-      firstNewEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedCourses,
+      firstNewPesEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedPesCourses,
+      firstCurrentPesEnrolmentStart = inProgressPesCourseKeys.minByOrNull { it.start }?.start,
       reopenedCourseCount = reopenedCourseCount,
     )
 
@@ -360,7 +365,8 @@ class EducationService(
     val onAnyPesCourseInCurrentPrison: Boolean,
     val hasEndedPesCourse: Boolean,
     val hasCreatedOrRestartedPesCourse: Boolean,
-    val firstNewEnrolmentStart: LocalDate?,
+    val firstNewPesEnrolmentStart: LocalDate?, // the earliest start date of all new PES courses in the current prison
+    val firstCurrentPesEnrolmentStart: LocalDate?, // the earliest start date of all In-Progress PES courses in the current prison
   )
 
   fun Education.key(): EnrolmentKey = EnrolmentKey(establishmentId!!, qualificationCode, learningStartDate)

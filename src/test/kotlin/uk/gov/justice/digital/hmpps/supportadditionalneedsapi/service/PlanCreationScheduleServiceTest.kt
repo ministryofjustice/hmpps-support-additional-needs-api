@@ -63,6 +63,40 @@ class PlanCreationScheduleServiceTest {
   private val prisonNumber = randomValidPrisonNumber()
 
   @Test
+  fun `getCurrentStatus returns the status of the existing schedule`() {
+    // Given
+    val existing = PlanCreationScheduleEntity(
+      prisonNumber = prisonNumber,
+      status = PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY,
+      deadlineDate = IN_THE_FUTURE_DATE,
+      createdAtPrison = "AAA",
+      updatedAtPrison = "AAA",
+      earliestStartDate = null,
+    )
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(existing)
+
+    // When
+    val result = service.getCurrentStatus(prisonNumber)
+
+    // Then
+    assertThat(result).isEqualTo(PlanCreationScheduleStatus.EXEMPT_PRISONER_NOT_COMPLY)
+    verify(planCreationScheduleRepository).findByPrisonNumber(prisonNumber)
+  }
+
+  @Test
+  fun `getCurrentStatus returns null when no schedule exists`() {
+    // Given
+    given(planCreationScheduleRepository.findByPrisonNumber(prisonNumber)).willReturn(null)
+
+    // When
+    val result = service.getCurrentStatus(prisonNumber)
+
+    // Then
+    assertThat(result).isNull()
+    verify(planCreationScheduleRepository).findByPrisonNumber(prisonNumber)
+  }
+
+  @Test
   fun `createSchedule creates when in education and has need`() {
     // Given
     given(needService.hasNeed(prisonNumber)).willReturn(true)
