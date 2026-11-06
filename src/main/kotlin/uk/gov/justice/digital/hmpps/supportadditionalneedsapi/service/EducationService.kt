@@ -143,7 +143,7 @@ class EducationService(
         } else {
           // Prisoner has a Plan, so we need to create or reschedule their Review Schedule
           log.debug { "Prisoner $prisonNumber has started or restarted a PES course. Creating or updating their Review Schedule" }
-          val startDate = enrolmentDiff.firstNewEnrolmentStart ?: LocalDate.now(clock)
+          val startDate = enrolmentDiff.firstNewPesEnrolmentStart ?: LocalDate.now(clock)
           reviewScheduleService.createOrUpdateDueToEducationUpdate(
             prisonNumber,
             startDate,
@@ -186,7 +186,7 @@ class EducationService(
       // Special rule only when the ALN screener has been processed but was after the education start date.
       // The prisoner will be marked as has need when the education record is processed but shouldn't make the person
       // in scope for KPI.
-      val enrolmentStart = enrolmentDiff.firstNewEnrolmentStart
+      val enrolmentStart = enrolmentDiff.firstNewPesEnrolmentStart
       if (screeningDate != null && enrolmentStart != null) {
         // Not subject to KPI if enrolment starts before the screening date
         if (enrolmentStart < screeningDate) return false
@@ -334,7 +334,7 @@ class EducationService(
       }
     }
 
-    val earliestStartDateOfAllCreatedOrUpdatedCourses = createdOrUpdatedEntities
+    val earliestStartDateOfAllCreatedOrUpdatedPesCourses = createdOrUpdatedEntities.filter( { it.isPesCourse() })
       .minByOrNull { it.learningStartDate }
       ?.learningStartDate
 
@@ -345,7 +345,7 @@ class EducationService(
       onAnyPesCourseInCurrentPrison = inProgressPesCourseKeys.isNotEmpty(),
       hasEndedPesCourse = endedPesCourse,
       hasCreatedOrRestartedPesCourse = createdOrRestartedPesCourses > 0,
-      firstNewEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedCourses,
+      firstNewPesEnrolmentStart = earliestStartDateOfAllCreatedOrUpdatedPesCourses,
       firstCurrentPesEnrolmentStart = inProgressPesCourseKeys.minByOrNull { it.start }?.start,
       reopenedCourseCount = reopenedCourseCount,
     )
@@ -365,7 +365,7 @@ class EducationService(
     val onAnyPesCourseInCurrentPrison: Boolean,
     val hasEndedPesCourse: Boolean,
     val hasCreatedOrRestartedPesCourse: Boolean,
-    val firstNewEnrolmentStart: LocalDate?, // the earliest start date of all new courses in the current prison (PES or non-PES)
+    val firstNewPesEnrolmentStart: LocalDate?, // the earliest start date of all new PES courses in the current prison
     val firstCurrentPesEnrolmentStart: LocalDate?, // the earliest start date of all In-Progress PES courses in the current prison
   )
 
