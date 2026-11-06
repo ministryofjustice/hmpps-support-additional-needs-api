@@ -121,7 +121,7 @@ class EducationService(
       // If the prisoner has needs and has (re-)started a PES course, we need to create or reschedule their Plan Creation Schedule or Review Schedule
       // If they have (re-)started a non-PES course, we don't need to create or update any schedules.
       val prisonerHasNeeds = needService.hasNeed(prisonNumber)
-      //val hasStartedOrRestartedAnyCourse = enrolmentDiff.createdCourseCount > 0 || enrolmentDiff.reopenedCourseCount > 0
+
       if (prisonerHasNeeds && enrolmentDiff.hasCreatedOrRestartedPesCourse) {
         log.debug { "Prisoner $prisonNumber has a need and has started or re-started a PES course" }
 

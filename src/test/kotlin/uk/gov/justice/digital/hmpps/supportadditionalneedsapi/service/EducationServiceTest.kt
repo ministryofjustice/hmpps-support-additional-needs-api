@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.client.prisonersea
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.EducationEnrolmentEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ElspPlanEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.NeedSource
-import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleEntity
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.PlanCreationScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.entity.ReviewScheduleStatus
 import uk.gov.justice.digital.hmpps.supportadditionalneedsapi.domain.repository.AlnAssessmentRepository
@@ -410,7 +409,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -425,7 +424,7 @@ class EducationServiceTest {
           .exemptSchedule(
             prisonNumber = prisonNumber,
             status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
-            prisonId = "BXI"
+            prisonId = "BXI",
           )
         verify(reviewScheduleService)
           .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
@@ -486,7 +485,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -545,7 +544,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -560,7 +559,7 @@ class EducationServiceTest {
           .exemptSchedule(
             prisonNumber = prisonNumber,
             status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
-            prisonId = "BXI"
+            prisonId = "BXI",
           )
         verify(reviewScheduleService)
           .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
@@ -605,7 +604,7 @@ class EducationServiceTest {
               courseCode = "English",
               startDate = today.minusWeeks(1),
               endDate = today.minusDays(1),
-            )
+            ),
           ),
         )
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
@@ -618,7 +617,7 @@ class EducationServiceTest {
               "English",
               today.minusWeeks(1),
               "PES",
-              endDate = today.minusDays(1)
+              endDate = today.minusDays(1),
             ),
           ),
         )
@@ -627,7 +626,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -643,7 +642,7 @@ class EducationServiceTest {
           .exemptSchedule(
             prisonNumber = prisonNumber,
             status = PlanCreationScheduleStatus.EXEMPT_NOT_IN_EDUCATION,
-            prisonId = "BXI"
+            prisonId = "BXI",
           )
         verify(reviewScheduleService)
           .exemptSchedule(prisonNumber, ReviewScheduleStatus.EXEMPT_NOT_IN_EDUCATION, "BXI")
@@ -685,7 +684,7 @@ class EducationServiceTest {
               prisonId = "BXI",
               courseCode = "English",
               startDate = today.minusWeeks(1),
-            )
+            ),
           ),
         )
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
@@ -697,7 +696,7 @@ class EducationServiceTest {
               "BXI",
               "English",
               today.minusWeeks(1),
-              "PES"
+              "PES",
             ),
           ),
         )
@@ -706,7 +705,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -775,7 +774,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -829,7 +828,7 @@ class EducationServiceTest {
               prisonId = "BXI",
               courseCode = "English",
               startDate = today.minusWeeks(1),
-              endDate = today.minusDays(1)
+              endDate = today.minusDays(1),
             ),
             aPesCourse(
               prisonNumber = prisonNumber,
@@ -851,7 +850,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -892,7 +891,6 @@ class EducationServiceTest {
 
       @Test
       fun `ESWE-2415 AC3 Given a prisoner with no needs and with plan and on an active PES course, is starting a new PES course, should store the new PES course enrollment and not update the review schedule`() {
-
         // Given
         given(needService.hasNeed(any())).willReturn(false)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf())
@@ -926,7 +924,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -942,9 +940,7 @@ class EducationServiceTest {
           .exemptSchedule(any(), any(), any())
 
         // assert a call to the reviewScheduleService was not made
-        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(
-          any(), any(), any()
-        )
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
 
         // assert a call to the planCreationScheduleService was not made
         verify(planCreationScheduleService, never())
@@ -964,7 +960,6 @@ class EducationServiceTest {
 
       @Test
       fun `ESWE-2415 AC3 Given a prisoner with no needs and with an inactive plan (due to a completed PES course), is starting a new PES course, should store the new PES course enrollment and not update the review schedule`() {
-
         // Given
         given(needService.hasNeed(any())).willReturn(false)
         given(needService.getNeedSources(any())).willReturn(sortedSetOf())
@@ -977,7 +972,7 @@ class EducationServiceTest {
               prisonId = "BXI",
               courseCode = "English",
               startDate = today.minusWeeks(1),
-              endDate = today.minusDays(1)
+              endDate = today.minusDays(1),
             ),
             aPesCourse(
               prisonNumber = prisonNumber,
@@ -999,7 +994,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1015,9 +1010,7 @@ class EducationServiceTest {
           .exemptSchedule(any(), any(), any())
 
         // assert a call to the reviewScheduleService was not made
-        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(
-          any(), any(), any()
-        )
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
 
         // assert a call to the planCreationScheduleService was not made
         verify(planCreationScheduleService, never())
@@ -1061,7 +1054,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1122,7 +1115,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1188,14 +1181,14 @@ class EducationServiceTest {
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "DPS"))
+          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "DPS")),
         )
 
         // When
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1261,13 +1254,14 @@ class EducationServiceTest {
         given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
         given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES")))
+          listOf(anEducationEnrolment(prisonNumber, "BXI", "English", today.minusWeeks(1), "PES")),
+        )
 
         // When
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1290,7 +1284,7 @@ class EducationServiceTest {
           startDate = today.minusWeeks(1), // start date is the date of the first PES course, not the new one.
           prisonId = "BXI",
           subjectToKPIRules = true,
-          isPesCourse = true
+          isPesCourse = true,
         )
 
         // assert a call to create or update the review schedule was not made
@@ -1307,8 +1301,6 @@ class EducationServiceTest {
           assertThat(endDate).isNull()
         }
       }
-
-
 
       @Test
       fun `ESWE-2415 AC6 Given a prisoner without needs is starting a PES course and has no existing course enrolments, should store the new PES enrollment and not create or update any schedules`() {
@@ -1334,7 +1326,7 @@ class EducationServiceTest {
         educationService.processEducationStatusUpdate(
           prisonNumber,
           educationStatusUpdateAdditionalInformation,
-          inboundEvent
+          inboundEvent,
         )
 
         // Then
@@ -1369,143 +1361,139 @@ class EducationServiceTest {
         }
       }
 
+      @Test
+      fun `Given an EDUCATION_STARTED message is received but no changes were made to the course enrolments, no changes are stored and no updates are made to schedules`() {
+        // Given
 
-
-        @Test
-        fun `Given an EDUCATION_STARTED message is received but no changes were made to the course enrolments, no changes are stored and no updates are made to schedules`() {
-          // Given
-
-          val educationDto = EducationDTO(
-            educationData = listOf(
-              aPesCourse(
-                prisonNumber = prisonNumber,
-                prisonId = "BXI",
-                courseCode = "Maths",
-                startDate = today.minusWeeks(1),
-              ),
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              startDate = today.minusWeeks(1),
             ),
-          )
-          given(curiousApiClient.getEducation(any())).willReturn(educationDto)
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
-          given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-            listOf(
-              anEducationEnrolment(prisonNumber, "BXI", "Maths", today.minusWeeks(1), "PES"),
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(prisonNumber, "BXI", "Maths", today.minusWeeks(1), "PES"),
+          ),
+        )
+
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
+
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verifyNoInteractions(needService)
+        verifyNoInteractions(elspPlanRepository)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
+
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+
+        // assert a call to create or update the review schedule was not made
+        verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+
+        // assert nothing was written/updated to the EducationEnrolmentRepository
+        verifyNoMoreInteractions(educationEnrolmentRepository)
+      }
+
+      @Test
+      fun `Given a prisoner with needs and an inactive plan restarts a previously ended PES course, should update the database record for that course and reschedule the review schedule`() {
+        // Given
+        given(needService.hasNeed(any())).willReturn(true)
+        given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
+        given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
+
+        val courseStartDate = today.minusWeeks(2)
+
+        given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
+          listOf(
+            anEducationEnrolment(
+              prisonNumber,
+              "BXI",
+              "Maths",
+              courseStartDate,
+              "PES",
+              endDate = today.minusWeeks(1),
             ),
-          )
+          ),
+        )
 
-          // When
-          educationService.processEducationStatusUpdate(
-            prisonNumber,
-            educationStatusUpdateAdditionalInformation,
-            inboundEvent
-          )
+        val educationDto = EducationDTO(
+          educationData = listOf(
+            aPesCourse(
+              prisonNumber = prisonNumber,
+              prisonId = "BXI",
+              courseCode = "Maths",
+              // even though Curious is telling us the course is restarting today, they do not change their startDate field. This is CRUCIAL for us to find the right course in our DB because the composite key uses this field
+              startDate = courseStartDate,
+              endDate = null,
+            ),
+          ),
+        )
+        given(curiousApiClient.getEducation(any())).willReturn(educationDto)
 
-          // Then
-          verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
-          verifyNoInteractions(needService)
-          verifyNoInteractions(elspPlanRepository)
-          verify(curiousApiClient).getEducation(prisonNumber)
-          verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
+        // When
+        educationService.processEducationStatusUpdate(
+          prisonNumber,
+          educationStatusUpdateAdditionalInformation,
+          inboundEvent,
+        )
 
-          // assert it did not exempt any schedules
-          verify(planCreationScheduleService, never())
-            .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
-          verify(reviewScheduleService, never())
-            .exemptSchedule(any(), any(), any())
+        // Then
+        verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
+        verify(needService).hasNeed(prisonNumber)
+        verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
+        verify(curiousApiClient).getEducation(prisonNumber)
+        verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
 
-          // assert a call to the planCreationScheduleService was not made
-          verify(planCreationScheduleService, never())
-            .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
+        // assert it did not exempt any schedules
+        verify(planCreationScheduleService, never())
+          .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
+        verify(reviewScheduleService, never())
+          .exemptSchedule(any(), any(), any())
 
-          // assert a call to create or update the review schedule was not made
-          verify(reviewScheduleService, never()).createOrUpdateDueToEducationUpdate(any(), any(), any())
+        // assert a call to the planCreationScheduleService was not made
+        verify(planCreationScheduleService, never())
+          .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
 
-          // assert nothing was written/updated to the EducationEnrolmentRepository
-          verifyNoMoreInteractions(educationEnrolmentRepository)
+        // assert it did update the review schedule
+        verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
+          prisonNumber = prisonNumber,
+          startDate = courseStartDate,
+          prisonId = "BXI",
+        )
+
+        // assert the records written/updated to the EducationEnrolmentRepository
+        val captor = argumentCaptor<EducationEnrolmentEntity>()
+        verify(educationEnrolmentRepository).save(captor.capture())
+        with(captor.singleValue) {
+          assertThat(prisonNumber).isEqualTo(prisonNumber)
+          assertThat(qualificationCode).isEqualTo("Maths")
+          assertThat(fundingType).isEqualTo("PES")
+          assertThat(learningStartDate).isEqualTo(today.minusWeeks(2)) // When re-starting a course we do not update the start date; it is deliberately immutable in the Entity class
+          assertThat(endDate).isNull()
         }
-
-        @Test
-        fun `Given a prisoner with needs and an inactive plan restarts a previously ended PES course, should update the database record for that course and reschedule the review schedule`() {
-          // Given
-          given(needService.hasNeed(any())).willReturn(true)
-          given(needService.getNeedSources(any())).willReturn(sortedSetOf(NeedSource.ALN_SCREENER))
-          given(elspPlanRepository.findByPrisonNumber(any())).willReturn(anELSP(prisonNumber))
-
-          val courseStartDate = today.minusWeeks(2)
-
-          given(educationEnrolmentRepository.findAllByPrisonNumber(any())).willReturn(
-            listOf(
-              anEducationEnrolment(
-                prisonNumber,
-                "BXI",
-                "Maths",
-                courseStartDate,
-                "PES",
-                endDate = today.minusWeeks(1)
-              ),
-            ),
-          )
-
-          val educationDto = EducationDTO(
-            educationData = listOf(
-              aPesCourse(
-                prisonNumber = prisonNumber,
-                prisonId = "BXI",
-                courseCode = "Maths",
-                // even though Curious is telling us the course is restarting today, they do not change their startDate field. This is CRUCIAL for us to find the right course in our DB because the composite key uses this field
-                startDate = courseStartDate,
-                endDate = null,
-              ),
-            ),
-          )
-          given(curiousApiClient.getEducation(any())).willReturn(educationDto)
-
-          // When
-          educationService.processEducationStatusUpdate(
-            prisonNumber,
-            educationStatusUpdateAdditionalInformation,
-            inboundEvent
-          )
-
-          // Then
-          verify(prisonerSearchApiClient).getPrisoner(prisonNumber)
-          verify(needService).hasNeed(prisonNumber)
-          verify(elspPlanRepository).findByPrisonNumber(prisonNumber)
-          verify(curiousApiClient).getEducation(prisonNumber)
-          verify(educationEnrolmentRepository).findAllByPrisonNumber(prisonNumber)
-
-          // assert it did not exempt any schedules
-          verify(planCreationScheduleService, never())
-            .exemptSchedule(any(), any(), anyOrNull(), anyOrNull(), any(), any())
-          verify(reviewScheduleService, never())
-            .exemptSchedule(any(), any(), any())
-
-          // assert a call to the planCreationScheduleService was not made
-          verify(planCreationScheduleService, never())
-            .createOrUpdateDueToEducationUpdate(any(), any(), any(), any(), any())
-
-          // assert it did update the review schedule
-          verify(reviewScheduleService).createOrUpdateDueToEducationUpdate(
-            prisonNumber = prisonNumber,
-            startDate = courseStartDate,
-            prisonId = "BXI",
-          )
-
-          // assert the records written/updated to the EducationEnrolmentRepository
-          val captor = argumentCaptor<EducationEnrolmentEntity>()
-          verify(educationEnrolmentRepository).save(captor.capture())
-          with(captor.singleValue) {
-            assertThat(prisonNumber).isEqualTo(prisonNumber)
-            assertThat(qualificationCode).isEqualTo("Maths")
-            assertThat(fundingType).isEqualTo("PES")
-            assertThat(learningStartDate).isEqualTo(today.minusWeeks(2)) // When re-starting a course we do not update the start date; it is deliberately immutable in the Entity class
-            assertThat(endDate).isNull()
-          }
-        }
+      }
+    }
   }
-}
-
-
 
   private fun educationStatusUpdateInboundEvent(prisonNumber: String, subEventType: String) = mock<InboundEvent>().apply {
     given(this.prisonNumber()).willReturn(prisonNumber)
@@ -1555,14 +1543,4 @@ class EducationServiceTest {
     fundingType = fundingType,
     endDate = endDate,
   )
-
-  private fun aPlanCreationSchedule(prisonNumber: String, prisonId: String, status: PlanCreationScheduleStatus, deadline: LocalDate) =
-    PlanCreationScheduleEntity(
-      prisonNumber = prisonNumber,
-      deadlineDate = deadline,
-      earliestStartDate = deadline.minusDays(10),
-      status = status,
-      createdAtPrison = prisonId,
-      updatedAtPrison = prisonId,
-    )
 }
