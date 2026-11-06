@@ -98,7 +98,6 @@ class EducationService(
         return
       }
 
-      if (!enrolmentDiff.onAnyPesCourseInCurrentPrison) {
       // For EDUCATION_STOPPED events, only exempt schedules if a PES course was ended (stopping a non-PES course must not change scheduling).
       // For all other events, exempt whenever there is no active PES course.
       val shouldConsiderScheduleExemption = inboundEvent.description != "EDUCATION_STOPPED" || enrolmentDiff.hasEndedPesCourse
